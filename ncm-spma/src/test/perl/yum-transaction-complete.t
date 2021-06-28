@@ -25,14 +25,14 @@ use NCM::Component::spma::yum;
 use CAF::Object;
 use Test::MockModule;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @YTX_ORIG => NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION;
-Readonly::Array my @YTX => @{NCM::Component::spma::yum::_set_yum_config(\@YTX_ORIG)};
+Readonly::Array my @YTX => @{$cmp->_set_yum_config(\@YTX_ORIG)};
 Readonly my $CMD => join(" ", @YTX);
 
 set_desired_err($CMD, "");
 set_desired_output($CMD, "");
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 =pod
 

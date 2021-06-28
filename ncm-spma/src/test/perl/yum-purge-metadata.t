@@ -27,13 +27,13 @@ use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @PURGE_ORIG => NCM::Component::spma::yum::YUM_PURGE_METADATA();
-Readonly::Array my @PURGE => @{NCM::Component::spma::yum::_set_yum_config(\@PURGE_ORIG)};
+Readonly::Array my @PURGE => @{$cmp->_set_yum_config(\@PURGE_ORIG)};
 Readonly my $CMD => join(" ", @PURGE);
 
 ok(! grep {$_ eq '-C'} @PURGE, 'purge command has cache disabled');
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");

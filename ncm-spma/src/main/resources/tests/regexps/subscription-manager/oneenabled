@@ -1,0 +1,7 @@
+only one enabled statement
+---
+//software
+rendermodule=yumplugins/subscription-manager
+contentspath=/software/components/spma/plugins/subscription-manager
+---
+^enabled= ### COUNT 1

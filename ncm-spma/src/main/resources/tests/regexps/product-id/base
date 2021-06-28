@@ -1,0 +1,8 @@
+config for product-id plugin
+---
+//software
+rendermodule=yumplugins/product-id
+contentspath=/software/components/spma/plugins/product-id
+---
+^\[main\]$
+^enabled=1$

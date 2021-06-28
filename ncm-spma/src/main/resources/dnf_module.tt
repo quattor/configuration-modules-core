@@ -1,0 +1,5 @@
+[[% name %]]
+name=[% name %]
+stream=[% stream %]
+profiles=[%# intentionally kept empty, only configuring/enabling modules for now %]
+state=[% enable ? 'enabled' : 'disabled' %]

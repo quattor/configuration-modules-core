@@ -30,7 +30,7 @@ my $rm = Set::Scalar->new('dep;noarch', 'nodep;noarch');
 my $cmp = NCM::Component::spma::yum->new('spma');
 
 Readonly::Array my @DEPS_ORIG => NCM::Component::spma::yum::REPO_DEPS();
-Readonly::Array my @DEPS => @{NCM::Component::spma::yum::_set_yum_config(\@DEPS_ORIG)};
+Readonly::Array my @DEPS => @{$cmp->_set_yum_config(\@DEPS_ORIG)};
 Readonly my $CMD => join(" ", @DEPS, 'pkg.noarch');
 
 ok(grep {$_ eq '-C'} @DEPS, 'repoqeury command has cache enabled');

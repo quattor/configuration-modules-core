@@ -1,6 +1,7 @@
 unique template base;
 
-include "components/spma/yum/schema";
+include "components/spma/config";
+'/software/components/spma/dependencies' = null;
 
 '/software/components/spma' = dict();
 '/software/packages' = dict();
@@ -52,3 +53,4 @@ prefix "/software/repositories/2";
 "protocols/0/url" = "https://secret.example.com/repo";
 "proxy" = "";
 "skip_if_unavailable" = false;
+"module_hotfixes" = true;

@@ -30,9 +30,11 @@ use Test::Quattor;
 use NCM::Component::spma::yum;
 use Set::Scalar;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 
 Readonly::Array my @LP_ORIG => @{NCM::Component::spma::yum::LEAF_PACKAGES()};
-Readonly::Array my @LP => @{NCM::Component::spma::yum::_set_yum_config(\@LP_ORIG)};
+Readonly::Array my @LP => @{$cmp->_set_yum_config(\@LP_ORIG)};
 Readonly my $LEAVES => join(" ", @LP);
 
 =pod
@@ -44,8 +46,6 @@ Readonly my $LEAVES => join(" ", @LP);
 =item * All leaves are listed in the profile.
 
 =cut
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 my $wanted = Set::Scalar->new(qw(a;noarch b c));
 

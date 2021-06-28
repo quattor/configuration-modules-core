@@ -25,13 +25,13 @@ use Set::Scalar;
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @GROUP_ORIG => NCM::Component::spma::yum::REPOGROUP();
-Readonly::Array my @GROUP => @{NCM::Component::spma::yum::_set_yum_config(\@GROUP_ORIG)};
+Readonly::Array my @GROUP => @{$cmp->_set_yum_config(\@GROUP_ORIG)};
 Readonly my $CMD => join(" ", @GROUP, "mandatory", "foo");
 
 ok(grep {$_ eq '-C'} @GROUP, 'repoqeury command has cache enabled');
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "a\nb\nc\n");
 my $pkgs = $cmp->expand_groups({foo => { optional => '', mandatory => 1}});

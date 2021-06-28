@@ -46,13 +46,15 @@ use constant LARGE_INSTALL => 200;
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant YUM_CONF_CLEANUP_ON_REMOVE_VALUE => 1;
 use constant YUM_CONF_OBSOLETES => "obsoletes";
 use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
 
 # Must use cache (-C option)
 use constant REPOGROUP => qw(repoquery -C -l -g --grouppkgs);
-use constant REPOQUERY => qw(repoquery -C --show-duplicates --envra);
+use constant REPOQUERY => qw(repoquery -C --show-duplicates);
+use constant REPOQUERY_FORMAT => qw(--envra);
 use constant REPO_DEPS => qw(repoquery -C --requires --resolve --plugins
                              --qf %{NAME};%{ARCH});
 use constant REPO_WHATREQS => qw(repoquery -C --whatrequires --recursive --plugins
@@ -66,6 +68,7 @@ use constant YUM_CMD => qw(yum -y shell);
 use constant YUM_DISTRO_SYNC => qw(yum -y distro-sync);
 
 use constant VALID_PACKAGE_NAME => qr{^([\w\.\-\+]+)[*?]?};
+use constant REPO_INCLUDE => 1;
 
 our $NoActionSupported = 1;
 
@@ -106,20 +109,44 @@ sub _match_noaction_tempdir
     return $self->__match_template_dir($name, NOACTION_TEMPDIR_TEMPLATE);
 }
 
-# Action cleanup: boolean to cleanup old repositories when not running in NoAction.
-#   Is considered true when not defined
 sub cleanup_old_repos
 {
     my ($self, $repo_dir, $allowed_repos, $action_cleanup) = @_;
 
+    my @exts = qw(repo);
+    push(@exts, 'pkgs') if ($self->REPO_INCLUDE);
+
+    my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
+
+    return $self->_cleanup_old_something(
+        $repo_dir, $allowed,
+        "repository", \@exts,
+        $action_cleanup
+        );
+}
+
+# directory: directory to look for files
+# allowed: set::scalar of names that will not be cleaned up
+# type: what is being cleaned up (used in reporting)
+# exts: arrayref of file extensions to cleanup up
+# action_cleanup: boolean to cleanup old repositories when not running in NoAction.
+#   Is considered true when not defined
+sub _cleanup_old_something
+{
+    my ($self, $directory, $allowed, $type, $exts, $action_cleanup) = @_;
+
+    my $types = $type;
+    $types =~ s/y$/ie/;
+    $types .= 's';
+
     if ($NoAction) {
-        if ($self->_match_noaction_tempdir($repo_dir)) {
+        if ($self->_match_noaction_tempdir($directory)) {
             # This is ok
-            $self->verbose("Going to remove repositories from temporary NoAction",
-                           " repository directory $repo_dir.");
+            $self->verbose("Going to remove $types from temporary NoAction",
+                           " $type directory $directory.");
         } else {
-            $self->error("Not going to cleanup repository files with NoAction",
-                         " with unexpected repository directory $repo_dir ",
+            $self->error("Not going to cleanup $type files with NoAction",
+                         " with unexpected $type directory $directory ",
                          " (expected template ", NOACTION_TEMPDIR_TEMPLATE, ").",
                          " Please report this issue to the developers,",
                          " as this is most likely a bug in the code.");
@@ -132,21 +159,21 @@ sub cleanup_old_repos
     return 1 if defined($action_cleanup) && !$action_cleanup;
 
     my $dir;
-    if (!opendir($dir, $repo_dir)) {
-        $self->error("Unable to read repositories in $repo_dir");
+    if (!opendir($dir, $directory)) {
+        $self->error("Unable to read $types in $directory");
         return 0;
     }
-    my $current = Set::Scalar->new(map(m{(.*)\.(?:repo|pkgs)$}, readdir($dir)));
+
+    my $pattern = '(.*)\.(?:' . join('|', @$exts) . ')$';
+    my $current = Set::Scalar->new(map(m{$pattern}, readdir($dir)));
     closedir($dir);
 
-    my $allowed = Set::Scalar->new(map($_->{name}, @$allowed_repos));
-
-    my $rm = $current-$allowed;
+    my $rm = $current - $allowed;
     foreach my $i (@$rm) {
-        foreach my $ext (qw(repo pkgs)) {
-            my $fn = "$repo_dir/$i.$ext";
+        foreach my $ext (@$exts) {
+            my $fn = "$directory/$i.$ext";
             next if ! -e $fn;
-            my $msg = "outdated repository $i (file $fn)";
+            my $msg = "outdated $type $i (file $fn)";
             $self->verbose("Unlinking $msg");
             if (!unlink($fn)) {
                 $self->error("Unable to remove $msg: $!");
@@ -224,6 +251,7 @@ sub generate_repos
         }
 
         # No log instance passed, do all the logging ourself.
+        $repo->{repo_include} = $self->REPO_INCLUDE;
         my $trd = EDG::WP4::CCM::TextRender->new($template, $repo, relpath => 'spma');
         if (! defined($trd->get_text())) {
             $self->error ("Unable to generate repository $repo->{name}: $trd->{fail}");
@@ -235,11 +263,13 @@ sub generate_repos
                                   log => $self);
         $changes += $fh->close() || 0; # handle undef
 
-        $fh = CAF::FileWriter->new($self->_keeps_state("$repos_dir/$repo->{name}.pkgs"),
-                                   log => $self);
-        # TODO. Also add "do not edit" ? Or switch to FileEditor?
-        print $fh "# Additional configuration for $repo->{name}\n";
-        $fh->close();
+        if ($self->REPO_INCLUDE) {
+            $fh = CAF::FileWriter->new($self->_keeps_state("$repos_dir/$repo->{name}.pkgs"),
+                                       log => $self);
+            # TODO. Also add "do not edit" ? Or switch to FileEditor?
+            print $fh "# Additional configuration for $repo->{name}\n";
+            $fh->close();
+        };
     }
 
     return $changes;
@@ -250,11 +280,11 @@ sub generate_repos
 # the first element is the executable
 sub _set_yum_config
 {
-    my ($cmd_ref) = @_;
+    my ($self, $cmd_ref) = @_;
 
     my ($exe, @args) = @$cmd_ref;
 
-    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix(YUM_CONF_FILE));
+    my @new_cmd = ($exe, '-c', _prefix_noaction_prefix($self->YUM_CONF_FILE));
     push (@new_cmd, @args) if @args;
 
     return \@new_cmd;
@@ -295,23 +325,40 @@ sub execute_yum_command
 
     $opts{stdin} = $stdin if defined($stdin);
 
-    my $cmd = CAF::Process->new(_set_yum_config($command), %opts);
+    my $cmd = CAF::Process->new($self->_set_yum_config($command), %opts);
 
     $cmd->execute();
-    $self->warn("$why produced warnings: $err") if $err;
+    if ($err) {
+        my $warn_logger = ($err =~ m/\A[\s\n]*Last metadata expiration check.*[\s\n]*\z/m) ? 'verbose': 'warn';
+        $self->$warn_logger("$why produced warnings: $err");
+    }
     $self->verbose("$why output: $out") if(defined($out));
     if ($? ||
-        ($err && $err =~ m{^(?:Error|Failed|
-                      (?:Could \s+ not \s+ match)|
-                      (?:Transaction \s+ encountered.*error)|
-                      (?:Unknown \s+ group \s+  package \s+ type) |
-                      (?:.*requested \s+ URL \s+ returned \s+ error))}oxmi) ||
+        ($err && $err =~ m{^\s*(
+         Error |
+         Failed (?! (?: \s+ (?: loading \s+ plugin \s+))) |
+         (?:Could \s+ not \s+ match) |
+         (?:Transaction \s+ encountered .* error) |
+         (?:Unknown \s+ group \s+  package \s+ type) |
+         (?:.*requested \s+ URL \s+ returned \s+ error) |
+         (?:Versionlock \s* plugin) |
+         (?:Command \s+ line \s+ error)
+         )}oxmi) ||
+        ($out && $out =~ m{^\s*(
+         (?:[>]* \s* Problem (?: \s* \d+)? \s* :)  # from dnf transaction
+         )}oxmi) ||
         ($out && (@missing = ($out =~ m{^No package (.*) available}omg)))
         ) {
+        my $ec = $?;
+        my $match = $1;
         $self->warn("Command output: $out");
         $self->$error_logger("Failed $why: ", $err || "(empty/undef stderr)");
         if (@missing) {
             $self->$error_logger("Missing packages: ", join(" ", @missing));
+        } elsif (defined($match)) {
+            $self->verbose("Command output match $match (exitcode $ec)");
+        } else {
+            $self->verbose("Command exitcode $ec");
         }
         return undef;
     }
@@ -533,7 +580,17 @@ sub locked_all_packages
     # Process output and filter exact matches
     foreach my $pkgstr (split(/\n/, $locked)) {
         my @envra = split(/:/, $pkgstr);
-        my $pkg = $envra[1];
+        if (scalar @envra != 2) {
+            $self->error("no epoch in repoquery format '", join(" ", REPOQUERY_FORMAT), "' for $pkgstr");
+            return;
+        }
+
+        # in nevra format, remove the trailing epoch
+        # (in envra, removing the trailing epoch reduces it to empty string)
+        my $noepoch = $envra[0];
+        $noepoch =~ s/\d+$//;
+
+        my $pkg = $noepoch.$envra[1];
         if ($wanted_locked->has($pkg)) {
             $wanted_locked->delete($pkg);
         } else {
@@ -605,7 +662,7 @@ sub versionlock
     my ($self, $pkgs, $fullsearch) = @_;
 
     my ($locked, $toquery) = $self->prepare_lock_lists($pkgs);
-    my $out = $self->execute_yum_command([REPOQUERY, @$toquery],
+    my $out = $self->execute_yum_command([REPOQUERY, $self->REPOQUERY_FORMAT, @$toquery],
                                          "determining epochs", 1);
     return 0 if !defined($out) || !$self->locked_all_packages($locked, $out, $fullsearch);
 
@@ -617,6 +674,25 @@ sub versionlock
     return 1;
 }
 
+# return package to remove
+#   candidates are (non-trivial) values from the leaves selection command (name;arch format)
+#   wanted is list of packages that spma should install (name and also name;arch format)
+sub _pkg_rem_calc
+{
+    my ($self, $candidates, $wanted) = @_;
+
+    my $false_positives = Set::Scalar->new();
+    foreach my $pkg (@$candidates) {
+        my $name = (split(/;/, $pkg))[0];
+        if ($wanted->has($name)) {
+            $false_positives->insert($pkg);
+        }
+    }
+
+    return $candidates - $false_positives;
+};
+
+
 # Returns the set of packages to remove. A package must be removed if
 # it is a leaf package and is not listed in $wanted, or if its
 # architecture doesn't match the architectures specified in $wanted
@@ -625,7 +701,7 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new(_set_yum_config(LEAF_PACKAGES),
+    my $out = CAF::Process->new($self->_set_yum_config($self->LEAF_PACKAGES),
                                 keeps_state => 1,
                                 log => $self)->output();
 
@@ -638,17 +714,9 @@ sub packages_to_remove
     # garbage.
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
 
-    my $candidates = $leaves-$wanted;
+    my $candidates = $leaves - $wanted;
 
-    my $false_positives = Set::Scalar->new();
-    foreach my $pkg (@$candidates) {
-        my $name = (split(/;/, $pkg))[0];
-        if ($wanted->has($name)) {
-            $false_positives->insert($pkg);
-        }
-    }
-
-    return $candidates-$false_positives;
+    return $self->_pkg_rem_calc($candidates, $wanted);
 }
 
 # Queries for packages packages that depend on $rm, and if there is a
@@ -662,7 +730,7 @@ sub spare_deps_whatreq
     foreach my $pk (@$rm) {
         my $arg = $pk;
         $arg =~ s{;}{.};
-        my $whatreqs = $self->execute_yum_command([REPO_WHATREQS, $arg],
+        my $whatreqs = $self->execute_yum_command([$self->REPO_WHATREQS, $arg],
                                                   "determine what requires $pk", 1,
                                                   undef, $error_is_warn ? "warn" : "error");
         return 0 if !defined($whatreqs);
@@ -691,7 +759,7 @@ sub spare_deps_requires
         push(@pkgs, $pkg);
     }
 
-    my $deps = $self->execute_yum_command([REPO_DEPS, @pkgs],
+    my $deps = $self->execute_yum_command([$self->REPO_DEPS, @pkgs],
                                           "dependencies of install candidates", 1,
                                           undef, $error_is_warn ? "warn" : "error");
 
@@ -735,6 +803,12 @@ sub spare_dependencies
 
 
 # Completes any pending transactions
+sub _do_complete_transaction {
+    my ($self) = @_;
+    return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
+                                              "complete previous transactions"));
+}
+
 sub complete_transaction
 {
     my ($self) = @_;
@@ -747,8 +821,7 @@ sub complete_transaction
         $self->verbose("Skipping complete_transaction in NoAction mode");
         return 1;
     } else {
-        return defined($self->execute_yum_command([YUM_COMPLETE_TRANSACTION],
-                                              "complete previous transactions"));
+        return $self->_do_complete_transaction();
     }
 }
 
@@ -817,7 +890,7 @@ sub update_pkgs
         my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
         $self->$clean_cache_method() or return 0;
 
-        $self->make_cache($purge) or return 0;
+        $self->make_cache() or return 0;
     };
 
     # Versionlock is determined based on all configured packages
@@ -1065,7 +1138,7 @@ sub configure_yum
 
     # use CONSTANT() to get the value of the constant as key
     my $yum_opts = {
-        YUM_CONF_CLEANUP_ON_REMOVE() => 1,
+        YUM_CONF_CLEANUP_ON_REMOVE() => $self->YUM_CONF_CLEANUP_ON_REMOVE_VALUE(),
         YUM_CONF_OBSOLETES() => $obsoletes,
         YUM_CONF_REPOSDIR() => $repodirs,
         YUM_CONF_PLUGINCONFPATH() => $plugindir,
@@ -1109,10 +1182,12 @@ sub configure_plugins
         };
     }
 
-    # fastestmirror plugin: disable by default
-    if (! $plugins->{fastestmirror}) {
-        $self->verbose("yum plugin fastestmirror is not configured. It will be disabled.");
-        $plugins->{fastestmirror}->{enabled} = 0;
+    # disable by default
+    foreach my $name (qw(fastestmirror subscription-manager product-id)) {
+        if (! $plugins->{$name}) {
+            $self->verbose("yum plugin $name is not configured. It will be disabled.");
+            $plugins->{$name}->{enabled} = 0;
+        }
     }
 
     # priorities plugin: enable by default
@@ -1149,6 +1224,9 @@ sub configure_plugins
 
     return $changes;
 }
+
+# nothing to do for yum. this is dnf only
+sub modularity { return 1;};
 
 sub Configure
 {
@@ -1205,7 +1283,7 @@ sub Configure
     }
 
     # check if a temp location is required for NoAction support.
-    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, YUM_CONF_FILE);
+    my $prefix = $self->noaction_prefix($NoAction, YUM_PLUGIN_DIR, $main_repos_dir, $self->YUM_CONF_FILE);
 
     if (! defined($prefix)) {
         return 0;
@@ -1236,6 +1314,8 @@ sub Configure
     $res = $self->generate_repos($quattor_managed_reposdir, $repos, REPOS_TEMPLATE,
                                  $t->{proxyhost}, $t->{proxytype}, $t->{proxyport});
 
+    $self->modularity($t->{modules}, $config) or return 0;
+
     defined($res) or return 0;
     $purge_caches += $res;
 
@@ -1246,7 +1326,7 @@ sub Configure
     if ($t->{reposdirs}) {
         push(@$reposdir, @{$t->{reposdirs}});
     }
-    $self->configure_yum(_prefix_noaction_prefix(YUM_CONF_FILE),
+    $self->configure_yum(_prefix_noaction_prefix($self->YUM_CONF_FILE),
                          $t->{process_obsoletes}, $plugindir, $reposdir, $t->{main_options});
 
     $res = $self->update_pkgs_retry($allpkgs, $groups, $t->{run},

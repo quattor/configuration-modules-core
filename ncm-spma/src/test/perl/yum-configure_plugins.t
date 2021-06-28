@@ -34,8 +34,8 @@ my $cmp = NCM::Component::spma::yum->new("spma");
 
 $keeps_state = 0;
 $changes = $cmp->configure_plugins($YUM_PLUGIN_DIR);
-is($changes, 3, "3 modified files when no plugins are passed");
-is($keeps_state, 3, "_keeps_state called once per plugin");
+is($changes, 5, "3 modified files when no plugins are passed");
+is($keeps_state, 5, "_keeps_state called once per plugin");
 
 $fh = get_file('/etc/yum/pluginconf.d/versionlock.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/versionlock.conf is a CAF::FileWriter');
@@ -43,11 +43,13 @@ $text = "$fh";
 $text =~ s/\s//g;
 is($text, '[main]enabled=1locklist=/etc/yum/pluginconf.d/versionlock.list', "Expected text for default versionlock enabled");
 
-$fh = get_file('/etc/yum/pluginconf.d/fastestmirror.conf');
-isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/fastestmirror.conf is a CAF::FileWriter');
-$text = "$fh";
-$text =~ s/\s//g;
-is($text, '[main]enabled=0', "Expected text for default fastestmirror disabled");
+foreach my $name (qw(fastestmirror subscription-manager product-id)) {
+    $fh = get_file("/etc/yum/pluginconf.d/$name.conf");
+    isa_ok($fh, 'CAF::FileWriter', "/etc/yum/pluginconf.d/$name.conf is a CAF::FileWriter");
+    $text = "$fh";
+    $text =~ s/\s//g;
+    is($text, '[main]enabled=0', "Expected text for default $name disabled");
+}
 
 $fh = get_file('/etc/yum/pluginconf.d/priorities.conf');
 isa_ok($fh, 'CAF::FileWriter', '/etc/yum/pluginconf.d/priorities.conf is a CAF::FileWriter');

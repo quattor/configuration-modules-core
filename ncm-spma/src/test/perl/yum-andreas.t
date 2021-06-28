@@ -29,32 +29,37 @@ use NCM::Component::spma::yum;
 use CAF::Object;
 use Readonly;
 
+$CAF::Object::NoAction = 1;
+
+my $cmp = NCM::Component::spma::yum->new("spma");
+
+
 Readonly::Array my @RPM_QUERY_ORIG => @{NCM::Component::spma::yum::RPM_QUERY()};
-Readonly::Array my @RPM_QUERY => @{NCM::Component::spma::yum::_set_yum_config(\@RPM_QUERY_ORIG)};
+Readonly::Array my @RPM_QUERY => @{$cmp->_set_yum_config(\@RPM_QUERY_ORIG)};
 Readonly my $RPMQ => join(" ", @RPM_QUERY);
 
 Readonly::Array my @YDS_ORIG => NCM::Component::spma::yum::YUM_DISTRO_SYNC();
-Readonly::Array my @YDS => @{NCM::Component::spma::yum::_set_yum_config(\@YDS_ORIG)};
+Readonly::Array my @YDS => @{$cmp->_set_yum_config(\@YDS_ORIG)};
 Readonly my $DISTROSYNC => join(" ", @YDS);
 
 Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
-Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
+Readonly::Array my @YE => @{$cmp->_set_yum_config(\@YE_ORIG)};
 Readonly my $YUMEXPIRE => join(" ", @YE);
 
 Readonly::Array my @MC_ORIG => NCM::Component::spma::yum::YUM_MAKECACHE();
-Readonly::Array my @MC => @{NCM::Component::spma::yum::_set_yum_config(\@MC_ORIG)};
+Readonly::Array my @MC => @{$cmp->_set_yum_config(\@MC_ORIG)};
 Readonly my $MAKECACHE => join(" ", @MC);
 
 Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY();
-Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
+Readonly::Array my @REPOQUERY => @{$cmp->_set_yum_config(\@REPOQUERY_ORIG)}, NCM::Component::spma::yum::REPOQUERY_FORMAT();
 Readonly my $REPOQ => join(" ", @REPOQUERY, "ncm-cdp-1.0.4-1.noarch");
 
 Readonly::Array my @YCT_ORIG => NCM::Component::spma::yum::YUM_COMPLETE_TRANSACTION();
-Readonly::Array my @YCT => @{NCM::Component::spma::yum::_set_yum_config(\@YCT_ORIG)};
+Readonly::Array my @YCT => @{$cmp->_set_yum_config(\@YCT_ORIG)};
 Readonly my $YUMCT => join(" ", @YCT);
 
 Readonly::Array my @LP_ORIG => @{NCM::Component::spma::yum::LEAF_PACKAGES()};
-Readonly::Array my @LP => @{NCM::Component::spma::yum::_set_yum_config(\@LP_ORIG)};
+Readonly::Array my @LP => @{$cmp->_set_yum_config(\@LP_ORIG)};
 Readonly my $LEAF => join(" ", @LP);
 
 set_desired_output($RPMQ, "ncm-cdp;noarch\n");
@@ -69,10 +74,6 @@ set_desired_output($REPOQ, "0:ncm-cdp-1.0.4-1.noarch\n");
 set_desired_err($YUMCT, "");
 set_desired_output($YUMCT, "");
 set_desired_output($LEAF, "");
-
-$CAF::Object::NoAction = 1;
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 # A list of packages, based on a real profile.
 my $wanted = {

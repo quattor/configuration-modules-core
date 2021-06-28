@@ -26,13 +26,13 @@ use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @MC_ORIG => NCM::Component::spma::yum::YUM_MAKECACHE();
-Readonly::Array my @MC => @{NCM::Component::spma::yum::_set_yum_config(\@MC_ORIG)};
+Readonly::Array my @MC => @{$cmp->_set_yum_config(\@MC_ORIG)};
 Readonly my $CMD => join(" ", @MC);
 
 ok(! grep {$_ eq '-C'} @MC, 'yum makecache command has cache disabled');
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");

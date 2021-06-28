@@ -19,3 +19,4 @@ contentspath=/software/repositories/2
 ^gpgcheck=0$
 ^includepkgs=alot \*more\*$
 ^skip_if_unavailable=0$
+^module_hotfixes=1$

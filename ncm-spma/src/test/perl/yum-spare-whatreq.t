@@ -30,7 +30,7 @@ my $install = Set::Scalar->new('pkg;noarch');
 my $cmp = NCM::Component::spma::yum->new('spma');
 
 Readonly::Array my @WHATREQS_ORIG => NCM::Component::spma::yum::REPO_WHATREQS();
-Readonly::Array my @WHATREQS => @{NCM::Component::spma::yum::_set_yum_config(\@WHATREQS_ORIG)};
+Readonly::Array my @WHATREQS => @{$cmp->_set_yum_config(\@WHATREQS_ORIG)};
 Readonly::Array my @CMD => (
     join(" ", @WHATREQS, 'dep.noarch'),
     join(" ", @WHATREQS, 'nodep.noarch'));

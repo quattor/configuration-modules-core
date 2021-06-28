@@ -27,13 +27,14 @@ use CAF::Object;
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
+
 Readonly::Array my @YE_ORIG => NCM::Component::spma::yum::YUM_EXPIRE();
-Readonly::Array my @YE => @{NCM::Component::spma::yum::_set_yum_config(\@YE_ORIG)};
+Readonly::Array my @YE => @{$cmp->_set_yum_config(\@YE_ORIG)};
 Readonly my $CMD => join(" ", @YE);
 
 ok(! grep {$_ eq '-C'} @YE, 'yum expire command has cache disabled');
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 set_desired_output($CMD, "");
 set_desired_err($CMD, "");
