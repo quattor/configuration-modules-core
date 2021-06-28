@@ -60,10 +60,16 @@ type slurm_sbcast_parameters = {
 
 };
 
+type slurm_dependency_parameters = {
+    'disable_remote_singleton' ? boolean
+    '{kill_invalid_depend}' ? boolean
+    '{max_depend_depth}' ? long(0..)
+};
+
 type slurm_scheduler_parameters = {
     'assoc_limit_stop' ? boolean
     @{in seconds}
-    'batch_sched_delay' ? long(0..)
+    '{batch_sched_delay}' ? long(0..)
     'bb_array_stage_cnt' ? long(0..)
     'bf_busy_nodes' ? boolean  # should be set without argument
     'bf_continue' ? boolean  # should be set without argument
@@ -95,17 +101,19 @@ type slurm_scheduler_parameters = {
     'enable_user_top' ? boolean
     'Ignore_NUMA' ? boolean
     'inventory_interval' ? long(0..)
-    '{kill_invalid_depend}' ? boolean
+    '{kill_invalid_depend}' ? boolean with {
+        deprecated(0, 'kill_invalid_depend has moved to DependencyParameters'); true;
+    }
     'max_array_tasks' ? long(0..)   # should be smaller than MaxArraySize
-    'max_depend_depth' ? long(0..)
+    '{max_depend_depth}' ? long(0..) with {deprecated(0, 'max_depend_depth has moved to DependencyParameters'); true; }
     'max_rpc_cnt' ? long(0..)
     'max_sched_time' ? long(0..)
     'max_script_size' ? long(0..)
     'max_switch_wait' ? long(0..)
-    'no_backup_scheduling' ? boolean
-    'no_env_cache' ? boolean
+    '{no_backup_scheduling}' ? boolean
+    '{no_env_cache}' ? boolean
     'pack_serial_at_end' ? boolean
-    'partition_job_depth' ? long(0..)
+    '{partition_job_depth}' ? long(0..)
     'preempt_reorder_count' ? long(0..)
     'preempt_strict_order' ? boolean
     'preempt_youngest_first' ? boolean
@@ -319,15 +327,15 @@ type slurm_conf_prolog_epilog = {
 type slurm_ctld_parameters = {
     'allow_user_triggers' ? boolean
     'cloud_dns' ? boolean
-    'cloud_reg_addrs' ? boolean
+    '{cloud_reg_addrs}' ? boolean
     'enable_configless' ? boolean
     'idle_on_node_suspend' ? boolean
     'power_save_interval' ? long(0..)
     'power_save_min_interval' ? long(0..)
-    'max_dbd_msg_action' ? choice('discard', 'exit')
+    '{max_dbd_msg_action}' ? choice('discard', 'exit')
     'preempt_send_user_signal' ? boolean
     'reboot_from_controller' ? boolean
-    'user_resv_delete' ? boolean
+    '{user_resv_delete}' ? boolean
 };
 
 type slurm_conf_process = {
@@ -383,6 +391,7 @@ type slurm_conf_scheduling = {
     'MaxMemPerNode' ? long(0..)
     'SchedulerTimeSlice' ? long(5..65533)
     'SchedulerParameters' ? slurm_scheduler_parameters
+    'DependencyParameters' ? slurm_dependency_parameters
     'SchedulerType' ? choice('backfill', 'builtin', 'hold')  # prefix="sched/"
     'SelectType' ? choice('bluegene', 'cons_res', 'cray', 'linear', 'serial', 'cons_tres')  # prefix="select/"
     'SelectTypeParameters' ? slurm_select_type_parameters
