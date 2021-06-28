@@ -1,0 +1,37 @@
+Test php_variable string
+---
+/a/b/c
+quote
+---
+<\?php
+
+\$variable1\['some.value'\] = array\(
+    'dictlist' => array\(
+        'abc' => array\(
+            'def',
+            null,
+            \),
+        'def' => array\(
+            'ghi',
+            \),
+        \),
+    'dictwithdigit' => array\(
+        10 => 'abc',
+        20 => 'def',
+        50 => some php code doing something,
+        \),
+    'emptydict' => array\(
+        \),
+    'emptylist' => array\(
+        \),
+    'listbool' => array\(
+        true,
+        false,
+        \),
+    'mixeddict' => array\(
+        'whatisthis',
+        'something' => 'else',
+        'howdoesitevenwork',
+        \),
+    'null' => null,
+    \);
