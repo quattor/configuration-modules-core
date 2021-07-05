@@ -6,6 +6,8 @@ metaconfigservice=/etc/xinetd.d/rsync
 ^service\srsync$
 ^\{$
 ^\s{4}disable\s=\sno$
+^\s{4}log_on_failure\s=\sHOST USERID$
+^\s{4}log_on_success\s=\sHOST DURATION TRAFFIC$
 ^\s{4}server\s=\s/usr/bin/rsync$
 ^\s{4}server_args\s=\s--daemon$
 ^\s{4}socket_type\s=\sstream$
