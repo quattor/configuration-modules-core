@@ -2,7 +2,7 @@
 [% INCLUDE metaconfig/ssh/client_attrs.tt data=main -%]
 
 [% FOREACH mt IN Match -%]
-Match [% mt.matches.join(' ') %]
+[%     INCLUDE metaconfig/ssh/match.tt %]
 [%     INCLUDE metaconfig/ssh/client_attrs.tt data=mt FILTER indent %]
 [% END -%]
 

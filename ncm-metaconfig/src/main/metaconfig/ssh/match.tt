@@ -1,0 +1,8 @@
+Match[% -%]
+[% FOREACH pair IN mt.criteria.pairs -%]
+[%      IF pair.value.is_boolean -%]
+ [%          pair.key -%]
+[%      ELSE -%]
+ [%          pair.key %] [% CCM.is_list(pair.value) ? pair.value.join(',') : pair.value -%]
+[%      END -%]
+[% END -%]

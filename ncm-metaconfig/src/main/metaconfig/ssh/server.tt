@@ -1,0 +1,7 @@
+
+[% INCLUDE metaconfig/ssh/server_attrs.tt data=main -%]
+
+[% FOREACH mt IN Match -%]
+[%     INCLUDE metaconfig/ssh/match.tt %]
+[%     INCLUDE metaconfig/ssh/server_attrs.tt data=mt FILTER indent %]
+[% END -%]
