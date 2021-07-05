@@ -1,0 +1,80 @@
+Simple base test
+---
+/etc/nova/nova.conf
+---
+^\[DEFAULT\]
+^auth_strategy = keystone
+^cert = \/etc\/certlocation\/cert\.pem
+^cpu_allocation_ratio = 4
+^debug = False
+^enabled_apis = osapi_compute,metadata,ooi
+^firewall_driver = nova\.virt\.firewall\.NoopFirewallDriver
+^force_config_drive = True
+^key = \/etc\/certlocation\/key\.pem
+^linuxnet_interface_driver = nova\.network\.linux_net\.NeutronLinuxBridgeInterfaceDriver
+^memcached_servers = keystone1\.openstack\.uk:9000
+^my_ip = 127\.0\.0\.1
+^network_api_class = nova\.network\.neutronv2\.api\.API
+^ooi_listen_port = 9000
+^pci_alias = { "vendor_id":"10de", "product_id":"13bb", "device_type":"type-PCI", "name":"nvidia-quadro-k620-vga"}
+^pci_alias = { "vendor_id":"11de", "product_id":"14bb", "device_type":"type-PCI", "name":"nvidia-quadro-k621-vga"}
+^ram_allocation_ratio = 4
+^reclaim_instance_interval = 0
+^rpc_backend = rabbit
+^scheduler_default_filters = RetryFilter,AvailabilityZoneFilter,AggregateRamFilter,AggregateDiskFilter,AggregateCoreFilter,ComputeFilter,ComputeCapabilitiesFilter,ImagePropertiesFilter,ServerGroupAntiAffinityFilter,ServerGroupAffinityFilter,NUMATopologyFilter,AggregateInstanceExtraSpecsFilter,PciPassthroughFilter
+^scheduler_max_attempts = 20
+^security_group_api = neutron
+^verbose = True
+
+^\[api_database\]
+^connection = mysql\+pymysql:\/\/nova:meepmorp@openstack\.uk:9000\/nova_api
+
+^\[cache\]
+^backend = oslo_cache\.memcache_pool
+^enabled = True
+^memcached_servers = keystone1\.openstack\.uk:9000
+
+^\[database\]
+^connection = mysql\+pymysql:\/\/nova:meepmorp@openstack\.uk:9000\/nova
+
+^\[glance\]
+^api_servers = http:\/\/openstack\.uk:9000
+
+^\[keystone_authtoken\]
+^auth_plugin = password
+^auth_type = password
+^auth_uri = https:\/\/openstack\.uk:9000
+^auth_url = https:\/\/openstack\.uk:9000
+^memcached_servers = keystone1\.openstack\.uk:9000
+^password = meepmorp
+^project_domain_name = default
+^project_name = service
+^user_domain_name = default
+^username = nova
+
+^\[neutron\]
+^auth_plugin = password
+^auth_type = password
+^auth_url = https:\/\/openstack\.uk:9000
+^metadata_proxy_shared_secret = meepmorp
+^password = meepmorp
+^project_domain_name = default
+^project_name = service
+^region_name = RegionOne
+^service_metadata_proxy = True
+^url = https:\/\/openstack\.uk:9000
+^user_domain_name = default
+^username = neutron
+
+^\[oslo_concurrency\]
+^lock_path = \/var\/lib\/nova\/tmp
+
+^\[oslo_messaging_rabbit\]
+^rabbit_hosts = rabbit1\.openstack\.uk:9000
+^rabbit_password = meepmorp
+^rabbit_userid = openstack
+
+^\[vnc\]
+^vncserver_listen = *
+^vncserver_proxyclient_address = *
+
