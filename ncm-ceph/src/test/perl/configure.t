@@ -21,6 +21,8 @@ set_desired_output("/usr/bin/ceph -f json mon dump", $clmapdata::MONJSON);
 set_desired_output("/usr/bin/ceph -f json mgr dump", $clmapdata::MGRJSON);
 set_desired_output("/usr/bin/ceph -f json mds stat", $clmapdata::MDSJSON);
 
+set_desired_output("/usr/bin/ceph -f json config dump",'[]');
+
 set_desired_output('/usr/bin/ceph -f json --version', $clusterdata::CEPH_VERSION);
 set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');

@@ -7,7 +7,6 @@ type ceph_mds_config = {
     'mds_max_purge_files' ? long = 64
     'mds_max_purge_ops' ? long = 8192
     'mds_max_purge_ops_per_pg' ? double = 0.5
-    'mds_log_max_expiring' ? long = 20
     'mds_log_max_segments' ? long = 30
 
 };
