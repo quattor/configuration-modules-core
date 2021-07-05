@@ -1,5 +1,9 @@
 #${PMpre} NCM::Component::spma::apt${PMpost}
 
+use Data::Dumper;
+$Data::Dumper::Indent = 0; # Supress indentation and new-lines
+$Data::Dumper::Terse = 1; # Output values only, supress variable names if possible
+
 =head1 NAME
 
 C<NCM::Component::spma::apt> - NCM SPMA backend for apt
@@ -77,13 +81,29 @@ Readonly my $CMD_DPKG_QUERY => [$BIN_DPKG_QUERY, qw(-W -f=${db:Status-Abbrev};${
 
 our $NoActionSupported = 1;
 
+# Wrapper function for calling apt commands
+sub _call_apt
+{
+    my ($self, $cmd) = @_;
+    $self->debug(5, '_call_apt: Called with args(%s)', $cmd);
+
+    my $proc = CAF::Process->new($cmd);
+    my $output = $proc->output();
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    $self->debug(5, '_call_apt: %s exited with %s', $cmd[0], $exitstatus);
+    if ($exitstatus > 0) {
+        $output =~ tr{\n}{ };
+        $self->error('_call_apt: %s failed with "%s"', $cmd[0], $output);
+    }
+    return $exitstatus == 0;
+}
 
 # If user specified sources (userrepos) are not allowed, removes any
 # sources present in the system that are not listed in $allowed_sources.
 sub cleanup_old_sources
 {
     my ($self, $sources_dir, $allowed_sources) = @_;
-    $self->debug(5, 'Entered cleanup_old_sources()');
+    $self->debug(5, 'cleanup_old_sources: Called with args(%s, %s)', $sources_dir, $allowed_sources);
 
     if ($self->directory_exists($sources_dir)) {
         my $current = Set::Scalar->new(@{$self->listdir($sources_dir, filter => qr{\.list$}, adddir => 1)});
@@ -108,7 +128,7 @@ sub cleanup_old_sources
 sub initialize_sources_dir
 {
     my ($self, $sources_dir) = @_;
-    $self->debug(5, 'Entered initialize_sources_dir()');
+    $self->debug(5, 'initialize_sources_dir: Called with args(%s)', $sources_dir);
 
     if (! $self->directory($sources_dir)) {
         $self->error("Unable to create source dir $sources_dir: $self->{fail}");
@@ -124,7 +144,7 @@ sub initialize_sources_dir
 sub generate_sources
 {
     my ($self, $sources_dir, $sources, $template) = @_;
-    $self->debug(5, 'Entered generate_sources()');
+    $self->debug(5, 'generate_sources: Called with args(%s, %s, %s)', $sources_dir, $sources, $template);
 
     my $changes = 0;
 
@@ -148,26 +168,27 @@ sub generate_sources
 sub configure_apt
 {
     my ($self, $config) = @_;
-    $self->debug(5, 'Entered configure_apt()');
+    $self->debug(5, 'configure_apt: Called with args(%s)', $config);
 
     my $tr = EDG::WP4::CCM::TextRender->new($TEMPLATE_CONFIG, $config, relpath => 'spma');
     if ($tr) {
         my $fh = $tr->filewriter($FILE_CONFIG);
         return $fh->close() || 0; # handle undef
-    } else {
-        return 0;
     }
+    $self->error('configure_apt: TextRender failed to render configuration');
+    return 0;
 }
 
 # Returns a set of all installed packages
 sub get_installed_pkgs
 {
-    my $self = shift;
-    $self->debug(5, 'Entered get_installed_pkgs()');
+    my ($self) = @_;
+    $self->debug(5, 'get_installed_pkgs: Called');
 
     my $out = CAF::Process->new($CMD_DPKG_QUERY, keeps_state => 1) ->output();
-    if ($?) {
-        $self->debug(5, "dpkg command returned $?");
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    if ($exitstatus) {
+        $self->debug(5, "dpkg command returned $exitstatus");
         return 0;
     }
     # db:Status-Abbrev is three characters, we are looking for
@@ -184,28 +205,30 @@ sub get_installed_pkgs
 sub get_package_version_arch
 {
     my ($self, $name, $details) = @_;
-    $self->debug(5, 'Entered get_package_version_arch()');
+    $self->debug(5, "get_package_version_arch: Called with args($name, ", Dumper($details), ")");
 
     my @versions;
 
-    if ($details) {
+    if (%{$details}) {
         foreach my $version (sort keys %$details) {
             my $params = $details->{$version};
             $version = unescape($version);
             if ($params->{arch}) {
                 foreach my $arch (sort keys %{ $params->{arch} }) {
-                    $self->debug(5, '  Adding package ', $name, ' with version ', $version, ' and architecture ', $arch, ' to list');
+                    $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' with version ', $version, ' and architecture ', $arch, ' to list');
                     push(@versions, sprintf('%s:%s=%s', $name, $arch, $version));
                 }
             } else {
-                $self->debug(5, '  Adding package ', $name, ' with version ', $version, ' but without architecture to list');
+                $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' with version ', $version, ' but without architecture to list');
                 push(@versions, sprintf('%s=%s', $name, $version));
             }
         }
     } else {
-        $self->debug(5, '  Adding package ', $name, ' without version or architecture to list');
+        $self->debug(4, 'get_package_version_arch: Adding package ', $name, ' without version or architecture to list');
         push(@versions, $name);
     }
+
+    $self->debug(5, 'get_package_version_arch: returning arrayref:', Dumper(@versions));
 
     return \@versions;
 }
@@ -216,7 +239,7 @@ sub apply_package_version_arch
 {
     my ($self, $packagelist, $packagetree) = @_;
 
-    $self->debug(5, 'Entered apply_package_version_arch()');
+    $self->debug(5, 'apply_package_version_arch: Called with args(%s, %s)', $packagelist, $packagetree);
 
     my @results;
     my @notfound;
@@ -240,7 +263,7 @@ sub apply_package_version_arch
 sub get_desired_pkgs
 {
     my ($self, $pkgs) = @_;
-    $self->debug(5, 'Entered get_desired_pkgs()');
+    $self->debug(5, 'get_desired_pkgs: Called with args(%s)', $pkgs);
 
     my $packages = Set::Scalar->new();
 
@@ -259,11 +282,10 @@ sub get_desired_pkgs
 # Update package metadata from upstream sourcesitories
 sub resynchronize_package_index
 {
-    my $self = shift;
-    $self->debug(5, 'Entered resynchronize_package_index()');
+    my ($self) = @_;
+    $self->debug(5, 'resynchronize_package_index: Called');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPDATE, keeps_state => 1);
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt($CMD_APT_UPDATE);
 }
 
 
@@ -271,10 +293,9 @@ sub resynchronize_package_index
 sub upgrade_packages
 {
     my ($self) = @_;
-    $self->debug(5, 'Entered upgrade_packages()');
+    $self->debug(5, 'upgrade_packages: Called');
 
-    my $cmd = CAF::Process->new($CMD_APT_UPGRADE) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt($CMD_APT_UPGRADE);
 }
 
 
@@ -282,10 +303,9 @@ sub upgrade_packages
 sub install_packages
 {
     my ($self, $packages) = @_;
-    $self->debug(5, 'Entered install_packages()');
+    $self->debug(5, 'install_packages: Called with args(', Dumper($packages), ')');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_INSTALL, @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_INSTALL, @$packages]);
 }
 
 
@@ -294,10 +314,9 @@ sub install_packages
 sub mark_packages_auto
 {
     my ($self, $packages) = @_;
-    $self->debug(5, 'Entered mark_packages_auto()');
+    $self->debug(5, 'mark_packages_auto: Called with args(%s)', $packages);
 
-    my $cmd = CAF::Process->new([@$CMD_APT_MARK, 'auto', @$packages]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_MARK, 'auto', @$packages]);
 }
 
 
@@ -305,17 +324,16 @@ sub mark_packages_auto
 sub autoremove_packages
 {
     my ($self) = @_;
-    $self->debug(5, 'Entered autoremove_packages()');
+    $self->debug(5, 'autoremove_packages: Called');
 
-    my $cmd = CAF::Process->new([@$CMD_APT_AUTOREMOVE]) ;
-    return $cmd->execute() ? 1 : undef;
+    return _call_apt([@$CMD_APT_AUTOREMOVE]);
 }
 
 
 sub Configure
 {
     my ($self, $config) = @_;
-    $self->debug(5, 'Entered Configure()');
+    $self->debug(5, 'Configure: Called with args(%s)', $config);
 
     # Get configuration trees
     my $tree_sources = $config->getTree($TREE_SOURCES);
@@ -343,17 +361,17 @@ sub Configure
 
     my $packages_installed = $self->get_installed_pkgs() or return 0;
     my $packages_desired = $self->get_desired_pkgs($tree_pkgs) or return 0;
+
     my $packages_unwanted = $packages_installed->difference($packages_desired);
+    my $packages_to_install = $packages_desired->difference($packages_installed);
 
-    $self->debug(5, 'Installed packages:', $packages_installed);
-    $self->debug(5, 'Desired packages:', $packages_desired);
-    $self->debug(5, 'Packages installed but unwanted:', $packages_unwanted);
+    $self->debug(4, 'Installed packages: ', $packages_installed);
+    $self->debug(4, 'Desired packages: ', $packages_desired);
+    $self->debug(4, 'Packages installed but unwanted: ', $packages_unwanted);
+    $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
-    my $packages_to_install = $self->apply_package_version_arch($packages_desired, $tree_pkgs) or return 0;
-
-    $self->debug(5, 'Packages to install ', $packages_to_install);
-
-    $self->install_packages($packages_to_install) or return 0;
+    my $apt_packages_to_install = $self->apply_package_version_arch($packages_to_install, $tree_pkgs);
+    $self->install_packages($apt_packages_to_install) or return 0;
 
     # If user installed packages are not permitted, mark all unlisted packages as automatically installed and
     # ask apt to remove any of these that are not required to satisfy dependencies of the desired package list
