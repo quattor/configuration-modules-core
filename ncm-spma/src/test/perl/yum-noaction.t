@@ -361,7 +361,7 @@ is("$yum_cfg_fh", $expectedconf, "generated yum conf with multiple reposdirs");
 
 =cut
 
-is_deeply(NCM::Component::spma::yum::_set_yum_config(['yum','arg1']),
+is_deeply($cmp->_set_yum_config(['yum','arg1']),
           ['yum','-c',"$tmppath/etc/yum.conf",'arg1'],
           "temporary yum config correctly inserted");
 
@@ -412,7 +412,7 @@ $error = '';
 $cmp->Configure($cfg);
 
 # get tmppath from the yum.conf
-my $tmpycfg = NCM::Component::spma::yum::_set_yum_config(['yum'])->[2];
+my $tmpycfg = $cmp->_set_yum_config(['yum'])->[2];
 my $tmpetc = dirname($tmpycfg);
 ok($cmp->_match_noaction_tempdir($tmpetc),
    "copied /etc that has yum.conf is a noaction tempdir $tmpetc");

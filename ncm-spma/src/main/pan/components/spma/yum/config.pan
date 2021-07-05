@@ -4,21 +4,14 @@
 
 unique template components/spma/yum/config;
 
-# Prefix for packages/groups
-prefix '/software';
+include 'components/spma/config-common-yum';
 
-'groups' ?= dict();
-
-# Package to install
-'packages' = pkg_repl("ncm-${project.artifactId}", "${no-snapshot-version}-${rpm.release}", "noarch");
-
-# Set prefix to root of component configuration.
 prefix '/software/components/${project.artifactId}';
-
 'packager' = 'yum';
 
-'register_change' ?= list(
-    "/software/groups",
-    "/software/packages",
-    "/software/repositories",
-);
+
+bind "/software/components/spma" = component_spma_yum;
+bind "/software/groups" = SOFTWARE_GROUP{} with {
+    if (length(SELF) > 0) deprecated(0, 'Support for YUM groups will be removed in a future release.');
+    true;
+};

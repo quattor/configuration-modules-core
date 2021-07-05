@@ -34,13 +34,13 @@ $mockyum->mock('_keeps_state', sub {
 
 $CAF::Object::NoAction = 1;
 
+my $cmp = NCM::Component::spma::yum->new("spma");
+
 Readonly::Array my @REPOQUERY_ORIG => NCM::Component::spma::yum::REPOQUERY;
-Readonly::Array my @REPOQUERY => @{NCM::Component::spma::yum::_set_yum_config(\@REPOQUERY_ORIG)};
+Readonly::Array my @REPOQUERY => @{$cmp->_set_yum_config(\@REPOQUERY_ORIG)}, NCM::Component::spma::yum::REPOQUERY_FORMAT();
 Readonly my $FILE => "/etc/yum/pluginconf.d/versionlock.list";
 
 ok(grep {$_ eq '-C'} @REPOQUERY, 'repoquery command has cache enabled');
-
-my $cmp = NCM::Component::spma::yum->new("spma");
 
 
 my $pkgs = {
@@ -150,7 +150,7 @@ set_desired_output(join(" ", @REPOQUERY, "python*-2.7.5-el6.x86_64"), "");
 is($cmp->versionlock({pythoh_2a => $pkgs->{python_2a}}), 0,
    "Detected non-locked packages when wildcards are present");
 
-set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "perl-5.10.1-1.x86_64");
+set_desired_output(join(" ", @REPOQUERY, "perl-5.10*.x86_64"), "0:perl-5.10.1-1.x86_64");
 is($cmp->versionlock({perl => $pkgs->{perl}}), 1,
    "Version with star is processed correctly");
 

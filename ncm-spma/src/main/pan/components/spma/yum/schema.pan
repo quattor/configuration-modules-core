@@ -55,8 +55,3 @@ type component_spma_yum = {
     "repository_cleanup" ? boolean
 };
 
-bind "/software/components/spma" = component_spma_yum;
-bind "/software/groups" = SOFTWARE_GROUP{} with {
-    if (length(SELF) > 0) deprecated(0, 'Support for YUM groups will be removed in a future release.');
-    true;
-};

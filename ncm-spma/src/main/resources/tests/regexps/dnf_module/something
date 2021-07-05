@@ -1,0 +1,11 @@
+config for dnf module (section and name are inserted in component)
+---
+//software
+rendermodule=dnf_module
+contentspath=/software/modules/mod-something
+---
+^\[\]$
+^name=$
+^stream=1.2.3$
+^profiles=$
+^state=enabled$
