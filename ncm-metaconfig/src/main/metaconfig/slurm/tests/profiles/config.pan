@@ -21,7 +21,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #EpilogSlurmctld=
 "FirstJobId" = 1;
 "MaxJobId" = 9999999;
-#GresTypes=
+"GresTypes" = list("gpu", "mps");
 "GroupUpdateForce" = false;
 "GroupUpdateTime" = 600;
 "JobCheckpointDir" = "/var/spool/slurm/checkpoint";

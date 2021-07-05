@@ -489,6 +489,7 @@ type slurm_conf_compute_nodes = {
     'Boards' ? long(0..)
     'CoreSpecCount' ? long(0..)
     'CoresPerSocket' ? long(0..)
+    'CpuBind' ? choice('none', 'board', 'socket', 'ldom', 'core', 'thread')
     'CPUs' ? long(0..)
     'CpuSpecList' ? long(0..)[]
     'Feature' ? string[]
@@ -541,9 +542,13 @@ type slurm_conf_partition = {
     'AllowGroups' ? string[]
     'AllowQos' ? string[]
     'Alternate' ? string
+    'CpuBind' ? choice('none', 'board', 'socket', 'ldom', 'core', 'thread')
     'Default' ? boolean
+    'DefCpuPerGPU' ? long(0..)
     @{in megabytes}
     'DefMemPerCPU' ? long(0..)
+    @{in megabytes}
+    'DefMemPerGPU' ? long(0..)
     @{in megabytes}
     'DefMemPerNode' ? long(0..)
     'DenyAccounts' ? string[]
