@@ -17,10 +17,12 @@ type cumulus_port_speed = long with index(SELF, list(1, 10, 25, 40, 50, 100)) > 
 type cumulus_interface_bridge = {
     @{access port to VLAN}
     'access' ? cumulus_vlan
-    @{tagger VLANs, VLAN for untagged traffic is bridge pvid}
+    @{tagged VLANs, VLAN for untagged traffic is bridge or interface pvid}
     'vids' ? cumulus_vlan[]
     @{interface is part of bridge (default called bridge)}
     'enable' : boolean = true
+    @{VLAN for untagged packets (default is bridge pvid)}
+    'pvid' ? cumulus_vlan
 } = dict();
 
 type cumulus_interface_bridge_common = {

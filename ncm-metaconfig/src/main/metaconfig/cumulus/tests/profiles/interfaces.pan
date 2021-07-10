@@ -32,7 +32,7 @@ prefix "/software/components/metaconfig/services/{/etc/network/interfaces}/conte
 
 "swp3" = dict(
     'alias', 'some port',
-    'bridge', dict('access', 123),
+    'bridge', dict('access', 123, 'pvid', 14),
     'link', dict('autoneg', true, 'speed', 10),
     'vrf', 'test3',
 );
