@@ -1,0 +1,6 @@
+[% FOREACH section IN CCM.contents -%]
+[[%     section.key %]]
+[%-      FOREACH data IN section.value %]
+[%          tt = 'metaconfig/cumulus/' _ section.key _ '_rule.tt'; INCLUDE "${tt}"  -%]
+[%      END %]
+[% END %]

@@ -1,4 +1,4 @@
-Cumulus interfaces configuration
+Cumulus ports configuration
 ---
 /etc/cumulus/ports.conf
 quote

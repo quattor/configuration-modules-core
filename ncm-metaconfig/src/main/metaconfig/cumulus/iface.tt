@@ -4,4 +4,4 @@ iface [% fname %][% inet.length ? " inet " _ inet : '' %]
 [% IF data.size;
         INCLUDE 'metaconfig/cumulus/iface_data.tt' data=data FILTER indent;
     END;
--%]
+%]

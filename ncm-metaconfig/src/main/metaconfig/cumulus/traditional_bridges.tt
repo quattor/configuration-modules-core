@@ -1,0 +1,31 @@
+[%-# gather unconfigured ports
+   ifas = [];
+   FOREACH pair IN CCM.contents.bridges.pairs;
+       br = pair.value;
+       # gather all ports, and fix naming wrt vid
+       ports = [];
+       FOREACH ifa IN br.ports;
+            IF br.defined('vid');
+                IF !ifa.match('\.\d+$');
+                    ifa = ifa _ '.' _ br.vid;
+                END;
+            END;
+            IF !CCM.contents.interfaces.defined(ifa);
+                # these should be unique, already add them
+                INCLUDE 'metaconfig/cumulus/iface.tt' name=ifa inet='' data={};
+            END;
+            ports.push(ifa);
+        END;
+        br.delete('vid');
+        brdata = {};
+        IF ports.size > 0;
+            brdata.ports = ports;
+        END;
+        br.delete('ports');
+        IF br.defined('stp');
+            brdata.stp = br.stp;
+            br.delete('stp');
+        END;
+        br.bridge = brdata;
+        INCLUDE 'metaconfig/cumulus/iface.tt' name='br-' _ pair.key data=br;
+    END %]

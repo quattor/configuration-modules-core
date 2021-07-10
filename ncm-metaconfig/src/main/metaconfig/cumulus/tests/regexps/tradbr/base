@@ -1,0 +1,107 @@
+Cumulus interfaces traditional bridge configuration
+---
+/etc/network/interfaces
+quote
+---
+
+
+
+auto swp1.100
+iface swp1.100
+
+
+auto swp2.100
+iface swp2.100
+
+
+auto bond2.100
+iface bond2.100
+
+
+auto br-tag100
+iface br-tag100
+    address 10.0.100.1/24
+    bridge-ports swp1.100 swp2.100 bond2.100
+    bridge-stp yes
+    vrf test100
+
+
+auto swp1
+iface swp1
+
+
+auto br-untagged
+iface br-untagged
+    address 10.0.0.1/24
+    bridge-ports swp1 bond2
+    bridge-stp yes
+
+
+auto swp3.130
+iface swp3.130
+
+
+auto bond2.140
+iface bond2.140
+
+
+auto br-v130
+iface br-v130
+    address 10.0.130.1/24
+    bridge-ports swp3.130 bond2.140
+    bridge-stp yes
+
+
+auto swp2.120
+iface swp2.120
+
+
+auto swp3.120
+iface swp3.120
+
+
+auto bond2.120
+iface bond2.120
+
+
+auto br-vlan120
+iface br-vlan120
+    address 10.0.120.1/24
+    bridge-ports swp2.120 swp3.120 bond2.120
+    bridge-stp yes
+
+
+
+
+
+auto bond2
+iface bond2
+    bond-slaves swp4 swp5 swp6 swp7
+
+
+
+auto swp4
+iface swp4
+
+
+
+auto swp5
+iface swp5
+
+
+
+auto swp6
+iface swp6
+
+
+
+auto swp7
+iface swp7
+
+
+
+auto test100
+iface test100
+    vrf-table auto
+
+

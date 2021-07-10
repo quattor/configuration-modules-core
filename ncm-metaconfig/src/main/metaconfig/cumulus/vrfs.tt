@@ -1,0 +1,31 @@
+[%-# gather VRFs
+   vrfs = {};
+   FOREACH pair IN CCM.contents.interfaces.pairs;
+       IF pair.value.defined('vrf');
+          vrf = pair.value.vrf;
+          IF !CCM.contents.interfaces.defined(vrf);
+              vrfs.$vrf = 1;
+          END;
+       END;
+   END;
+   FOREACH pair IN CCM.contents.bridges.pairs;
+       IF pair.value.defined('vrf');
+          vrf = pair.value.vrf;
+          IF !CCM.contents.interfaces.defined(vrf);
+              vrfs.$vrf = 1;
+          END;
+       END;
+   END;
+   FOREACH vrf IN vrfs.pairs;
+       data = {
+            'vrf-table' = 'auto'
+       };
+       IF vrf.key == 'mgmt';
+          data.address = '127.0.0.1';
+          data.mask = 8;
+          data.address6 = '::1';
+          data.mask6 = 128;
+       END;
+       INCLUDE 'metaconfig/cumulus/iface.tt' name=vrf.key inet='' data=data;
+   END;
+-%]

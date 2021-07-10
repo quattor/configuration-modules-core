@@ -1,15 +1,27 @@
 [% # key translation map
     map = {
         slaves = 'bond-slaves'
+        address6 = 'address'
     };
     IF data.defined('mask');
         data.address = data.address _ '/' _ data.mask;
     END;
-    data.delete('mask', 'vlan');
+    IF data.defined('mask6');
+        data.address6 = data.address6 _ '/' _ data.mask6;
+    END;
+    data.delete('mask', 'vlan', 'mask6');
     data.bridge.delete('enable');
     IF data.defined('link');
         IF data.link.defined('speed');
             data.link.speed = data.link.speed * 1000;
+        END;
+    END;
+    IF data.defined('backup-ip');
+        name = 'backup-ip';
+        bip = data.${name};
+        data.${name} = bip.ip;
+        IF bip.defined('vrf');
+            data.${name} = data.${name} _ ' vrf ' _ bip.vrf;
         END;
     END;
     FOREACH el IN data.pairs;
