@@ -462,6 +462,7 @@ type postfix_main = {
     "smtp_tls_note_starttls_offer" ? boolean
     "smtp_tls_per_site" ? string
     "smtp_tls_policy_maps" ? string
+    "smtp_tls_protocols" ? string
     "smtp_tls_scert_verifydepth" ? long
     "smtp_tls_secure_cert_match" ? string[]
     "smtp_tls_security_level" ? string
