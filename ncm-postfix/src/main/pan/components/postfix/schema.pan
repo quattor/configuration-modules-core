@@ -64,16 +64,10 @@ type postfix_ldap_database = {
     "tls_cipher_suite" ? string
 };
 
-final variable MINUTES = 60;
-final variable HOURS = MINUTES * 60;
-final variable DAYS = HOURS * 24;
-final variable WEEKS = DAYS * 7;
-
 @{
     All fields available in main.cf. Nothing is mandatory here, since
     it all has default values. Time limits are expressed in
-    SECONDS. Multiply by the appropriate constant above to simplify
-    your code.
+    seconds.
 }
 type postfix_main = {
     "_2bounce_notice_recipient" ? string
