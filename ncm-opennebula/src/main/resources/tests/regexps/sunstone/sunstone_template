@@ -38,7 +38,7 @@ OpenNebula sunstone_server full test
 ^\s{6}:name:\s{1}large-x8$
 ^\s{6}:vcpu:\s{1}8$
 ^:lang:\s{1}en_US$
-^:marketplace_url:\s{1}http:\/\/marketplace\.opennebula\.systems\/appliance$
+^:marketplace_url:\s{1}http:\/\/marketplace.opennebula.io\/$
 ^:memcache_host:\s{1}localhost$
 ^:memcache_namespace:\s{1}opennebula.sunstone$
 ^:memcache_port:\s{1}11211$

@@ -933,7 +933,7 @@ type opennebula_sunstone = {
     "mode" : string = 'mixed'
     "marketplace_username" ? string
     "marketplace_password" ? string
-    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
+    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.io/'
     "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
     "instance_types" : opennebula_instance_types[] = list (
         dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128,
@@ -949,7 +949,10 @@ type opennebula_sunstone = {
         dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192,
                 "description", "General purpose instance for high-load servers"),
     )
-    "routes" : string[] = list("oneflow", "vcenter", "support")
+    @{List of Ruby files containing custom routes to be loaded}
+    "routes" : string[] = list("oneflow", "vcenter", "support", "nsx")
+    @{List of filesystems to offer when creating new image}
+    "support_fs" : string[] = list("ext4", "ext3", "ext2", "xfs")
 };
 
 @documentation{
@@ -990,6 +993,8 @@ type opennebula_oneflow = {
         3 = DEBUG
     }
     "debug_level" : long(0..3) = 2
+    @{Endpoint for ZeroMQ subscriptions}
+    "subscriber_endpoint" : string = 'tcp://localhost:2101'
 };
 
 @documentation{
