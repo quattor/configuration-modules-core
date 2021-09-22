@@ -15,6 +15,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "AuthType" = "munge";
 "CryptoType" = "munge";
 "ClusterName" = "thecluster";
+"CommunicationParameters" = dict("block_null_hash", true);
 "DisableRootJobs" = true;
 "EnforcePartLimits" = 'NO';
 #Epilog=
@@ -24,7 +25,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "GresTypes" = list("gpu", "mps");
 "GroupUpdateForce" = false;
 "GroupUpdateTime" = 600;
-"JobCheckpointDir" = "/var/spool/slurm/checkpoint";
 "JobContainerType" = "tmpfs";
 #JobCredentialPrivateKey=
 #JobCredentialPublicCertificate=
@@ -79,7 +79,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "SwitchType" = "none";
 #TaskEpilog=
 "TaskPlugin" = list("affinity" , "cgroup");
-"TaskPluginParam" = dict("Sched", true);
 #TaskProlog=
 #TopologyPlugin=topology/tree
 #TmpFS=/tmp
@@ -156,7 +155,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #AccountingStoragePort=
 "AccountingStorageType" = "slurmdbd";
 #AccountingStorageUser=
-"AccountingStoreJobComment" = true;
+"AccountingStoreFlags" = list("job_comment", "job_env");
 #DebugFlags=
 #JobCompHost=
 "JobCompLoc" = "/var/spool/slurm/job_completions.log";

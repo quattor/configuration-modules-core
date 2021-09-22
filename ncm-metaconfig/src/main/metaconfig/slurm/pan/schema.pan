@@ -56,7 +56,8 @@ type slurm_power_parameters = {
 
 type slurm_sbcast_parameters = {
     'DestDir' ? absolute_file_path
-    'Compression' ? choice("lz4", "zlib", "none")
+    'Compression' ? choice("lz4", "none")
+    'send_libs' ? boolean
 
 };
 
@@ -86,6 +87,7 @@ type slurm_scheduler_parameters = {
     'bf_max_time' ? long(0..256)
     'bf_min_age_reserve' ? long(0..)
     'bf_min_prio_reserve' ? long(0..)
+    'bf_node_space_size' ? long(2..2000000)
     'bf_resolution' ? long(0..)
     'bf_window' ? long(0..)
     'bf_window_linear' ? long(0..)
@@ -152,9 +154,7 @@ type slurm_select_type_parameters = {
 type slurm_task_plugin_param = {
     'Boards' ? boolean
     'Cores' ? boolean
-    'Cpusets' ? boolean
     'None' ? boolean
-    'Sched' ? boolean
     'Sockets' ? boolean
     'Threads' ? boolean
     'SlurmdOffSpec' ? boolean
@@ -202,6 +202,17 @@ type slurm_launch_params = {
 type slurm_authalt_params = {
     'disable_token_creation' ? boolean
     'jwt_key' ? absolute_file_path
+    'jwks' ? absolute_file_path
+};
+
+type slurm_communication_params = {
+    'block_null_hash' ? boolean
+    'CheckGhalQuiesce' ? boolean
+    'DisableIPv4' ? boolean
+    'EnableIPv6' ? boolean
+    'NoAddrCache' ? boolean
+    'NoCtldInAddrAny' ? boolean
+    'NoInAddrAny' ? boolean
 };
 
 type slurm_conf_control = {
@@ -209,28 +220,28 @@ type slurm_conf_control = {
     'AuthAltParameters' ? slurm_authalt_params
     'AuthAltTypes' ? choice('jwt')
     'AuthInfo' ? string[]
-    'AuthType' ? choice('none', 'munge')
+    'AuthType' ? choice('munge')
     'BackupController' ? string
     'BackupAddr' ? type_ipv4
-    'BurstBufferType' ? choice('none', 'datawarp')
-    'CheckpointType' ? choice('blcr', 'none', 'ompi')
+    'BurstBufferType' ? choice('none', 'datawarp', 'lua')
     'ChosLoc' ? absolute_file_path  # see https://github.com/scanon/chos
     'CliFilterPlugins' ? string[]
     'ClusterName' : string
+    'CommunicationParameters' ? slurm_communication_params
     'CompleteWait' ? long(0..65535)
     'ControlMachine' : string
     'ControlAddr' ? type_ipv4
 
     'CoreSpecPlugin' ? choice('cray', 'none')
-    'CpuFreqDef' ? choice( 'Conservative', 'OnDemand', 'Performance', 'PowerSave')
+    'CpuFreqDef' ? choice( 'Conservative', 'OnDemand', 'Performance', 'PowerSave', 'SchedUtil')
     'CpuFreqGovernors' ? choice('Conservative', 'OnDemand', 'Performance', 'PowerSave', 'UserSpace')
     'CryptoType' ? choice("munge", "openssl")
     'DebugFlags' ? choice( 'Backfill', 'BackfillMap', 'BGBlockAlgo', 'BGBlockAlgoDeep', 'BGBlockPick',
-        'BGBlockWires', 'BurstBuffer', 'CPU_Bind', 'CpuFrequency', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS',
+        'BGBlockWires', 'BurstBuffer', 'Cgroup', 'CPU_Bind', 'CpuFrequency', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS',
         'DB_QUERY', 'DB_RESERVATION', 'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'Elasticsearch', 'Energy',
-        'ExtSensors', 'Federation', 'FrontEnd', 'Gres', 'HeteroJobs', 'Gang', 'JobContainer', 'License',
-        'NodeFeatures', 'NO_CONF_HASH', 'Power', 'Priority', 'Profile', 'Protocol', 'Reservation', 'SelectType',
-        'Steps', 'Switch', 'TimeCray', 'TraceJobs', 'Triggers')[]
+        'ExtSensors', 'Federation', 'FrontEnd', 'Gres', 'HeteroJobs', 'Gang', 'JobAccountGather', 'JobContainer',
+        'License', 'NodeFeatures', 'NO_CONF_HASH', 'Power', 'Priority', 'Profile', 'Protocol', 'Reservation',
+        'Script', 'SelectType', 'Steps', 'Switch', 'TimeCray', 'TraceJobs', 'Triggers')[]
 
     'DefaultStorageHost' ? string
     'DefaultStorageLoc' ? string
@@ -250,7 +261,6 @@ type slurm_conf_control = {
     'GresTypes' ? string[]
     'GroupUpdateForce' ? boolean # 0/1
     'GroupUpdateTime' ? long(0..)
-    'JobCheckpointDir' ? absolute_file_path
     'JobContainerType' ? choice('cncu', 'tmpfs', 'none')
     'JobCredentialPrivateKey' ? absolute_file_path
     'JobCredentialPublicCertificate' ? absolute_file_path
@@ -290,7 +300,6 @@ type slurm_conf_control = {
 
     'NodeFeaturesPlugins' ? choice('knl_cray', 'knl_generic')
     'MailDomain' ? string
-    'MemLimitEnforce' ? boolean # yes/no
     'MinJobAge' ? long(0..)
     'MsgAggregationParams' ? slurm_msg_aggregation
     'PrivateData' ? choice('accounts', 'cloud', 'events', 'jobs', 'nodes', 'partitions',
@@ -298,6 +307,7 @@ type slurm_conf_control = {
     'RoutePlugin' ? choice("default", "topology")   # prefix=route/
     'SallocDefaultCommand' ? string
     'SbcastParameters' ? slurm_sbcast_parameters
+    'BcastExclude' ? absolute_file_path[]
     'SrunPortRange' ? string   # ideally the range contains at least 1000 ports
     'TmpFS' ? absolute_file_path
     'TrackWCKey' ? boolean
@@ -333,9 +343,16 @@ type slurm_ctld_parameters = {
     'power_save_interval' ? long(0..)
     'power_save_min_interval' ? long(0..)
     '{max_dbd_msg_action}' ? choice('discard', 'exit')
+    'node_reg_mem_percent' ? long(0..100)
     'preempt_send_user_signal' ? boolean
     'reboot_from_controller' ? boolean
     '{user_resv_delete}' ? boolean
+};
+
+type slurm_d_parameters = {
+    'config_overrides' ? boolean
+    'l3cache_as_socket' ? boolean
+    'shutdown_on_reboot' ? boolean
 };
 
 type slurm_conf_process = {
@@ -347,6 +364,7 @@ type slurm_conf_process = {
 
     'SlurmUser' ? string
     'SlurmdUser' ? string
+    'SlurmdParameters' ? slurm_d_parameters
     'SlurmctldParameters' ? slurm_ctld_parameters
     'SlurmctldPidFile' ? absolute_file_path
     'SlurmctldPlugstack' ? string[]
@@ -436,7 +454,7 @@ type slurm_conf_accounting = {
     'AccountingStorageTRES' ? string[]
     'AccountingStorageType' ? choice("filetxt", "none", "slurmdbd")
     'AccountingStorageUser' ? string
-    'AccountingStoreJobComment' ? boolean
+    'AccountingStoreFlags' ? choice('job_comment', 'job_env', 'job_script')[]
 
     'AcctGatherNodeFreq' ? long(0..) # for acct_gather_energy/rapl plugin set a value less than 300
     'AcctGatherEnergyType' ? choice('none', 'ipmi', 'rapl')
@@ -685,7 +703,7 @@ type slurm_dbd_conf = {
     'AuthAltParameters' ? slurm_authalt_params
     'AuthAltTypes' ? choice('jwt')
     'AuthInfo' ? string
-    'AuthType' ? choice('none', 'munge')
+    'AuthType' ? choice('munge')
     'CommitDelay' ? long(1..)
     'DbdBackupHost' ? string
     'DbdAddr' ? string

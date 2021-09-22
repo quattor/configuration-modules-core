@@ -9,7 +9,7 @@ quote
 AccountingStorageEnforce=qos,safe
 AccountingStorageHost=slurmdb.example.org
 AccountingStorageType=accounting_storage/slurmdbd
-AccountingStoreJobComment=YES
+AccountingStoreFlags=job_comment,job_env
 JobAcctGatherFrequency=energy=10,network=30
 JobAcctGatherType=jobacct_gather/cgroup
 JobCompLoc=/var/spool/slurm/job_completions.log
@@ -21,6 +21,7 @@ AuthAltParameters=jwt_key=/etc/slurm/jwt.key
 AuthAltTypes=auth/jwt
 AuthType=auth/munge
 ClusterName=thecluster
+CommunicationParameters=block_null_hash
 ControlMachine=master.example.com
 CryptoType=crypto/munge
 DisableRootJobs=YES
@@ -29,7 +30,6 @@ FirstJobId=1
 GresTypes=gpu,mps
 GroupUpdateForce=NO
 GroupUpdateTime=600
-JobCheckpointDir=/var/spool/slurm/checkpoint
 JobContainerType=job_container/tmpfs
 JobSubmitPlugins=lua,pbs
 LaunchParameters=use_interactive_step
@@ -92,7 +92,6 @@ SlurmdSpoolDir=/var/spool/slurm/slurmd
 StateSaveLocation=/var/spool/slurm
 SwitchType=switch/none
 TaskPlugin=task/affinity,task/cgroup
-TaskPluginParam=Sched
 
 # scheduling
 
