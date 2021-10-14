@@ -1,4 +1,5 @@
 [%- booleans = ['encode_user_password', 'vnc_proxy_ipv6'] -%]
+[%- option_list = ['routes', 'support_fs'] -%]
 [%- FOR pair IN sunstone.pairs -%]
 [%-    SWITCH pair.key -%]
 [%         CASE 'instance_types' -%]
@@ -7,7 +8,7 @@
 [%                 INCLUDE 'opennebula/sunstone_level1.tt'
                                           data=item -%]
 [%             END -%]
-[%         CASE 'routes' -%]
+[%         CASE option_list -%]
 :[%             pair.key %]:
 [%              FILTER indent -%]
 [%              FOREACH item IN sunstone.${pair.key} -%]
