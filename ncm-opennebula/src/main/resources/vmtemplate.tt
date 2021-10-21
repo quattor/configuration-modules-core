@@ -73,10 +73,15 @@ PCI = [
 ]
 [%- END %]
 [%- FOR device IN hardware.cards.pairs %]
-[%-     FOR pair IN device.value.pairs %]
-[%-         IF pair.value.pci.defined %]
+[%      IF CCM.is_list(device.value);
+            values = device.value;
+        ELSE;
+            values = device.value.values;
+        END;
+        FOR pair IN values %]
+[%-         IF pair.pci.defined %]
 PCI = [
-[%              INCLUDE 'opennebula/pci_level1.tt' data=pair.value.pci FILTER indent -%]
+[%          INCLUDE 'opennebula/pci_level1.tt' data=pair.pci FILTER indent -%]
 ]
 [%-         END %]
 [%-     END %]

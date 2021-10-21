@@ -296,4 +296,8 @@ type opennebula_vmtemplate = {
     (e.g. not placing all the cpu bound VMs in the same host) or improve the fault tolerance
     (e.g. not placing all your front-ends in the same host) of your multi-VM applications.}
     "vmgroup" ? opennebula_vmtemplate_vmgroup[]
+    @{Hide the KVM hypervisor from standard MSR based discovery.
+    Useful to use PCI PT with some GPU cards or operating systems.
+    More info: https://libvirt.org/formatdomain.html#hypervisor-features.}
+    "hiddenkvm" ? boolean
 } = dict();
