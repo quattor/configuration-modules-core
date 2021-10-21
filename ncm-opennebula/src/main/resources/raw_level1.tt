@@ -8,7 +8,7 @@ DATA = "<vcpu>[% vcpus %]</vcpu><cpu mode='host-passthrough'>
 [%-     END %]
 </memoryBacking>
 [%- END -%]
-[%- IF system.opennebula.hiddenkvm.defined %]
+[%- IF system.opennebula.hiddenkvm %]
 <features><acpi/><kvm><hidden state='on'/></kvm></features>
 [%- END -%]
 ",
