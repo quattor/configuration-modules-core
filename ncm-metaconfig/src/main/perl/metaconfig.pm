@@ -316,11 +316,16 @@ sub _configure_files
 
     foreach my $esc_filename (sort keys %{$t->{services}}) {
         my $srvc = $t->{services}->{$esc_filename};
-        my $cont_el = $config->getElement($self->prefix()."/services/$esc_filename/contents");
         my $filename = ($root || '') . unescape($esc_filename);
-        # Only when run_commands is false, use undef so nothing is even reported
-        my $commands = $run_commands ? $self->resolve_command_actions($t->{commands}, $srvc->{actions} || {}) : undef;
-        $self->handle_service($filename, $srvc, $cont_el, $sa, $commands);
+
+        if (!defined($srvc->{active}) || $srvc->{active}) {
+            my $cont_el = $config->getElement($self->prefix()."/services/$esc_filename/contents");
+            # Only when run_commands is false, use undef so nothing is even reported
+            my $commands = $run_commands ? $self->resolve_command_actions($t->{commands}, $srvc->{actions} || {}) : undef;
+            $self->handle_service($filename, $srvc, $cont_el, $sa, $commands);
+        } else {
+            $self->info("Skip inactive service for file $filename");
+        }
     }
 
     return $sa;
