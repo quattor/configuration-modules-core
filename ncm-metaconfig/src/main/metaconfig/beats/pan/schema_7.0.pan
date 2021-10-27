@@ -9,14 +9,14 @@ type beats_output_logstash_ssl_protocol = string with match(SELF, '^(SSLvs|TLSv1
     SSL settings for logstash output
 }
 type beats_output_logstash_ssl = {
-    'certificate_authorities' ? string[]
-    'certificate' ? string
-    'key' ? string
-    'key_passphrase' ? string
+    'certificate_authorities' ? absolute_file_path[]
+    'certificate' ? absolute_file_path
+    'key' ? absolute_file_path
+    'key_passphrase' ? string_trimmed
     'insecure' ? boolean
-    'cipher_suites' ? string[]
-    'curve_types' ? string[]
-    'verification_mode' ? string with match(SELF, '^(none|full|certificate)')
+    'cipher_suites' ? string_trimmed[]
+    'curve_types' ? string_trimmed[]
+    'verification_mode' ? choice('none', 'full', 'certificate')
     'supported_protocols' ? beats_output_logstash_ssl_protocol[]
     'enabled' ? boolean
 };
@@ -40,11 +40,11 @@ type beats_output_kafka_ssl = {
 }
 type beats_output_kafka = {
     'hosts' ? type_hostport []
-    'username' ? string
-    'password' ? string
-    'topic' ? string
+    'username' ? string_trimmed
+    'password' ? string_trimmed
+    'topic' ? string_trimmed
     'ssl' ? beats_output_kafka_ssl
-    'version' ? string
+    'version' ? string_trimmed
 };
 
 @documentation{
@@ -53,12 +53,12 @@ type beats_output_kafka = {
 type beats_output_elasticsearch = {
     'hosts' ? type_hostport[]
     'protocol' ? string with match(SELF, '^https?$')
-    'username' ? string
-    'password' ? string
+    'username' ? string_trimmed
+    'password' ? string_trimmed
     'worker' ? long(0..)
-    'index' ? string
-    'path' ? string
-    'proxy_url' ? string
+    'index' ? string_trimmed
+    'path' ? absolute_file_path
+    'proxy_url' ? type_URI
     'max_retries' ? long(0..)
     'bulk_max_size' ? long(0..)
     'timeout' ? long(0..)
@@ -77,9 +77,9 @@ type beats_output_logstash = {
     'worker' ? long(0..)
     'loadbalance' ? boolean
     'pipelining' ? long(0..)
-    'proxy_url' ? string
+    'proxy_url' ? type_URI
     'proxy_use_local_resolver' ? boolean
-    'index' ? string
+    'index' ? string_trimmed
     'ssl' ? beats_output_logstash_ssl
     'timeout' ? long(0..)
     'max_retries' ? long
@@ -90,8 +90,8 @@ type beats_output_logstash = {
     file(s) as output
 }
 type beats_output_file = {
-    'path' ? string
-    'filename' ? string
+    'path' ? absolute_file_path
+    'filename' ? absolute_file_path
     'rotate_every_kb' ? long(0..)
     'number_of_files' ? long(0..)
 };
@@ -121,7 +121,7 @@ type beats_output = {
     shipper geoip
 }
 type beats_shipper_geoip = {
-    'paths' ? string[]
+    'paths' ? absolute_file_path[]
 };
 
 @documentation{
@@ -133,8 +133,8 @@ type beats_logging_selector = string with match(SELF, '^(beat|publish|service|\*
     log to local files
 }
 type beats_logging_files = {
-    'path' ? string
-    'name' ? string
+    'path' ? absolute_file_path
+    'name' ? string_trimmed
     'rotateeverybytes' ? long(0..)
     'keepfiles' ? long(0..)
 };
@@ -147,7 +147,7 @@ type beats_logging = {
     'to_files' ? boolean
     'files' ? beats_logging_files
     'selectors' ? beats_logging_selector[]
-    'level' ? string with match(SELF, '^(critical|error|warning|info|debug)$')
+    'level' ? choice('critical', 'error', 'warning', 'info', 'debug')
 };
 
 @documenation{
@@ -156,8 +156,8 @@ type beats_logging = {
 type beats_service = {
     'output' : beats_output
     'logging' ? beats_logging
-    'name' ? string
-    'tags' ? string[]
+    'name' ? string_trimmed
+    'tags' ? string_trimmed[]
     'ignore_outgoing' ? boolean
     'refresh_topology_freq' ? long(0..)
     'topology_expire' ? long(0..)
@@ -169,9 +169,9 @@ type beats_service = {
     Handle logmessages spread over multiple lines
 }
 type beats_filebeat_input_multiline = {
-    'pattern' ? string
+    'pattern' ? string_trimmed
     'negate' ? boolean
-    'match' ? string with match(SELF, '^(after|before)$')
+    'match' ? choice('after', 'before')
     'max_lines' ? long(0..)
     'timeout' ? long(0..)
 };
@@ -180,15 +180,27 @@ type beats_filebeat_input_multiline = {
     Configure a input (source of certain class of data, can come multiple paths)
 }
 type beats_filebeat_input = {
-    'paths' : string[]
-    'encoding' ? string with
-    match(SELF,
-    '^(plain|utf-8|utf-16be-bom|utf-16be|utf-16le|big5|gb18030|gbk|hz-gb-2312|euc-kr|euc-jp|iso-2022-jp|shift-jis)$')
-    'type' ? string with match(SELF, '^(log|stdin)$')
-    'exclude_lines' ? string[]
-    'include_lines' ? string[]
-    'exclude_files' ? string[]
-    'fields' ? string{}
+    'paths' : absolute_file_path[]
+    'encoding' ? choice(
+        'big5',
+        'euc-jp',
+        'euc-kr',
+        'gb18030',
+        'gbk',
+        'hz-gb-2312',
+        'iso-2022-jp',
+        'plain',
+        'shift-jis',
+        'utf-16be',
+        'utf-16be-bom',
+        'utf-16le',
+        'utf-8',
+    )
+    'type' ? choice('log', 'stdin')
+    'exclude_lines' ? string_trimmed[]
+    'include_lines' ? string_trimmed[]
+    'exclude_files' ? absolute_file_path[]
+    'fields' ? string_trimmed{}
     'fields_under_root' ? boolean
     'ignore_older' ? long(0..)
     'scan_frequency' ? long(0..)
@@ -208,8 +220,8 @@ type beats_filebeat_input = {
 type beats_filebeat_filebeat = {
     'inputs' : beats_filebeat_input[]
     'prospectors' : beats_filebeat_input[]
-    'registry_file' ? string
-    'config_dir' ? string
+    'registry_file' ? absolute_file_path
+    'config_dir' ? absolute_file_path
 };
 
 @documentation{
@@ -228,8 +240,8 @@ type beats_filebeat_service = {
     mmrequota, mmlsfs, mmlsfilset, mmdf: paths to these executables
 }
 type beats_gpfsbeat_gpfsbeat = {
-    'period' : string  # is of the form 42s
-    'devices' : string[]
+    'period' : string_trimmed # is of the form 42s
+    'devices' : string_trimmed[]
     'mmrepquota' ? absolute_file_path
     'mmlsfs' ? absolute_file_path
     'mmlsfileset' ? absolute_file_path
@@ -260,7 +272,7 @@ type beats_topbeat_input_stats = {
 }
 type beats_topbeat_input = {
     'period' : long(0..) = 10
-    'procs' ? string[]
+    'procs' ? string_trimmed[]
     'stats' ? beats_topbeat_input_stats
 };
 
