@@ -1,0 +1,12 @@
+Cumulus frr configuration
+---
+/etc/frr/frr.conf
+quote
+---
+log syslog informational
+vrf some
+    ip route 2.3.4.5/20 12.13.14.15
+vrf vrf1
+    ip route 1.2.3.4/24 11.12.13.14
+    ip route 0.0.0.0/0 null0
+

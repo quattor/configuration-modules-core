@@ -1,0 +1,9 @@
+Cumulus frr configuration
+---
+/etc/cumulus/acl/policy.d/50_quattor.rules
+quote
+---
+\[iptables\]
+-A FORWARD --dport 80:90 --in-interface swp1 --jump ACCEPT --protocol tcp 
+-A INPUT --jump DROP --out-interface ! swp3,swp4 --protocol tcp --source ! 1.2.3.0/24 --sport ! 100 --tcp-flags SYN,ACK,FIN,RST SYN 
+
