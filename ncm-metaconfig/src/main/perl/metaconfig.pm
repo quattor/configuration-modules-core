@@ -210,7 +210,7 @@ sub run_shell_command
         $self->$report("run $type command '$command' ",
                        ($ec ? 'failed' : 'ok'),
                        ($error_on_fail ? '' : ' (no error on fail set)'),
-                       ,": stdout '$out'\n stderr '$err'",
+                       ": stdout '$out'\n stderr '$err'",
                        ($input ? "\n stdin '$input'" : ""));
         return $ec && $error_on_fail ? undef : 1;
     } else {
