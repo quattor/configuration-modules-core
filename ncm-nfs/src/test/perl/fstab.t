@@ -38,7 +38,7 @@ is_deeply(NCM::Component::nfs::fstab_add_defaults($fs1_orig), $fs1,
 
 my $fstab = "/etc/fstab";
 
-my $fstab_txt = <<EOF;
+my $fstab_txt = <<'EOF';
 # Comment
 # comment with ncm-nfs
 /dev00 /mntpt00       ext4                special,defaults                1
@@ -46,6 +46,7 @@ my $fstab_txt = <<EOF;
 /mydev0 /mount0 nfs nodefaults 10 100
 /mydevX /mountX none bind
 mydev1 /mount1 panfs super,awesome 50 100
+1.2.3.4@o2ib:5.6.7.8@o2ib:/thename /mymount lustre defaults,user_xattr,_netdev,retry=10 0 0
 # Extra trailing comment
 EOF
 
@@ -85,9 +86,18 @@ my $fs4 = {
     passno => 100,
 };
 
+my $fs5 = {
+    device => '1.2.3.4@o2ib:5.6.7.8@o2ib:/thename',
+    mountpoint => "/mymount",
+    fstype => "lustre",
+    options => "defaults,user_xattr,_netdev,retry=10",
+    freq => 0,
+    passno => 0,
+};
+
 
 my @parsed = map {NCM::Component::nfs::parse_fstab_line($_)} split("\n", $fstab_txt);
-is_deeply(\@parsed, [undef, undef, $fs0, $fs1, $fs2, $fs3, $fs4, undef],
+is_deeply(\@parsed, [undef, undef, $fs0, $fs1, $fs2, $fs3, $fs4, $fs5, undef],
           "fstab lines parsed as expected (comments are not added)");
 
 =head2 fstab
@@ -114,8 +124,13 @@ Test::Quattor::RegexpTest->new(
 
 ok($fstab_changed, "fstab method returns changed state");
 # Tests nfs and none/bind
-is_deeply($old, { '/mydev0' => $fs2, '/mydevX' => $fs3, 'mydev1' => $fs4 }, "old hashref as expected");
-is_deeply($old_order, [qw(/mydev0 /mydevX mydev1)], "old order as expected");
+is_deeply($old, {
+    '/mydev0' => $fs2,
+    '/mydevX' => $fs3,
+    'mydev1' => $fs4,
+    '1.2.3.4@o2ib:5.6.7.8@o2ib:/thename' => $fs5,
+    }, "old hashref as expected");
+is_deeply($old_order, [qw(/mydev0 /mydevX mydev1 1.2.3.4@o2ib:5.6.7.8@o2ib:/thename)], "old order as expected");
 
 my $nfs0 = {
     device => "/mydev0",
@@ -157,17 +172,23 @@ my $nfs3 = {
     action => 'mount',
 };
 
+my $nfs4 = {%$fs5, action => 'none'};
 
 is(NCM::Component::nfs::mount_action_new_old($nfs0, $fs2),
    'umount/mount', 'Different mountpoint returns umount/mount');
 
-is_deeply($new, { '/mydev0' => $nfs0, mydev1 => $nfs1, amydev2 => $nfs2, mydev3 => $nfs3 },
-          "new hashref as expected");
-is_deeply($new_order, [qw(/mydev0 mydev1 amydev2 mydev3)], "new order as expected");
+is_deeply($new, {
+    '/mydev0' => $nfs0,
+    mydev1 => $nfs1,
+    amydev2 => $nfs2,
+    mydev3 => $nfs3,
+    '1.2.3.4@o2ib:5.6.7.8@o2ib:/thename' => $nfs4,
+}, "new hashref as expected");
+is_deeply($new_order, [qw(/mydev0 mydev1 amydev2 mydev3 1.2.3.4@o2ib:5.6.7.8@o2ib:/thename)], "new order as expected");
 
 diag explain $Test::Quattor::caf_path;
 is_deeply($Test::Quattor::caf_path->{directory},
-          [map {[[$_],{}]} qw(/mount000 /mount1 /amount2 /mount3)],
+          [map {[[$_],{}]} qw(/mount000 /mount1 /amount2 /mount3 /mymount)],
           "fstab triggered _make_directory (no directories existed)");
 
 =head2 do_mount
