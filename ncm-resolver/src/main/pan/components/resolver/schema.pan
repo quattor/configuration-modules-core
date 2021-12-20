@@ -15,17 +15,15 @@ include 'quattor/schema';
   introspect these keys, just the type, so new keys can be added to this
   resource and the component will write them.
 }
-type type_resolver_options = {
+type resolver_component_options = {
     'rotate' ? boolean
     'timeout' ? long(0..30)
 };
 
-type component_resolver_type = {
+type resolver_component = {
     include structure_component
     'servers' : type_ip[..3]
     'search' ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
     'dnscache' : boolean = false
-    'options' ? type_resolver_options
+    'options' ? resolver_component_options
 };
-
-bind "/software/components/resolver" = component_resolver_type;
