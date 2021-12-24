@@ -29,58 +29,57 @@ declaration template components/pam/schema;
 
 include 'quattor/schema';
 
-type component_pam_options = extensible {
+type pam_component_options = extensible {
 };
 
-type component_listfile_acl = {
+type pam_component_listfile_acl = {
+
     "filename" : string
     "items" : string[]
 };
 
-type component_pam_module_stack = {
+type pam_component_module_stack = {
     "control" : string with match(SELF, '^(requisite|required|optional|sufficient|[^=]+=[^=]+(\s+[^=]+=[^=]+)*)$')
     "module" : string
-    "options" ? component_pam_options
+    "options" ? pam_component_options
     "options_list" ? string[]
-    "allow" ? component_listfile_acl
-    "deny" ? component_listfile_acl
+    "allow" ? pam_component_listfile_acl
+    "deny" ? pam_component_listfile_acl
 };
 
-type component_pam_service_type = {
-    "auth" ? component_pam_module_stack[]
-    "account" ? component_pam_module_stack[]
-    "password" ? component_pam_module_stack[]
-    "session" ? component_pam_module_stack[]
+type pam_component_service_type = {
+    "auth" ? pam_component_module_stack[]
+    "account" ? pam_component_module_stack[]
+    "password" ? pam_component_module_stack[]
+    "session" ? pam_component_module_stack[]
     "mode" ? string with match(SELF, "0[0-7][0-7][0-7]")
 };
 
-type component_pam_module = {
+type pam_component_module = {
     "path" ? string
 };
 
 # see pam_access(8)
 
-type component_pam_access_entry = {
+type pam_component_access_entry = {
     "permission" : string with match(SELF, "^[-+]$")
     "users" : string
         "origins" : string
 };
 
-type component_pam_access = {
+type pam_component_access = {
     "filename" : string
-    "acl" : component_pam_access_entry[]
-    "lastacl" : component_pam_access_entry
+    "acl" : pam_component_access_entry[]
+    "lastacl" : pam_component_access_entry
     "allowpos" : boolean
     "allowneg" : boolean
 };
 
-type component_pam_entry = {
+type pam_component = {
     include       structure_component
-    "modules" ? component_pam_module{}
-    "services" ? component_pam_service_type{}
+    "modules" ? pam_component_module{}
+    "services" ? pam_component_service_type{}
     "directory" ? string
     "acldir" ? string
-    "access" ? component_pam_access{}
+    "access" ? pam_component_access{}
 };
-
-bind "/software/components/pam" = component_pam_entry;
