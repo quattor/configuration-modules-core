@@ -35,6 +35,7 @@ type named_options = {
     "notify-source" ? named_source[]
     "directory" : string = "/var/named"
     "dump-file" : string = "/var/named/data/cache_dump.db"
+    @{run rndc stats before anything is written to the statistics file}
     "statistics-file" : string = "/var/named/data/named_stats.txt"
     "memstatistics-file" : string = "/var/named/data/named_mem_stats.txt"
     "bindkeys-file" : string = "/etc/named.iscdlv.key"
@@ -42,6 +43,7 @@ type named_options = {
     "empty-zones-enable" ? boolean
     "forward" : string = "first" with match(SELF,'^(first|only)$')
     "max-cache-size" ? long
+    "zone-statistics" ? boolean
 };
 
 @{

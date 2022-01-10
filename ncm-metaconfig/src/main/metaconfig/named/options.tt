@@ -27,10 +27,10 @@ listen-on port 53 {
 };
 [%- END %]
 
-[%- FOREACH i IN ['recursion', 'dnssec-enable', 'dnssec-validation', 'empty-zones-enable'] -%]
+[%- FOREACH i IN ['recursion', 'dnssec-enable', 'dnssec-validation', 'empty-zones-enable', 'zone-statistics'] -%]
 [%      i %] [% desc.$i ? "yes" : "no" %];
 [%  END -%]
-[%  FOREACH i IN ['directory', 'dump-file', 'memstatistics-file', 'bindkeys-file'] -%]
+[%  FOREACH i IN ['directory', 'dump-file', 'statistics-file', 'memstatistics-file', 'bindkeys-file'] -%]
 [%      i %] "[% desc.$i %]";
 [%  END -%]
 [%- FOREACH i IN ['dnssec-lookaside', 'max-cache-size'] -%]
