@@ -47,7 +47,9 @@ type named_options = {
     "memstatistics-file" : string = "/var/named/data/named_mem_stats.txt"
     "query-source" ? named_source[]
     "recursion" : boolean = true
+    @{run rndc stats before anything is written to the statistics file}
     "statistics-file" : string = "/var/named/data/named_stats.txt"
+    "zone-statistics" ? boolean
 };
 
 @{
