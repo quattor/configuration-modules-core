@@ -9,11 +9,11 @@ Function to validate all aii_opennebula hooks
 }
 function validate_aii_opennebula_hooks = {
     if (ARGC != 1) {
-        error(format("%s: requires only one argument", FUNCTION));
+        error("%s: requires only one argument", FUNCTION);
     };
 
     if (! exists(SELF[ARGV[0]])) {
-        error(format("%s: no %s hook found.", FUNCTION, ARGV[0]));
+        error("%s: no %s hook found.", FUNCTION, ARGV[0]);
     };
 
     hk = SELF[ARGV[0]];
@@ -22,7 +22,7 @@ function validate_aii_opennebula_hooks = {
     foreach(i; v; hk) {
         if (exists(v['module']) && v['module'] == OPENNEBULA_AII_MODULE_NAME) {
             if (found) {
-                error(format("%s: second aii_opennebula %s hook found", FUNCTION, ARGV[0]));
+                error("%s: second aii_opennebula %s hook found", FUNCTION, ARGV[0]);
             } else {
                 found = true;
                 ind = i;
@@ -31,12 +31,12 @@ function validate_aii_opennebula_hooks = {
     };
 
     if (! found) {
-        error(format("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]));
+        error("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]);
     };
 
     if (ind != length(hk) - 1) {
-        error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
-        FUNCTION, ARGV[0], ind, length(hk)));
+        error("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
+        FUNCTION, ARGV[0], ind, length(hk));
     };
 
     # validate the hook
@@ -61,7 +61,7 @@ type opennebula_vmtemplate_vnet = string{} with {
     # check if all entries in the map have a network interface
     foreach (k; v; SELF) {
         if (! exists("/system/network/interfaces/" + k)) {
-            error(format("entry: %s in the vnet map is not available from /system/network/interfaces tree", k));
+            error("entry: %s in the vnet map is not available from /system/network/interfaces tree", k);
         };
     };
     # check if all interfaces have an entry in the map
@@ -72,7 +72,7 @@ type opennebula_vmtemplate_vnet = string{} with {
             (! (exists(v['driver']) && (v['driver'] == 'bonding'))) && # bonding interface is no real device
             (! (match(k, '^ib\d+$') && exists("/hardware/cards/ib/" + k))) # It's ok if this is an IB device
             ) {
-            error(format("/system/network/interfaces/%s has no entry in the vnet map", k));
+            error("/system/network/interfaces/%s has no entry in the vnet map", k);
         };
     };
     true;
@@ -81,7 +81,7 @@ type opennebula_vmtemplate_vnet = string{} with {
 type opennebula_rdm_disk = string{} with {
     foreach (k; v; SELF) {
         if (! is_absolute_file_path(v)) {
-            error(format("entry: %s in the RDM disk map %s is not a valid file path", v, k));
+            error("entry: %s in the RDM disk map %s is not a valid file path", v, k);
         };
     };
     true;
@@ -91,13 +91,13 @@ type opennebula_vmtemplate_datastore = string{} with {
     # check is all entries in the map have a hardrive
     foreach (k; v; SELF) {
         if (! exists("/hardware/harddisks/" + k)) {
-            error(format("/hardware/harddisks/%s has no entry in the datastores map", k));
+            error("/hardware/harddisks/%s has no entry in the datastores map", k);
         };
     };
     # check if all interfaces have an entry in the map
     foreach (k; v; value("/hardware/harddisks")) {
         if (! exists(SELF[k])) {
-            error(format("entry: %s in the datastore map is not available from /hardware/harddisks tree", k));
+            error("entry: %s in the datastore map is not available from /hardware/harddisks tree", k);
         };
     };
     true;
@@ -109,13 +109,13 @@ function is_consistent_memorybacking = {
     foreach (memory; data; SELF) {
         foreach (memory2; data2; SELF) {
             if (SELF[memory] == SELF[memory2] && memory != memory2) {
-                error(format("entry: %s appears several times within memorybacking list", data));
+                error("entry: %s appears several times within memorybacking list", data);
             };
         };
     };
     foreach (memory; data; SELF) {
         if (! match('^(hugepages|nosharepages|locked)$', SELF[memory])) {
-            error(format("entry: %s is not a valid memorybacking value", data));
+            error("entry: %s is not a valid memorybacking value", data);
         };
     };
     true;
@@ -126,7 +126,7 @@ Type that checks if the network interface is available from the quattor tree
 }
 type valid_interface_ignoremac = string with {
     if (! exists("/system/network/interfaces/" + SELF)) {
-        error(format("ignoremac.interface: '%s' is not available from /system/network/interfaces tree", SELF));
+        error("ignoremac.interface: '%s' is not available from /system/network/interfaces tree", SELF);
     };
     true;
 };
