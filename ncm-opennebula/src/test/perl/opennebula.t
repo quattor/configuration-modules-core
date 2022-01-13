@@ -91,4 +91,10 @@ isa_ok($vnm_conf, "CAF::FileWriter", "vnm_conf CAF::FileWriter instance");
 like("$vnm_conf", qr{^:arp_cache_poisoning:\s{1}.+$}m, "vnm_conf has expected content");
 $vnm_conf->close();
 
+# pci conf file
+my $pci_conf = get_file($NCM::Component::OpenNebula::Server::PCI_CONF_FILE);
+isa_ok($pci_conf, "CAF::FileWriter", "pci_conf CAF::FileWriter instance");
+like("$pci_conf", qr{^:filter:$}m, "pci_conf has expected content");
+$pci_conf->close();
+
 done_testing();

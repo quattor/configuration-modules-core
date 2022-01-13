@@ -1057,6 +1057,61 @@ type opennebula_untouchables = {
     "vmgroups" ? string[]
 };
 
+@documentation{
+Type that sets the OpenNebula
+pci.conf file
+}
+type opennebula_pci = {
+    @{
+    This option specifies the main filters for PCI card monitoring. The format
+    is the same as used by lspci to filter on PCI card by vendor:device(:class)
+    identification. Several filters can be added as a list, or separated
+    by commas. The NULL filter will retrieve all PCI cards.
+
+    From lspci help:
+        -d [<vendor>]:[<device>][:<class>]
+            Show only devices with specified vendor, device and  class  ID.
+            The  ID's  are given in hexadecimal and may be omitted or given
+            as "*", both meaning "any value"
+
+    For example:
+    :filter:
+      - '10de:*'      # all NVIDIA VGA cards
+      - '10de:11bf'   # only GK104GL [GRID K2]
+      - '*:10d3'      # only 82574L Gigabit Network cards
+      - '8086::0c03'  # only Intel USB controllers
+    or
+    :filter: '*:*'    # all devices
+    or
+    :filter: '0:0'    # no devices
+
+    No devices filter is set by default.
+    }
+    "filter" : string[] = list('0:0')
+    @{
+    The PCI cards list restricted by the :filter option above can be even more
+    filtered by the list of exact PCI addresses (bus:device.func).
+
+    For example:
+        :short_address:
+            - '07:00.0'
+            - '06:00.0'
+    }
+    "short_address" ? string[]
+    @{
+    The PCI cards list restricted by the :filter option above can be even more
+    filtered by matching the device name against the list of regular expression
+    case-insensitive patterns.
+
+    For example:
+        :device_name:
+            - 'Virtual Function'
+            - 'Gigabit Network'
+            - 'USB.*Host Controller'
+            - '^MegaRAID'
+    }
+    "device_name" ? string[]
+};
 
 @documentation{
 Type to define ONE basic resources
@@ -1078,6 +1133,8 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    @{set pci pt filter configuration}
+    'pci' ? opennebula_pci
     @{set vnm remote configuration}
     'vnm_conf' ? opennebula_vnm_conf
     @{set ssh host multiplex options}

@@ -58,6 +58,9 @@ prefix "/software/components/opennebula/kvmrc";
 prefix "/software/components/opennebula/vnm_conf";
 "arp_cache_poisoning" = false;
 
+prefix "/software/components/opennebula/pci";
+"filter" = list('*:*');
+
 prefix "/software/components/opennebula";
 
 "clusters" = dict(
