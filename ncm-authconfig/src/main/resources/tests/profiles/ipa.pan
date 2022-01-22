@@ -6,6 +6,10 @@ prefix "/desc";
 'krb5/validate' = true;
 'krb5/realm' = 'MY.REALM';
 'krb5/canonicalize'  = false;
+'krb5/server'  = list('k1', 'k2');
+'krb5/backup_server'  = list('k3', 'k4');
+
+'ldap/deref_threshold' = 5;
 
 'dyndns/update' = false;
 'dyndns/ttl' = 123;
