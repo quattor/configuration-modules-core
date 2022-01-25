@@ -216,6 +216,7 @@ type httpd_ssl_global = {
     "cacertificatefile" ? string
     "carevocationfile" ? string
     "carevocationpath" ? string
+    "carevocationcheck" ? choice("chain", "leaf", "none")
 
     "verifydepth" ? long
 
