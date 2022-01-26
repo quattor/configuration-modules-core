@@ -17,6 +17,15 @@ type authconfig_sssd_ipa_krb5 = {
     'canonicalize' ? boolean
     'use_fast' ? string with match(SELF, '^(never|try|demand)$')
     'confd_path' ? absolute_file_path
+    'server' ? type_hostname[]
+    'backup_server'? type_hostname[]
+};
+
+@{
+    LDAP settings for the IPA access provider
+}
+type authconfig_sssd_ipa_ldap = {
+    'deref_threshold' ? long(0..)
 };
 
 @{
@@ -50,6 +59,7 @@ type authconfig_sssd_ipa_search_base = {
 }
 type authconfig_sssd_ipa = {
     'krb5' ? authconfig_sssd_ipa_krb5
+    'ldap' ? authconfig_sssd_ipa_ldap
     'dyndns' ? authconfig_sssd_ipa_dyndns
     'search_base' ? authconfig_sssd_ipa_search_base
 
