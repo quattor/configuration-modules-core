@@ -1,6 +1,6 @@
 template tcluster;
 
-variable MDSS = dict (
+variable MDS_NODES = dict (
     'ceph002', dict(
         'fqdn', 'ceph002.cubone.os',
     ),
@@ -26,7 +26,7 @@ bind '/software/components/ceph' = ceph_component;
 
 prefix '/software/components/ceph/cluster';
 
-'mdss' = MDSS;
+'mdss' = MDS_NODES;
 'monitors' = dict (
     'ceph001', MONITOR1,
     'ceph002', MONITOR2,
