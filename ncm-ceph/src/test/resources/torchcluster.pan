@@ -4,7 +4,7 @@ include 'components/ceph/v2/schema';
 bind '/software/components/ceph' = ceph_component;
 prefix '/software/components/ceph';
 'ceph_version' = '15.2.8';
-'release' ='Octopus';
+'release' = 'Octopus';
 
 prefix 'orchestrator/cluster';
 
@@ -18,7 +18,7 @@ variable CEPH_OSD_HOSTS = list('cephosd1.test.nw', 'cephosd2.test.nw');
             'hostname', host,
             'addr', host,
             'labels', list('mon', 'mds', 'mgr')
-           );
+        );
     };
     foreach(id; host; CEPH_OSD_HOSTS){
         hosts[host] = dict('hostname', host);
