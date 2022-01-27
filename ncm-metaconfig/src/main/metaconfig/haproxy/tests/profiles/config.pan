@@ -78,6 +78,11 @@ prefix 'frontends/irods-in';
 "acl/network_allowed" = "src -f /etc/haproxy/whitelist.static";
 "tcp-request" = list("connection reject if !network_allowed");
 "http-request" = list("redirect scheme https unless { ssl_fc }");
+"use_backend/0" = "some-bk if some_acl";
+"errorfile" = append(dict(
+    'code', 403,
+    'filename', "/some/abs/path.code.http",
+    ));
 
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
