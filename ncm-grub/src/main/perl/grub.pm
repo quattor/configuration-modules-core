@@ -101,43 +101,102 @@ Produces the following entry in grub.conf:
 
 =over
 
-=item grubby_args_options
+=item convert_grubby_arguments
 
-Given string C<args>, split and convert into grubby commandline options
+Given C<args> string or hashref, update C<arguments> hashref
+with add/remove hashrefs.
+
+If C<args> is a string, arguments prefixed with '-' are added to the remove hashref.
+
+Returns the updated C<arguments> hashref.
+
+=cut
+
+sub convert_grubby_arguments
+{
+    my ($self, $args) = @_;
+
+    $args = {} if ! defined($args);
+
+    my $arguments = {
+        add => {},
+        remove => {},
+    };
+
+    my $update = sub {
+        my ($remove, $name, $value) = @_;
+
+        my ($key, $other) = $remove ? ('remove', 'add') : ('add', 'remove');
+        if (exists($arguments->{$other}->{$name})) {
+            $self->warn("Found $name in current grub args to $other, but scheduled for $key");
+            delete $arguments->{$other}->{$name};
+        };
+        $arguments->{$key}->{$name} = $value;
+    };
+
+    if (ref($args) eq 'HASH') {
+        foreach my $name (sort keys %$args) {
+            my $remove = !$args->{$name}->{enable};
+            my $value = $args->{$name}->{value};
+            &$update($remove, $name, $value);
+        };
+    } else {
+        foreach my $arg (split(/\s+/, $args)) {
+            my $remove = $arg =~ s/^-//;
+            my ($name, $value) = split(/=/, $arg, 2);
+            &$update($remove, $name, $value);
+        }
+    };
+
+    return $arguments;
+}
+
+=item assemble_grubby_options
+
+Given C<arguments> hashref, return the add and remove option arrayrrefs.
+
+=cut
+
+sub _assemble_grubby_options
+{
+    my ($self, $arguments) = @_;
+
+    my $assemble = sub {
+        my $mode = shift;
+        my @options;
+        foreach my $key (sort keys %{$arguments->{$mode}}) {
+            my $value = $arguments->{$mode}->{$key};
+            push(@options, $key . ((defined($value) && $value ne "") ? "=$value" : ""));
+        }
+        return join(" ", @options);
+    };
+
+    return &$assemble("add"), &$assemble("remove");
+}
+
+=item grubby_arguments_options
+
+Given arguments hashref C<args>, convert into grubby commandline options
 to add and/or remove the arguments.
-Arguments prefixed with '-' are scheduled for removal
 If C<multiboot> is true, generate multiboot commandline options
 
 Returns a list of options.
 
 =cut
 
-sub grubby_args_options
+sub grubby_arguments_options
 {
-    my ($self, $args, $multiboot) = @_;
-
-    $args = '' if ! defined($args);
-
-    # howto remove an argument: precede with a -
-    my @add;
-    my @remove;
-
-    # kernelargs cannot be '0'
-    foreach my $arg (split(/\s+/, $args)) {
-        if ($arg =~ s/^-//) {
-            push(@remove, $arg);
-        } else {
-            push(@add, $arg);
-        }
-    }
+    my ($self, $arguments, $multiboot) = @_;
 
     my @options;
 
-    my $mb = $multiboot ? 'mb' : '';
-    push(@options, "--${mb}args", join(" ", @add)) if @add;
-    push(@options, "--remove-${mb}args", join(" ", @remove)) if @remove;
+    my ($add, $remove) = $self->_assemble_grubby_options($arguments);
 
-    $self->debug(1, "converted '$args' in options '@options'");
+    my $mb = $multiboot ? 'mb' : '';
+    push(@options, "--${mb}args", $add) if $add;
+    push(@options, "--remove-${mb}args", $remove) if $remove;
+
+    $self->debug(1, "converted add '$add' and remove '$remove' in options '@options'");
     return @options;
 }
 
@@ -244,7 +303,7 @@ sub serial_console
     if ($ctree) {
         my %sc = (%SERIAL_CONSOLE_DEFAULTS, %$ctree);
 
-        $cons = "console=ttyS$sc{unit},$sc{speed}$sc{parity}$sc{word}";
+        $cons = "ttyS$sc{unit},$sc{speed}$sc{parity}$sc{word}";
         $self->verbose("Serial console kernel option $cons");
 
         # Grub settings
@@ -264,7 +323,6 @@ sub serial_console
                                        SEEK_END);
     } else {
         $self->verbose('No serial console to configure');
-        $cons = '';
     }
 
     return $cons;
@@ -494,19 +552,23 @@ sub kernel
     my $path = $kernel->{kernelpath};
     my $fullpath = "$prefix$path";
 
-    if ($kernel->{kernelargs}) {
-        $args = $kernel->{kernelargs};
-        if ($cons) {
-            # by $cons we mean serial cons, so we should only sub serial entries.
-            $args =~ s{console=(ttyS[^ ]*)}{};
-            $args .= " $cons";
+    my $kernelarguments = $self->convert_grubby_arguments($kernel->{kernelargs} || {});
+    if ($cons) {
+        my $to_add = $kernelarguments->{add};
+        if (exists($to_add->{console})) {
+            $self->verbose("Replacing console kernelargs $to_add->{console} for kernel $kernel with derived value");
         }
+        if (exists($kernelarguments->{remove}->{console})) {
+            $self->error("Not removing console argument for kernel $kernel, using derived value");
+            delete $kernelarguments->{remove}->{console};
+        }
+        $to_add->{console} = $cons;
     }
 
-    my @options = $self->grubby_args_options($args);
+    my @options = $self->grubby_arguments_options($kernelarguments);
 
-    my $mbargs = $kernel->{mbargs} || '';
-    my @mboptions = $self->grubby_args_options($mbargs, 1);
+    my $mbarguments = $self->convert_grubby_arguments($kernel->{mbargs} || {});
+    my @mboptions = $self->grubby_arguments_options($mbarguments, 1);
 
     my $title = $kernel->{title} || $path;
 
@@ -627,8 +689,7 @@ sub default_options
     my $fullcontrol = $tree->{fullcontrol};
     $self->debug(2, "fullcontrol is ", $fullcontrol ? "true" : "false/not defined");
 
-    # With fullcontrol, any args starting with '-' whould be invalid anyway
-    my @options = $self->grubby_args_options($tree->{args});
+    my $arguments = $self->convert_grubby_arguments($tree->{args} || {});
 
     my $entries = $self->get_info($default);
     if (scalar @$entries > 1) {
@@ -647,7 +708,28 @@ sub default_options
 
         # Check if the arguments we want to add are the same we have
         # compare with commandline option
-        if (join(' ', @options) eq "--args $current") {
+        my $currargs = $self->convert_grubby_arguments($current);
+        my @cremove = sort keys %{$currargs->{remove}};
+        if (@cremove) {
+            $self->error("Arguments to remove '@cremove' found in current '$current', must be error in parser");
+        };
+
+        my %cadd = %{$currargs->{add}};
+        my %to_add = %{$arguments->{add}};
+        my $add_cmp = sub {
+            return unless keys %cadd == keys %to_add;
+            foreach my $key (sort keys %cadd) {
+                return unless exists($to_add{$key});
+                if (defined($cadd{$key})) {
+                    return unless defined($to_add{$key}) && $cadd{$key} eq $to_add{$key};
+                } else {
+                    return if defined($to_add{$key});
+                }
+            }
+            return 1;
+        };
+
+        if (&$add_cmp()) {
             $self->verbose("fullcontrol defaultkernel kernel $default no changes in the arguments required");
         } else {
             # Remove all the arguments
@@ -662,7 +744,14 @@ sub default_options
                 }
             }
 
-            # Add the arguments specified inside $kernelargs
+            # Add the arguments specified inside $args
+            my @remove = sort keys %{$arguments->{remove}};
+            if (@remove) {
+                $self->debug(1, "With fullcontrol, the remove arguments have no meaning: @remove");
+                $arguments->{remove} = {};
+            };
+
+            my @options = $self->grubby_arguments_options($arguments);
             if (@options) {
                 if ($self->grubby(['--update-kernel', $default, @options], success => 1)) {
                     $self->info("fullcontrol set args with '@options' for default kernel $default");
@@ -676,6 +765,7 @@ sub default_options
         }
     } else {
         # If we want no full control of the arguments
+        my @options = $self->grubby_arguments_options($arguments);
         if (@options) {
             if ($self->grubby(['--update-kernel', $default, @options], success => 1)) {
                 $self->info("set args with '@options' for default kernel $default");
