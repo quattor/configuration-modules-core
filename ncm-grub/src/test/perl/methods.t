@@ -7,6 +7,8 @@ use Test::Quattor::Object;
 use CAF::Object;
 use Test::MockModule;
 use Readonly;
+use EDG::WP4::CCM::Path qw(escape);
+
 
 my $mock = Test::MockModule->new('NCM::Component::grub');
 
@@ -346,12 +348,12 @@ command_history_reset();
 ok($cmp->default_options({arguments => {
     a => {enable => 1},
     b => {enable => 0},
-    c => {enable => 1, value => 'xyz'},
-    d => {enable => 0, value => 'ghi'},
+    escape("c_aa") => {enable => 1, value => 'xyz'},
+    escape("d.e.f") => {enable => 0, value => 'ghi'},
     }}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
 ok(command_history_ok([
    '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
-   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c=xyz --remove-args b d=ghi',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c_aa=xyz --remove-args b d.e.f=ghi',
 ]), 'grubby commands from default options non-fullcontrol from arguments');
 
 command_history_reset();

@@ -5,6 +5,7 @@ use CAF::Object qw(SUCCESS);
 use CAF::FileEditor;
 use CAF::FileWriter;
 use CAF::Process;
+use EDG::WP4::CCM::Path qw(unescape);
 
 use Readonly;
 use parent qw(NCM::Component CAF::Path);
@@ -135,9 +136,10 @@ sub convert_grubby_arguments
     };
 
     if (ref($args) eq 'HASH') {
-        foreach my $name (sort keys %$args) {
-            my $remove = !$args->{$name}->{enable};
-            my $value = $args->{$name}->{value};
+        foreach my $ename (sort keys %$args) {
+            my $name = unescape($ename);
+            my $remove = !$args->{$ename}->{enable};
+            my $value = $args->{$ename}->{value};
             &$update($remove, $name, $value);
         };
     } else {
