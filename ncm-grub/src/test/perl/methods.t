@@ -340,6 +340,21 @@ ok(command_history_ok([
 ]), 'grubby commands from default options non-fullcontrol');
 
 command_history_reset();
+# start with non-fullcontrol
+# no --info call
+# test with arguments instead of args
+ok($cmp->default_options({arguments => {
+    a => {enable => 1},
+    b => {enable => 0},
+    c => {enable => 1, value => 'xyz'},
+    d => {enable => 0, value => 'ghi'},
+    }}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
+ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c=xyz --remove-args b d=ghi',
+]), 'grubby commands from default options non-fullcontrol from arguments');
+
+command_history_reset();
 # fullcontrol, existing options will not match;
 # but there are current args to remove first
 # settings args with a - with fullcontrol is pointless; all current args are removed first

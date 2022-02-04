@@ -11,6 +11,13 @@ include 'pan/types';
  line, where the first field matches the file_user parameter.
 }
 
+type grub_argument = {
+    @{a value for the argument (creates key=value when present; only key is generated when missing}
+    "value" ? string
+    @{if false, do not add/update this argument and remove this option from the current list}
+    "enable" : boolean = true
+};
+
 type type_grub_password = {
     @{Sets if a password should be enabled in grub.conf. If this is false,
       any existing password will be removed. If this is not defined, the component
@@ -76,6 +83,8 @@ type grub_component = {
       If 'fullcontrol' is true then the current arguments passed to the
       kernel are substituted by the ones given in this entry.}
     "args" ? string
+    @{Same as args, but removal is flagged by setting enble=false}
+    "arguments" ? grub_argument{}
     @{Sets if we want a full control of the kernel arguments. The component default is 'false'.}
     "fullcontrol" ? boolean
     @{This is a list of kernels that should have entries in the grub
@@ -85,4 +94,9 @@ type grub_component = {
     @{pxeboot first: set the PXE boot device as first device. Only
       for supported platforms (e.g. UEFI)}
     'pxeboot' ? boolean
+} with {
+    if (exists(SELF['args']) && exists(SELF['arguments'])) {
+        error("Only one of args or arguments can be set for the default kernel boot arguments");
+    };
+    true;
 };

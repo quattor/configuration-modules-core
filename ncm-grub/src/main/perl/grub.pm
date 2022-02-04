@@ -689,7 +689,7 @@ sub default_options
     my $fullcontrol = $tree->{fullcontrol};
     $self->debug(2, "fullcontrol is ", $fullcontrol ? "true" : "false/not defined");
 
-    my $arguments = $self->convert_grubby_arguments($tree->{args} || {});
+    my $arguments = $self->convert_grubby_arguments($tree->{args} || $tree->{arguments} || {});
 
     my $entries = $self->get_info($default);
     if (scalar @$entries > 1) {
