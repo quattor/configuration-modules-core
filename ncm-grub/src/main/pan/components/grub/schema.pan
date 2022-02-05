@@ -12,8 +12,9 @@ include 'pan/types';
 }
 
 type grub_argument = {
-    @{a value for the argument (creates key=value when present; only key is generated when missing}
-    "value" ? string
+    @{a value for the argument (creates key=value when present; only key is generated when missing
+      (a list is converted in comma-separated list of strings).}
+    "value" ? element with is_string(SELF) || is_long(SELF) || is_list(SELF)
     @{if false, do not add/update this argument and remove this option from the current list}
     "enable" : boolean = true
 };

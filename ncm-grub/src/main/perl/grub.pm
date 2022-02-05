@@ -140,7 +140,8 @@ sub convert_grubby_arguments
             my $name = unescape($ename);
             my $remove = !$args->{$ename}->{enable};
             my $value = $args->{$ename}->{value};
-            &$update($remove, $name, $value);
+            # don't stringify $value to preserve undef
+            &$update($remove, $name, ref($value) eq 'ARRAY' ? join(',', @$value) : $value);
         };
     } else {
         foreach my $arg (split(/\s+/, $args)) {

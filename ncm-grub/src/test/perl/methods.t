@@ -36,6 +36,37 @@ is_deeply([$cmp->grubby_arguments_options($arguments, 1)],
           ['--mbargs', 'a c', '--remove-mbargs', 'b'],
           "args returns multiboot options list");
 
+=head1 convert_grubby_arguments
+
+=cut
+
+is_deeply($cmp->convert_grubby_arguments({}), {add =>{}, remove => {}}, "emptyhashref args returns empty add/remove hash");
+is_deeply($cmp->convert_grubby_arguments({
+    a => {enable => 1},
+    b => {enable => 0},
+    c => {enable => 1},
+}), {
+    add =>{a => undef, c => undef},
+    remove => {b => undef},
+}, "hashref args returns add/remove hash");
+
+is_deeply($cmp->convert_grubby_arguments({
+    escape("a.a.a") => {enable => 1, value => 0},
+    bbb => {enable => 0, value => [qw(x1 x2 x3)]},
+    ccc => {enable => 1, value => [qw(y3 y2 y1)]},
+    escape("d.d") => {enable => 0},
+}), {
+    add =>{
+        "a.a.a" => 0,
+        ccc => "y3,y2,y1",
+    },
+    remove => {
+        bbb => "x1,x2,x3",
+        "d.d" => undef,
+    }
+}, "hashref args returns add/remove hash complicated example");
+
+
 =head1 grub_conf / password
 
 =cut
