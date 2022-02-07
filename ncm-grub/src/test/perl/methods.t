@@ -53,12 +53,12 @@ is_deeply($cmp->convert_grubby_arguments({
 is_deeply($cmp->convert_grubby_arguments({
     escape("a.a.a") => {enable => 1, value => 0},
     bbb => {enable => 0, value => [qw(x1 x2 x3)]},
-    ccc => {enable => 1, value => [qw(y3 y2 y1)]},
+    ccc => {enable => 1, value => ["y3", "y 2", "y1"]},
     escape("d.d") => {enable => 0},
 }), {
     add =>{
         "a.a.a" => 0,
-        ccc => "y3,y2,y1",
+        ccc => '"y3,y 2,y1"',
     },
     remove => {
         bbb => "x1,x2,x3",

@@ -141,7 +141,14 @@ sub convert_grubby_arguments
             my $remove = !$args->{$ename}->{enable};
             my $value = $args->{$ename}->{value};
             # don't stringify $value to preserve undef
-            &$update($remove, $name, ref($value) eq 'ARRAY' ? join(',', @$value) : $value);
+            if (ref($value) eq 'ARRAY') {
+                $value = join(',', @$value);
+            }
+            # only after array join
+            if (defined($value)) {
+                $value = '"'.$value.'"' if $value =~ m/\s/;
+            }
+            &$update($remove, $name, $value);
         };
     } else {
         foreach my $arg (split(/\s+/, $args)) {

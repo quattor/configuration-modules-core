@@ -84,7 +84,7 @@ type grub_component = {
       If 'fullcontrol' is true then the current arguments passed to the
       kernel are substituted by the ones given in this entry.}
     "args" ? string
-    @{Same as args, but removal is flagged by setting enble=false}
+    @{Same as args, but removal is flagged by setting enable=false}
     "arguments" ? grub_argument{}
     @{Sets if we want a full control of the kernel arguments. The component default is 'false'.}
     "fullcontrol" ? boolean
