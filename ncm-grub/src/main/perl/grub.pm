@@ -105,7 +105,7 @@ Produces the following entry in grub.conf:
 =item convert_grubby_arguments
 
 Given C<args> string or hashref, update C<arguments> hashref
-with add/remove hashrefs.
+with add/remove hashrefs. Optional serial console kernel commandline option C<cons>
 
 If C<args> is a string, arguments prefixed with '-' are added to the remove hashref.
 
@@ -115,7 +115,7 @@ Returns the updated C<arguments> hashref.
 
 sub convert_grubby_arguments
 {
-    my ($self, $args) = @_;
+    my ($self, $args, $cons) = @_;
 
     $args = {} if ! defined($args);
 
@@ -157,6 +157,18 @@ sub convert_grubby_arguments
             &$update($remove, $name, $value);
         }
     };
+
+    if ($cons) {
+        my $to_add = $arguments->{add};
+        if (exists($to_add->{console})) {
+            $self->verbose("Replacing console $to_add->{console} with derived value $cons");
+        }
+        if (exists($arguments->{remove}->{console})) {
+            $self->error("Not removing console argument, using derived value $cons");
+            delete $arguments->{remove}->{console};
+        }
+        $to_add->{console} = $cons;
+    }
 
     return $arguments;
 }
@@ -562,22 +574,11 @@ sub kernel
     my $path = $kernel->{kernelpath};
     my $fullpath = "$prefix$path";
 
-    my $kernelarguments = $self->convert_grubby_arguments($kernel->{kernelargs} || {});
-    if ($cons) {
-        my $to_add = $kernelarguments->{add};
-        if (exists($to_add->{console})) {
-            $self->verbose("Replacing console kernelargs $to_add->{console} for kernel $kernel with derived value");
-        }
-        if (exists($kernelarguments->{remove}->{console})) {
-            $self->error("Not removing console argument for kernel $kernel, using derived value");
-            delete $kernelarguments->{remove}->{console};
-        }
-        $to_add->{console} = $cons;
-    }
+    my $kernelarguments = $self->convert_grubby_arguments($kernel->{kernelargs} || {}, $cons);
 
     my @options = $self->grubby_arguments_options($kernelarguments);
 
-    my $mbarguments = $self->convert_grubby_arguments($kernel->{mbargs} || {});
+    my $mbarguments = $self->convert_grubby_arguments($kernel->{mbargs} || {}, $cons);
     my @mboptions = $self->grubby_arguments_options($mbarguments, 1);
 
     my $title = $kernel->{title} || $path;
@@ -694,12 +695,12 @@ Configure kernel commandline options of default kernel
 
 sub default_options
 {
-    my ($self, $tree, $default) = @_;
+    my ($self, $tree, $default, $cons) = @_;
 
     my $fullcontrol = $tree->{fullcontrol};
     $self->debug(2, "fullcontrol is ", $fullcontrol ? "true" : "false/not defined");
 
-    my $arguments = $self->convert_grubby_arguments($tree->{args} || $tree->{arguments} || {});
+    my $arguments = $self->convert_grubby_arguments($tree->{args} || $tree->{arguments} || {}, $cons);
 
     my $entries = $self->get_info($default);
     if (scalar @$entries > 1) {
@@ -949,8 +950,7 @@ sub Configure
     }
 
     # if we get here, default is the current default kernel
-    # TODO: no search and replace for console settings like kernel method? i.e. pass $cons
-    $self->default_options($tree, $default);
+    $self->default_options($tree, $default, $cons);
 
     return if $tree->{pxeboot} && (!$self->pxeboot());
 

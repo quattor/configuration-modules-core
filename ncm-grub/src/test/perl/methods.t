@@ -301,7 +301,7 @@ ok($cmp->kernel($kernel, '/boot', 'myconsole'), 'kernel settings returns SUCCESS
 ok(command_history_ok([
   '/sbin/grubby --info /boot/vmlinuz-1.2.3',
   '/sbin/grubby --info /boot/dunno',
-  '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3 --args a c console=myconsole e f --remove-args b d --add-multiboot /boot/dunno --mbargs mba mbc --remove-mbargs mbb',
+  '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3 --args a c console=myconsole e f --remove-args b d --add-multiboot /boot/dunno --mbargs console=myconsole mba mbc --remove-mbargs mbb',
 ]), 'grubby commands from kernel settings update');
 
 
@@ -314,7 +314,7 @@ ok($cmp->kernel($kernel, '/boot', 'myconsole'), 'kernel settings returns SUCCESS
 ok(command_history_ok([
   '/sbin/grubby --info /boot/vmlinuz-1.2.3',
   '/sbin/grubby --info /boot/dunno',
-  '/sbin/grubby --add-kernel /boot/vmlinuz-1.2.3 --title superkernel --args a c console=myconsole e f --remove-args b d --initrd /boot/some/file --add-multiboot /boot/dunno --mbargs mba mbc --remove-mbargs mbb',
+  '/sbin/grubby --add-kernel /boot/vmlinuz-1.2.3 --title superkernel --args a c console=myconsole e f --remove-args b d --initrd /boot/some/file --add-multiboot /boot/dunno --mbargs console=myconsole mba mbc --remove-mbargs mbb',
 ]), 'grubby commands from kernel settings add');
 
 
