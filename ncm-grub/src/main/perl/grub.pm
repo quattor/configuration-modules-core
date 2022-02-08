@@ -109,13 +109,16 @@ with add/remove hashrefs. Optional serial console kernel commandline option C<co
 
 If C<args> is a string, arguments prefixed with '-' are added to the remove hashref.
 
-Returns the updated C<arguments> hashref.
+Returns C<arguments> hashref with add and remove hashrefs.
+
+If track is false, the values of add and remove hashrefs are the last encountered value.
+If track is true, the values of add and remove hashrefs are arraysrefs with all encountered values.
 
 =cut
 
 sub convert_grubby_arguments
 {
-    my ($self, $args, $cons) = @_;
+    my ($self, $args, $cons, $track) = @_;
 
     $args = {} if ! defined($args);
 
@@ -132,7 +135,19 @@ sub convert_grubby_arguments
             $self->warn("Found $name in current grub args to $other, but scheduled for $key");
             delete $arguments->{$other}->{$name};
         };
-        $arguments->{$key}->{$name} = $value;
+        my $action = $arguments->{$key};
+        if ($track) {
+            $action->{$name} = [] if (!exists($action->{$name}));
+            push(@{$action->{$name}}, $value);
+        } else {
+            if (exists($action->{$name})) {
+                my $cval = $action->{$name};
+                $self->verbose("Found existing value for argument $name: ",
+                               (defined($cval) ? $cval : 'undef'),
+                               " to be replaced with ", (defined($value) ? $value : 'undef'));
+            };
+            $action->{$name} = $value;
+        };
     };
 
     if (ref($args) eq 'HASH') {
@@ -686,6 +701,89 @@ sub get_info
     return \@entries;
 };
 
+=item current_arguments
+
+Get the current arguments. Return current arguments as string and as parsed hasref
+
+C<track> option is passed to C<convert_grubby_arguments>.
+
+=cut
+
+sub get_current_arguments
+{
+    my ($self, $default, $track) = @_;
+
+    my $entries = $self->get_info($default);
+    if (scalar @$entries > 1) {
+        $self->warn("More than one grub entry for kernel $default found.",
+                    " Only first entry / lowest index will be modified");
+    };
+
+    # Check current arguments
+    my $current = '';
+    if (@$entries && $entries->[0]->{args} && $entries->[0]->{args} =~ m/^\"(.*)\"$/) {
+        $current = $1;
+        $self->verbose("found current args for kernel $default: '$current'");
+    }
+
+    my $currargs = $self->convert_grubby_arguments($current, undef, $track);
+    my @cremove = sort keys %{$currargs->{remove}};
+    if (@cremove) {
+        $self->error("Arguments to remove '@cremove' found in current '$current', must be error in parser");
+    };
+
+    return $current, $currargs;
+}
+
+=item sanitize_arguments
+
+Sanitize the current arguments
+
+=cut
+
+sub sanitize_arguments
+{
+    my ($self, $default) = @_;
+
+    my ($current, $currargs) = $self->get_current_arguments($default, 1);
+
+    my $add = {};
+    my $remove = {};
+
+    # Not caring about remove, these are faulty anyway
+    # For all add that have more than one value
+    foreach my $name (sort keys %{$currargs->{add}}) {
+        my $values = $currargs->{add}->{$name};
+        my $len = scalar(@$values);
+        if ($len > 1) {
+            $self->info("Found $len values for $name, replacing with last one: ",
+                        join(" , ", (map {defined($_) ? $_ : 'undef'} @$values)));
+            $add->{$name} = $values->[$len - 1];
+            $remove->{$name} = undef;  # don't set a value, --remove-args will remove all occurences
+        };
+    };
+
+    # Remove it all first
+    my @removeoptions = $self->grubby_arguments_options({add => {}, remove => $remove});
+    my $txt = "all multiple occuring args from default kernel $default using @removeoptions";
+    if ($self->grubby(['--update-kernel', $default, @removeoptions], success => 1)) {
+        $self->verbose("sanitize removed $txt");
+
+        my @addoptions = $self->grubby_arguments_options({add => $add, remove => {}});
+        my $txt = "args to default kernel $default using @addoptions";
+        if ($self->grubby(['--update-kernel', $default, @addoptions], success => 1)) {
+            $self->verbose("sanitize added $txt");
+        } else {
+            $self->error("sanitize failed to add $txt");
+            return;
+        }
+    } else {
+        $self->error("sanitize failed to remove $txt");
+        return;
+    }
+
+    return 1
+};
 
 =item default_options
 
@@ -702,31 +800,16 @@ sub default_options
 
     my $arguments = $self->convert_grubby_arguments($tree->{args} || $tree->{arguments} || {}, $cons);
 
-    my $entries = $self->get_info($default);
-    if (scalar @$entries > 1) {
-        $self->warn("More than one grub entry for kernel $default found.",
-                    " Only first entry / lowest index will be modified");
-    };
+    my ($current, $currargs) = $self->get_current_arguments($default);
 
     # If we want full control of the arguments:
     if ($fullcontrol) {
-        # Check current arguments
-        my $current = '';
-        if (@$entries && $entries->[0]->{args} && $entries->[0]->{args} =~ m/^\"(.*)\"$/) {
-            $current = $1;
-            $self->debug(1, "fullcontrol found current args for kernel $default: '$current'");
-        }
-
         # Check if the arguments we want to add are the same we have
         # compare with commandline option
-        my $currargs = $self->convert_grubby_arguments($current);
-        my @cremove = sort keys %{$currargs->{remove}};
-        if (@cremove) {
-            $self->error("Arguments to remove '@cremove' found in current '$current', must be error in parser");
-        };
 
         my %cadd = %{$currargs->{add}};
         my %to_add = %{$arguments->{add}};
+
         my $add_cmp = sub {
             return unless keys %cadd == keys %to_add;
             foreach my $key (sort keys %cadd) {
@@ -951,6 +1034,9 @@ sub Configure
 
     # if we get here, default is the current default kernel
     $self->default_options($tree, $default, $cons);
+
+    # last optional step: sanitize
+    $self->sanitize_arguments($default) if $tree->{sanitize};
 
     return if $tree->{pxeboot} && (!$self->pxeboot());
 

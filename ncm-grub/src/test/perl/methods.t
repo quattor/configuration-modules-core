@@ -419,4 +419,20 @@ ok(command_history_ok([
    "$ebm -o 4,3,2",
 ]), "efibootmgr called, correct bootorder set");
 
+
+=head1 sanitize_arguments
+
+=cut
+
+command_history_reset();
+set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+                   "blablah\nargs=\"something special=2 special=1 something nothing\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
+ok($cmp->sanitize_arguments('/boot/vmlinuz-1.2.3.4'), "sanitize_arguments returns success");
+ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args something special=1',
+]), 'grubby commands from sanitize');
+
+
 done_testing;

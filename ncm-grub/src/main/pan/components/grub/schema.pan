@@ -88,6 +88,8 @@ type grub_component = {
     "arguments" ? grub_argument{}
     @{Sets if we want a full control of the kernel arguments. The component default is 'false'.}
     "fullcontrol" ? boolean
+    @{Sets if we want to sanitize final state of default kernel arguments. The component default is 'false'.}
+    "sanitize" ? boolean
     @{This is a list of kernels that should have entries in the grub
       configuration file. Each kernel is described by the following entries.}
     "kernels" ? type_kernel[]
