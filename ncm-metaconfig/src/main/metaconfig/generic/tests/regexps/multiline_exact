@@ -1,0 +1,8 @@
+Test multiline_exact string
+---
+/a/b/c
+quote
+---
+first
+second
+third
