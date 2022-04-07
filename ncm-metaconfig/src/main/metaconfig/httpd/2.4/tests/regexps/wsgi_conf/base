@@ -39,6 +39,8 @@ multiline
 ^\s{8}require method m1 m2$
 ^\s{8}require user user1 user2$
 ^\s{8}require valid-user$
+^\s{8}expiresactive on$
+^\s{8}expiresdefault "access plus 1 month"$
 ^\s{4}</directory>$
 ^\s{4}<directory /usr/lib/python3.6/site-packages/myapp>$
 ^\s{8}<files wsgi.py>$

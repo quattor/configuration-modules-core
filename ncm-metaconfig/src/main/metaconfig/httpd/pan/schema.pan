@@ -571,6 +571,12 @@ type httpd_browsermatch = {
     "names" : string[]
 };
 
+type httpd_expires = {
+    "active" : boolean
+    "default" ? string
+    "bytype" ? string{}
+};
+
 type httpd_directory = {
     include httpd_file
     "rewrite" ? httpd_rewrite
@@ -585,6 +591,7 @@ type httpd_directory = {
     "wsgi" ? httpd_wsgi_vhost
     "davrods" ? httpd_davrods
     "files" ? httpd_file[]
+    "expires" ? httpd_expires
 };
 
 type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';

@@ -1,0 +1,9 @@
+expiresactive [% desc.active ? 'on' : 'off' -%]
+[% IF desc.exists('default') %]
+expiresdefault "[% desc.default %]"
+[% END %]
+[% IF desc.exists('bytype') -%]
+[%      FOREACH pair in desc.bytype.pairs -%]
+expiresbytype "[% pair.key %]" "[% pair.value %]"
+[%      END -%]
+[% END %]
