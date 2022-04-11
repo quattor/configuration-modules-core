@@ -21,14 +21,14 @@ type elasticsearch_index_search = {
 
 
 type elasticsearch_translog = {
-    "flush_threshold_ops" : long = 5000 with {deprecated(0, "Removed in ES 5.0"); true;}
+    "flush_threshold_ops" : long = 5000 with {deprecated(0, "Removed in ES 5.0"); true; }
 };
 
 type elasticsearch_index = {
     "number_of_shards" ? long(0..)
-    "number_of_replicas" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true;}
+    "number_of_replicas" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true; }
     "search" ? elasticsearch_index_search
-    "refresh" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true;}
+    "refresh" ? long(0..) with {deprecated(0, "Removed in ES 5.0"); true; }
     "translog" ? elasticsearch_translog
 };
 
@@ -85,8 +85,10 @@ type elasticsearch_discovery_zen = {
 };
 
 type elasticsearch_discovery = {
-    "zen" ? elasticsearch_discovery_zen
+    "zen" ? elasticsearch_discovery_zen with {deprecated(0, "Removed in ES 8.1"); true; }
+    "seed_hosts" ? type_hostport[]
 };
+
 
 @{include version specific types at the end}
 include format('metaconfig/elasticsearch/schema_%s', METACONFIG_ELASTICSEARCH_VERSION);
