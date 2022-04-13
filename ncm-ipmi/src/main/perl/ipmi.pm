@@ -9,6 +9,15 @@ use CAF::Process;
 use constant IPMI_EXEC => "/usr/bin/ipmitool";
 use constant BASEPATH => "/software/components/ipmi/";
 
+sub ConfigureNetwork {
+  my ($self, $channel) = @_;
+  #Ensure IPMI over LAN is enabled
+  CAF::Process->new([IPMI_EXEC, qw(lan set), $channel, qw(access on)], log => $self)->run();
+  #Set user authentication to use MD5 security (about as good as it gets)
+  CAF::Process->new([IPMI_EXEC, qw(lan set), $channel, qw(auth USER MD5)], log => $self)->run();
+    return;
+}
+
 sub Configure
 {
 
@@ -21,10 +30,6 @@ sub Configure
 
   CAF::Process->new([qw(chkconfig ipmi on)], log => $self)->run();
   CAF::Process->new([qw(service ipmi restart)], log => $self)->run();
-  #Ensure IPMI over LAN is enabled
-  CAF::Process->new([IPMI_EXEC, qw(lan set), $channel, qw(access on)], log => $self)->run();
-  #Set user authentication to use MD5 security (about as good as it gets)
-  CAF::Process->new([IPMI_EXEC, qw(lan set), $channel, qw(auth USER MD5)], log => $self)->run();
 
   for my $user (@{$users}) {
       my $userid = $user->{userid};
@@ -46,16 +51,13 @@ sub Configure
                         log => $self)->run();
   }
 
-  CAF::Process->new([IPMI_EXEC, qw(mc reset cold)],
-                    log => $self)->run();
+  $self->ConfigureNetwork($channel);
+
+  # Reset BMC to ensure changes have been made active
+  CAF::Process->new([IPMI_EXEC, qw(mc reset cold)], log => $self)->run();
 
   return; # return code is not checked.
 }
 
-
-
-sub ConfigureNetwork {
-    return;
-}
 
 1; # Perl module requirement.
