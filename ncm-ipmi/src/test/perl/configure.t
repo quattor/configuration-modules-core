@@ -28,7 +28,7 @@ Readonly my $CMD => NCM::Component::ipmi::IPMI_EXEC;
 
 $cmp->Configure($cfg);
 
-my $cmd = get_command(join(" ", $CMD, qw(user set name), "userid", "login"));
+my $cmd = get_command(join(" ", $CMD, qw(user set name), "1", "login"));
 ok(defined($cmd), "ipmitool user set name was called");
 
 $cmd = get_command(join(" ", $CMD, qw(mc reset cold)));
