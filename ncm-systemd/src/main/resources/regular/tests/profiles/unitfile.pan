@@ -60,6 +60,7 @@ bind "/unitfile" = systemd_unitfile_config[];
         'MemoryLimit', 1024,
         'BlockIODeviceWeight', list(list('/var', '100'), list('/tmp', '50')),
         'ExecStartPre', list('/usr/bin/true', '-/bin/false'),
+        'ExecStopPost', '/usr/bin/true',
         ),
     'socket', dict(
         'ExecStartPre', list('/some/path arg1', '-/some/other/path arg2'),

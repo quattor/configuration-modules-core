@@ -27,6 +27,7 @@ contentspath=/unitfile/0
 ^ExecStart=/usr/bin/special$
 ^ExecStartPre=/usr/bin/true$
 ^ExecStartPre=-/bin/false$
+^ExecStopPost=/usr/bin/true$
 ^LimitNPROC=100$
 ^LimitSTACK=infinity$
 ^MemoryAccounting=yes$
