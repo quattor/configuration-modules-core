@@ -482,7 +482,7 @@ type ${project.artifactId}_component = {
         if (unit["type"] == "mount" && exists(unit["file"]) && exists(unit["file"]["config"]["mount"])) {
             goodname = systemd_make_mountunit(unit["file"]["config"]["mount"]["Where"]);
             if(goodname != name) {
-                error(format('Incorrect name for mount unit, the name must match Where: %s vs %s', name, goodname));
+                error('Incorrect name for mount unit, the name must match Where: %s vs %s', name, goodname);
             };
         };
     };
