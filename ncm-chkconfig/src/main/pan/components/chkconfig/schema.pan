@@ -49,6 +49,6 @@ type service_type = {
 
 type component_chkconfig_type = {
     include structure_component
-    "service" : service_type{}
+    "service" : service_type{} = dict()
     "default" ? string with match (SELF, '^(ignore|off)$')
 };
