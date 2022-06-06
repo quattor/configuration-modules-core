@@ -25,11 +25,11 @@ function chkconfig_allow_combinations = {
         'off', list("on", "reset"),
         'on', list("reset"),
     );
-    foreach(win_svt;svt_list;svt_map) {
+    foreach(win_svt; svt_list; svt_map) {
         if (exists(service[win_svt])) {
-            foreach(idx;svt;svt_list) {
+            foreach(idx; svt; svt_list) {
                 if (exists(service[svt])) {
-                    error(format("Cannot combine '%s' with '%s' (%s would win).", win_svt, svt, win_svt));
+                    error("Cannot combine '%s' with '%s' (%s would win).", win_svt, svt, win_svt);
                 };
             };
         };
@@ -49,6 +49,6 @@ type service_type = {
 
 type component_chkconfig_type = {
     include structure_component
-    "service" : service_type{}
+    "service" : service_type{} = dict()
     "default" ? string with match (SELF, '^(ignore|off)$')
 };
