@@ -84,7 +84,7 @@ type ${project.artifactId}_textrender_convert = {
     true;
 };
 
-type caf_service_action = string with match(SELF, '^(restart|reload|stop_sleep_start)$');
+type caf_service_action = string with match(SELF, '^(restart|condrestart|reload|stop_sleep_start)$');
 
 type ${project.artifactId}_actions = {
     @{Always run, happens before possible modifications.
