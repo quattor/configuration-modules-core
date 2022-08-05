@@ -35,21 +35,23 @@ EOD
 
 Readonly our $OSD_YAML => <<EOD;
 ---
-data_devices:
-  rotational: 0
-encrypted: true
 placement:
   host_pattern: fastnode*
 service_id: nvme_drives
 service_type: osd
+spec:
+  data_devices:
+    rotational: 0
+  encrypted: true
 ---
-data_devices:
-  all: true
-encrypted: true
 placement:
   host_pattern: '*'
 service_id: default_drive_group
 service_type: osd
+spec:
+  data_devices:
+    all: true
+  encrypted: true
 EOD
 
 Readonly our $HOSTS_YAML => <<EOD;

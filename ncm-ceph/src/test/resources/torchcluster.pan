@@ -31,13 +31,13 @@ variable CEPH_OSD_HOSTS = list('cephosd1.test.nw', 'cephosd2.test.nw');
 'mgr/placement/count' = 3;
 'mds/r0/service_id' = 'cephfs';
 'mds/r0/placement/label' = 'mds';
-'osd/r1/encrypted' = true;
 'osd/r1/placement/host_pattern' = '*';
-'osd/r1/data_devices/all' = true;
+'osd/r1/spec/data_devices/all' = true;
+'osd/r1/spec/encrypted' = true;
 'osd/r0/service_id' = 'nvme_drives';
-'osd/r0/encrypted' = true;
 'osd/r0/placement/host_pattern' = 'fastnode*';
-'osd/r0/data_devices/rotational' = 0;
+'osd/r0/spec/encrypted' = true;
+'osd/r0/spec/data_devices/rotational' = 0;
 
 prefix 'orchestrator/initcfg/global';
 'mon_host' = list('host1.aaa.be', 'host2.aaa.be', 'host3.aaa.be');

@@ -59,10 +59,7 @@ type ceph_orch_osd_devices = {
 
 @documentation{ ceph orchestrator spec for osds.
 See https://docs.ceph.com/en/latest/cephadm/drivegroups/#osd-service-specification }
-type ceph_orch_osd_spec = {
-    'service_type' : choice('osd') = 'osd'
-    'service_id' : string = 'default_drive_group'
-    'placement' : ceph_orch_osd_placement
+type ceph_orch_osd_drivegroup_spec = {
     'data_devices' ? ceph_orch_osd_devices
     'db_devices' ? ceph_orch_osd_devices
     'wal_devices' ? ceph_orch_osd_devices
@@ -71,6 +68,16 @@ type ceph_orch_osd_spec = {
     'wal_slots' ? long
     'filter_logic' ? choice('AND', 'OR')
     'osds_per_device' ? long
+    'crush_device_class' ? string
+};
+
+@documentation{ ceph orchestrator spec for osds.
+See https://docs.ceph.com/en/latest/cephadm/drivegroups/#osd-service-specification }
+type ceph_orch_osd_spec = {
+    'service_type' : choice('osd') = 'osd'
+    'service_id' : string = 'default_drive_group'
+    'placement' : ceph_orch_osd_placement
+    'spec' : ceph_orch_osd_drivegroup_spec
 };
 
 @documentation{ all specifications deployable with ceph orch apply -i }
