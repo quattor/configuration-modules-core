@@ -11,7 +11,7 @@ include 'quattor/aii/opennebula/schema';
 
 include 'components/opennebula/common';
 include 'components/opennebula/monitord';
-
+include 'components/opennebula/sched';
 
 type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
@@ -890,16 +890,6 @@ type opennebula_instance_types = {
 } = dict();
 
 @documentation{
-type for opennebula service common RPC attributes.
-}
-type opennebula_rpc_service = {
-    @{OpenNebula daemon RPC contact information}
-    "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
-    @{authentication driver to communicate with OpenNebula core}
-    "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
-};
-
-@documentation{
 Type that sets the OpenNebula
 sunstone_server.conf file
 }
@@ -1133,6 +1123,7 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    'sched' ? opennebula_sched
     @{set pci pt filter configuration}
     'pci' ? opennebula_pci
     @{set vnm remote configuration}

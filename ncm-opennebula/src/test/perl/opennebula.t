@@ -73,6 +73,12 @@ isa_ok($monitord, "CAF::FileWriter", "monitord.conf CAF::FileWriter instance");
 like("$monitord", qr{^DB\s?=\s?\[$}m, "monitord.conf has expected content");
 $monitord->close();
 
+# sched conf file
+my $sched = get_file($NCM::Component::opennebula::SCHED_CONF_FILE);
+isa_ok($sched, "CAF::FileWriter", "sched.conf CAF::FileWriter instance");
+like("$sched", qr{^COLD_MIGRATE_MODE\s?=\s?\d+$}m, "sched.conf has expected content");
+$sched->close();
+
 # oneflow conf file
 my $oneflow = get_file($NCM::Component::opennebula::ONEFLOW_CONF_FILE);
 isa_ok($oneflow, "CAF::FileWriter", "oneflow-server.conf CAF::FileWriter instance");

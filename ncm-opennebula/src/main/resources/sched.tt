@@ -1,0 +1,14 @@
+[%- sched_section = ['log', 'default_sched', 'default_ds_sched', 'default_nic_sched'] -%]
+[%- FOR pair IN sched.pairs -%]
+[%-    SWITCH pair.key -%]
+[%         CASE sched_section -%]
+[%             pair.key FILTER upper %] = [% INCLUDE 'opennebula/oned_level1.tt'
+                                      data=sched.${pair.key} -%]
+[%         CASE 'different_vnets' -%]
+[%             pair.key FILTER upper %] = "[% pair.value ? "YES" : "NO" %]"
+[%         CASE 'one_xmlrpc' -%]
+[%             pair.key FILTER upper %] = "[% pair.value %]"
+[%         CASE -%]
+[%             pair.key FILTER upper %] = [% pair.value %]
+[%     END -%]
+[%- END -%]

@@ -44,6 +44,8 @@ sub restart_opennebula_service {
     my $srv;
     if ($service eq "oned" or $service eq "monitord") {
         $srv = CAF::Service->new(['opennebula'], log => $self);
+    } elsif ($service eq "sched") {
+        $srv = CAF::Service->new(['opennebula-scheduler'], log => $self);
     } elsif ($service eq "sunstone") {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
     } elsif ($service eq "oneflow") {

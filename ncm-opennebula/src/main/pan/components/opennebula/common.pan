@@ -153,3 +153,13 @@ type opennebula_vm = {
     )
     "keep_snapshots" : boolean = true
 } = dict();
+
+@documentation{
+type for opennebula service common RPC attributes.
+}
+type opennebula_rpc_service = {
+    @{OpenNebula daemon RPC contact information}
+    "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
+    @{authentication driver to communicate with OpenNebula core}
+    "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
+};
