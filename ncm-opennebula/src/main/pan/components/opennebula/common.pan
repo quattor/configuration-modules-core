@@ -18,7 +18,7 @@ function is_consistent_database = {
         req = list('server', 'port', 'user', 'passwd', 'db_name');
         foreach(idx; attr; req) {
             if(!exists(db[attr])) {
-                error(format("Invalid mysql db! Expected '%s' ", attr));
+                error("Invalid mysql db! Expected '%s' ", attr);
                 return(false);
             };
         };
@@ -38,7 +38,7 @@ function is_consistent_datastore = {
         req = list('disk_type', 'bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
         foreach(idx; attr; req) {
             if(!exists(ds[attr])) {
-                error(format("Invalid ceph datastore! Expected '%s' ", attr));
+                error("Invalid ceph datastore! Expected '%s' ", attr);
             };
         };
     };
@@ -77,7 +77,7 @@ function is_consistent_vnet = {
     # if not the bridge is mandatory
     } else {
         if (!exists(vn['bridge'])) {
-            error(format("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']));
+            error("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']);
         };
     };
     true;
