@@ -77,7 +77,7 @@ sub detect_opennebula_version
     my $version;
     my $msg = '';
     # untaint value
-    if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+.\d+)?$)/m ) {
+    if ("$fh" =~ m/^(\d+\.\d+\.\d+)?$/m ) {
         local $@;
         eval {
             $version = version->new($1);
