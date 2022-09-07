@@ -1,0 +1,13 @@
+[%- IF value.is_boolean -%]
+[%-     value ? 'true' : 'false' -%]
+[%- ELSIF CCM.is_list(value) -%]
+[
+[%      FOREACH item IN value -%]
+[%          FILTER indent -%]
+[%              INCLUDE 'metaconfig/telegraf/value.tt' value=item -%],
+[%          END -%]
+[%      END -%]
+]
+[%-  ELSE -%]
+[%-     value.is_string ? '"' _ value _ '"' : value -%]
+[%-  END -%]
