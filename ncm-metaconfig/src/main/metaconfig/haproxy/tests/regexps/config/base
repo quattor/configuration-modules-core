@@ -25,9 +25,12 @@ Test for config
 ^\s{4}retries\s3$
 ^\s{4}timeout\scheck\s3500$
 ^\s{4}timeout\sclient\s10000$
+^\s{4}timeout\sclient-fin\s30000$
 ^\s{4}timeout\sconnect\s3500$
 ^\s{4}timeout\squeue\s3500$
 ^\s{4}timeout\sserver\s10000$
+^\s{4}timeout\sserver-fin\s30000$
+^\s{4}timeout\stunnel\s3600000$
 ^listen\sstats\s:\s$
 ^\s{4}mode\shttp$
 ^\s{4}stats\senabled\s$

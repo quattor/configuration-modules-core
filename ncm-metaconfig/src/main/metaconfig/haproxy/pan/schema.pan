@@ -66,6 +66,9 @@ type haproxy_service_timeouts = {
     'connect' : long = 3500
     'client' : long = 10000
     'server' : long = 10000
+    'client-fin' ? long
+    'server-fin' ? long
+    'tunnel' ? long
 };
 
 @documentation {
