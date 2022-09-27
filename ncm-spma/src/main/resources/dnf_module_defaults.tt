@@ -1,0 +1,8 @@
+---
+document: modulemd-defaults
+version: [% modulemd_version.defined ? modulemd_version : "1" %]
+data:
+  module: [% name %]
+  stream: "[% stream %]"
+  profiles:
+    [% stream %]: [[% profiles.join(",") %]]
