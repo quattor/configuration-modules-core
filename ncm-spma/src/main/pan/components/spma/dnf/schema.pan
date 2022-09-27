@@ -22,4 +22,14 @@ type component_spma_dnf = {
     "run"                ? boolean  # Run the transaction after configuring DNF
 };
 
+@{DNF module structure. To be used as dict, with name as key.
+ to set default profiles for modules not enabled by default and change existing defaults.
+}
+type component_spma_dnf_module_defaults = {
+    'stream'   : string_trimmed
+    'profiles' ?  string_trimmed[]
+    @documentation{ defaults to 1 in component, provided in-case it changes in a future release }
+    'modulemd_version' : long(1..) = 1
+};
 bind "/software/components/spma" = component_spma_dnf;
+bind '/software/modules' = component_spma_dnf_module_defaults{};
