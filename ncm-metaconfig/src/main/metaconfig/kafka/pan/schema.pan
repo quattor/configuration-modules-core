@@ -8,9 +8,11 @@ type kafka_server_properties = {
     "broker.id" : long(0..)
     "group.initial.rebalance.delay.ms" ? long(0..)
     "inter.broker.listener.name" ? string
+    "inter.broker.protocol.version" ? string with match(SELF, '^\d+\.\d+$')
     "listener.security.protocol.map" ? string
     "listeners" ? string = "PLAINTEXT://localhost:9092"
     "log.dirs" : absolute_file_path
+    "log.message.format.version" ? string with match(SELF, '^\d+\.\d+$')
     "log.retention.hours" ? long(0..)
     "log.retention.check.interval.ms" ? long(0..)
     "log.segment.bytes" ? long(0..)
