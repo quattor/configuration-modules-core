@@ -78,4 +78,9 @@ type autofs_component = {
     mainly an internal name but it will be used to build the default map name.}
     "maps" ? autofs_map_type{}
     "conf" ? autofs_conf
+} with {
+    maps = is_defined(SELF['maps']) && length(SELF['maps']) > 0;
+    amd_mounts = is_defined(SELF['conf']['mountpoints']) && length(SELF['conf']['mountpoints']) > 0;
+    if (!maps && !amd_mounts) error('No autofs maps or amd style mounts have been defined');
+    true;
 };
