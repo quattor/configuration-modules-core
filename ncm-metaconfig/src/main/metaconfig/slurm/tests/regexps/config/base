@@ -26,6 +26,7 @@ CryptoType=crypto/munge
 DisableRootJobs=YES
 EnforcePartLimits=NO
 FirstJobId=1
+GresTypes=gpu,mps
 GroupUpdateForce=NO
 GroupUpdateTime=600
 JobCheckpointDir=/var/spool/slurm/checkpoint
