@@ -1,0 +1,12 @@
+<?php
+
+final class Config extends DefaultConfig
+{
+    public static $DB_HOST = [% dbhost %];
+    public static $DB_NAME = [% dbname %];
+    public static $DB_USER = [% dbuser %];
+    public static $DB_PASSWORD = [% dbpassword %];
+    public static $PAKITI_NAME = [% name %];
+}
+
+?>

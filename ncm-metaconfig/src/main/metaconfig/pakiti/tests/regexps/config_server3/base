@@ -1,0 +1,17 @@
+Base test for config_server3
+---
+/etc/pakiti/Config.php
+multiline
+---
+\<\?php
+
+final class Config extends DefaultConfig
+\{
+    public static \$DB_HOST = "localhost";
+    public static \$DB_NAME = "pakiti";
+    public static \$DB_USER = "pakiti";
+    public static \$DB_PASSWORD = "password";
+    public static \$PAKITI_NAME = "pakiti.wn.iihe.ac.be";
+\}
+
+\?\>
