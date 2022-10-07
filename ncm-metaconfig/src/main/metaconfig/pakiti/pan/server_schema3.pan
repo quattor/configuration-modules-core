@@ -4,8 +4,8 @@ include 'pan/types';
 
 type pakiti_server3 = {
     'dbhost' : type_hostname
-    'dbname' : string = 'pakiti'
-    'dbpassword' : string
-    'dbuser': string = 'pakiti'
-    'name' : string
+    'dbname' : string_trimmed = 'pakiti'
+    'dbpassword' : string_trimmed
+    'dbuser': string_trimmed = 'pakiti'
+    'name' : string_trimmed
 };
