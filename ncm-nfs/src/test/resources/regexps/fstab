@@ -3,7 +3,7 @@ modified fstab entry
 quote
 ---
 # File edited by ncm-nfs
-# Only nfs/nfs4/panfs/ceph filesystems and bind mounts managed by ncm-nfs component.
+# Only nfs/nfs4/panfs/ceph/lustre filesystems and bind mounts managed by ncm-nfs component.
 # Comment
 /dev00 /mntpt00       ext4                special,defaults                1
 /dev01 /mntpt01 ext3
@@ -12,3 +12,4 @@ quote
 mydev1 /mount1 panfs super,awesome 5 100
 amydev2 /amount2 none bind 0 0
 mydev3 /mount3 ceph name=user,secretfile=/etc/ceph/secret 0 0
+1.2.3.4@o2ib:5.6.7.8@o2ib:/thename /mymount lustre defaults,user_xattr,_netdev,retry=10 0 0
