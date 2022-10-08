@@ -30,7 +30,6 @@ multiline
 ^\s{8}sslrequiressl$
 ^\s{8}require not all granted$
 ^\s{8}require not ip 1.2.3.4$
-^\s{8}require not negate 1$
 ^\s{8}require all denied$
 ^\s{8}require env VARX VARY$
 ^\s{8}require expr some valid expression$
