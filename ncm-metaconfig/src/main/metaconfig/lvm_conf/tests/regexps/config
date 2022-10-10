@@ -1,0 +1,27 @@
+Base test for lvm.conf
+---
+multiline
+/etc/lvm/lvmlocal.conf
+---
+^config \{$
+^\}$
+^local \{$
+^\}$
+^dmeventd \{$
+^\}$
+^activation \{$
+^    activation_mode=degraded$
+^\}$
+^global \{$
+^    event_activation=0$
+^\}$
+^shell \{$
+^\}$
+^backup \{$
+^\}$
+^log \{$
+^\}$
+^allocation \{$
+^\}$
+^devices \{$
+^\}$

@@ -1,0 +1,56 @@
+# Written by ncm-metaconfig, do not modify
+#
+# Local configuration file for the LVM2 system.
+# Settings in this file override equivalent ones in lvm.conf
+# Refer to 'man lvm.conf' for further information and settings
+#
+config {
+[% FOREACH key IN config.keys.sort -%]
+    [% key %]=[% config.$key %]
+[% END -%]
+}
+local {
+[% FOREACH key IN local.keys.sort -%]
+    [% key %]=[% local.$key %]
+[% END -%]
+}
+dmeventd {
+[% FOREACH key IN dmeventd.keys.sort -%]
+    [% key %]=[% dmeventd.$key %]
+[% END -%]
+}
+activation {
+[% FOREACH key IN activation.keys.sort -%]
+    [% key %]=[% activation.$key %]
+[% END -%]
+}
+global {
+[% FOREACH key IN global.keys.sort -%]
+    [% key %]=[% global.$key %]
+[% END -%]
+}
+shell {
+[% FOREACH key IN shell.keys.sort -%]
+    [% key %]=[% shell.$key %]
+[% END -%]
+}
+backup {
+[% FOREACH key IN backup.keys.sort -%]
+    [% key %]=[% backup.$key %]
+[% END -%]
+}
+log {
+[% FOREACH key IN log.keys.sort -%]
+    [% key %]=[% log.$key %]
+[% END -%]
+}
+allocation {
+[% FOREACH key IN allocation.keys.sort -%]
+    [% key %]=[% allocation.$key %]
+[% END -%]
+}
+devices {
+[% FOREACH key IN devices.keys.sort -%]
+    [% key %]=[% devices.$key %]
+[% END -%]
+}
