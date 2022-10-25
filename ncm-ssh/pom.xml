@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>ssh</artifactId>
   <packaging>pom</packaging>
-  <version>21.12.1-SNAPSHOT</version>
+  <version>21.12.1-rc3</version>
   <name>ncm-ssh</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
