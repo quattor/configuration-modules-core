@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>hostsfile</artifactId>
   <packaging>pom</packaging>
-  <version>21.12.1-rc4-SNAPSHOT</version>
+  <version>21.12.1</version>
   <name>ncm-hostsfile</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
