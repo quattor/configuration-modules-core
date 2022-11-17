@@ -86,6 +86,13 @@ type httpd_kerberos = {
     "savecredentials" : boolean = false
 };
 
+type httpd_oidc_state_cookies = {
+    @{maximum number of state cookies}
+    "number" : long
+    @{delete oldest state cookies}
+    "delete" : boolean
+};
+
 @{OpenID Connect configuration for mod_auth_openidc
     https://github.com/pingidentity/mod_auth_openidc
 }
@@ -108,6 +115,8 @@ type httpd_oidc = {
     "providertokenendpointauth" ? type_absoluteURI
     "provideruserinfoendpoint" ? type_absoluteURI
     "providerjwksuri" ? type_absoluteURI
+
+    "statemaxnumberofcookies" ? httpd_oidc_state_cookies
 } with {
     if (!exists(SELF['providermetadataurl'])) {
         provs = list('issuer', 'authorizationendpoint', 'tokenendpoint',

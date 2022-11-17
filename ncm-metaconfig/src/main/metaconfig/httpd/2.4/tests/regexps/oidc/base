@@ -11,3 +11,4 @@ Base test for oidc section of ssl.conf
 ^\s{4}oidcredirecturi https://my.org/service$
 ^\s{4}oidcresponsetype "id_token token2"$
 ^\s{4}oidcscope "openid email profile"$
+^\s{4}oidcstatemaxnumberofcookies 10 true$
