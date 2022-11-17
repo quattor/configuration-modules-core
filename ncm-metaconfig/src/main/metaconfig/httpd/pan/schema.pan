@@ -45,8 +45,8 @@ type httpd_option_plusminus_none = string[] with {
     foreach(idx; opt; SELF) {
         pm = match(opt, '^(\+|-)');
         if (to_long(plusminus) != to_long(pm)) {
-            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s',
-                opt, SELF[0]));
+            error('Either all options must start with + or -, or no option may: got %s compared with first %s',
+                opt, SELF[0]);
         };
     };
     true;
