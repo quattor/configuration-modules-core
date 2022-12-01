@@ -8,10 +8,10 @@ jobs:
     container: centos:7
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Determine hash for caching key
       id: cachekeystep
-      run: echo ::set-output name=pomcachekey::${{ hashFiles('**/pom.xml') }}
+      run: echo "pomcachekey=${{ hashFiles('**/pom.xml') }}" >> $GITHUB_ENV
     - name: set up dependencies
       run: |
         yum -y install epel-release http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
@@ -36,10 +36,10 @@ jobs:
         tar -xvzf template-library-core-master.tar.gz
         cd -
     - name: Cache Maven packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /tmp/m2
-        key: ${{ runner.os }}-m2-${{ steps.cachekeystep.outputs.pomcachekey }}
+        key: ${{ runner.os }}-m2-${{ env.pomcachekey }}
         restore-keys: ${{ runner.os }}-m2-
     - name: run tests
       run: |
