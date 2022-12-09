@@ -46,6 +46,10 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/c
                 "method", list("m1", "m2"),
             ),
         ),
+        "expires", dict(
+            "active", true,
+            "default", "access plus 1 month",
+        ),
     );
     append(l);
     append(dict(
