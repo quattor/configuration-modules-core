@@ -45,8 +45,8 @@ type httpd_option_plusminus_none = string[] with {
     foreach(idx; opt; SELF) {
         pm = match(opt, '^(\+|-)');
         if (to_long(plusminus) != to_long(pm)) {
-            error(format('Either all options must start with + or -, or no option may: got %s compared with first %s',
-                opt, SELF[0]));
+            error('Either all options must start with + or -, or no option may: got %s compared with first %s',
+                opt, SELF[0]);
         };
     };
     true;
@@ -86,6 +86,13 @@ type httpd_kerberos = {
     "savecredentials" : boolean = false
 };
 
+type httpd_oidc_state_cookies = {
+    @{maximum number of state cookies}
+    "number" : long
+    @{delete oldest state cookies}
+    "delete" : boolean
+};
+
 @{OpenID Connect configuration for mod_auth_openidc
     https://github.com/pingidentity/mod_auth_openidc
 }
@@ -108,6 +115,8 @@ type httpd_oidc = {
     "providertokenendpointauth" ? type_absoluteURI
     "provideruserinfoendpoint" ? type_absoluteURI
     "providerjwksuri" ? type_absoluteURI
+
+    "statemaxnumberofcookies" ? httpd_oidc_state_cookies
 } with {
     if (!exists(SELF['providermetadataurl'])) {
         provs = list('issuer', 'authorizationendpoint', 'tokenendpoint',

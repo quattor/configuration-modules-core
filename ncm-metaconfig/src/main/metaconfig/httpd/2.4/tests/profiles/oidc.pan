@@ -22,3 +22,6 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/ssl.conf}/co
 "redirecturi" = "https://my.org/service";
 
 "providermetadataurl" = "https://accounts.google.com/.well-known/openid-configuration";
+
+"statemaxnumberofcookies/number" = 10;
+"statemaxnumberofcookies/delete" = true;
