@@ -12,6 +12,9 @@ type ceph_osd_config = {
     'osd_scrub_load_threshold' ? double(0..)
     'osd_scrub_min_interval' ? double(0..)
     'osd_scrub_max_interval' ? double(0..)
+    'osd_deep_scrub_large_omap_object_key_threshold' ? long(0..)
+    'osd_op_queue' ? choice('wpq', 'prioritized', 'debug_random') = 'wpq'
+    'osd_op_queue_cut_off' ? choice('low', 'high', 'debug_random') = 'low'
 };
 
 @documentation{
