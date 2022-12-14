@@ -259,6 +259,9 @@ type structure_component_syslogng = {
     "destinations" : structure_syslogng_destinations{}
     "filters" ? structure_syslogng_filters
     "log_rules" : structure_syslogng_log_rule[]
+} with {
+    deprecated(0, "ncm-syslogng is deprecated and will be removed in a future Quattor release");
+    true;
 };
 
 bind "/software/components/syslogng" = structure_component_syslogng;
