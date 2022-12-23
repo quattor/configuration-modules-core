@@ -110,15 +110,11 @@ function valid_ntpd_logconfig_list = {
     foreach (idx; configkeyword; ARGV[0]) {
         # all keywords can be prefixed with +-=
         if (!match(configkeyword, '^(\=|\-|\+)\w+')) {
-            error("invalid logconfig value "
-                + to_string(ARGV[0])
-                + " all configkeywords must precede by +,-, or =");
+            error("invalid logconfig value %s all configkeywords must precede by +,-, or =", ARGV[0]);
         };
         configkeyword = substr("configkeyword", 1);
         if (!match(configkeyword, '^(all)?(clock|peer|sys|sync)?(status|events|statistics)?')) {
-            error("invalid logconfig value "
-                + to_string(ARGV[0])
-                + " failed to match regex '" + match_logkw + "'");
+            error("invalid logconfig value %s failed to match regex '%s'", ARGV[0], match_logkw);
         };
     };
     true;
