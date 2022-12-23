@@ -101,7 +101,13 @@ type ntpd_system_options = {
 }
 type ntpd_interface_options = {
     "action" : choice("listen", "ignore", "drop")
-    "match" : string
+    "match" : string_trimmed with {
+        match(SELF, '^(all|ipv4|ipv6|wildcard)$')
+        || is_ip(SELF)
+        || is_ipv4_netmask_pair(SELF)
+        || is_ipv6_network_block(SELF)
+        || path_exists(format('/system/network/interfaces/%s', SELF));
+    }
 };
 
 # logging configuration
