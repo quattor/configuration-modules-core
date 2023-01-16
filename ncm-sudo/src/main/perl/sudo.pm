@@ -2,7 +2,7 @@
 
 =head1 DESCRIPTION
 
-The I<sudo> component manages the sudo configuracion, I.E: edits
+The I<sudo> component manages the sudo configuration, I.E: edits
 C<< /etc/sudoers >>. It doesn't provide as strict and nice syntax and
 semantic correction as visudo(8) does, but it tries to warn on most
 common users' mistakes.
