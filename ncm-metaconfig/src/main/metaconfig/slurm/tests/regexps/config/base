@@ -43,6 +43,7 @@ MpiDefault=none
 PrivateData=jobs,accounts,nodes,reservations,usage
 ProctrackType=proctrack/cgroup
 ReturnToService=1
+ScronParameters=enable
 
 # logging
 

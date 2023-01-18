@@ -215,6 +215,10 @@ type slurm_communication_params = {
     'NoInAddrAny' ? boolean
 };
 
+type slurm_cron_parameters = {
+    'enable' ? boolean
+};
+
 type slurm_conf_control = {
     'AllowSpecResourcesUsage' ? long(0..1)  # actually a boolean, defaults to 0 for non-Cray systems
     'AuthAltParameters' ? slurm_authalt_params
@@ -308,6 +312,7 @@ type slurm_conf_control = {
     'SallocDefaultCommand' ? string
     'SbcastParameters' ? slurm_sbcast_parameters
     'BcastExclude' ? absolute_file_path[]
+    'ScronParameters' ? slurm_cron_parameters
     'SrunPortRange' ? string   # ideally the range contains at least 1000 ports
     'TmpFS' ? absolute_file_path
     'TrackWCKey' ? boolean

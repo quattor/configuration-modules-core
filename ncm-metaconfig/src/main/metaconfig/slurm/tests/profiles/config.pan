@@ -55,7 +55,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #RebootProgram=
 "ReturnToService" = 1;
 #SallocDefaultCommand=
-
+"ScronParameters" = dict("enable", true);
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/process";
 
