@@ -529,12 +529,11 @@ sub Configure
         return 0;
     }
 
-    # Do not remove currently running kernel.
+    # get currently running kernel version.
     my $kvers = (POSIX::uname())[2];
-    $self->info("Will skip removal of running kernel: $kvers");
 
     # Compose list of packages to be installed and removed.
-    my $will_remove = $preinstalled - $to_install - "kernel-$kvers" - "kernel-core-$kvers";
+    my $will_remove = $preinstalled - $to_install;
     my $will_install = $to_install - $preinstalled;
     my $whitelist = $t->{whitelist};
     my $whitelisted = Set::Scalar->new();
@@ -542,12 +541,19 @@ sub Configure
         if (substr($rpm, 0, 11) eq 'gpg-pubkey-') {
             $will_remove->delete($rpm);
         }
+        my $rpm_version = (split(':', $rpm))[-1];
+        
+        # Do not remove core packages for currently running kernel.
+        if ( ($rpm =~ /^(kernel|kernel-core|kernel-modules)-(\d+):/) &&
+            (index($rpm_version, $kvers) == 0 || match_glob($kvers, $rpm_version))) {
+            $self->info("Skip removal of core package(s) for running kernel: $rpm");
+            $will_remove->delete($rpm);
+        }
+
         # Do not remove whitelisted packages.
         if (defined($whitelist)) {
             for my $white_pkg (@$whitelist) {
-                my $rpm_noepoch = $rpm;
-                $rpm_noepoch =~ s/^.*://;
-                if (index($rpm_noepoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_noepoch)) {
+                if (index($rpm_version, $white_pkg) == 0 || match_glob($white_pkg, $rpm_version)) {
                     $will_remove->delete($rpm);
                     $whitelisted->insert($rpm);
                 }
