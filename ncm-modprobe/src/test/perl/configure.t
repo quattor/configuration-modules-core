@@ -29,7 +29,7 @@ $cmp = Test::MockObject::Extends->new($cmp);
 
 no warnings 'redefine';
 
-my @methods = grep($_ =~ m{^process|mkinitr},
+my @methods = grep($_ =~ m{^process|dracut},
                    @{Class::Inspector->functions("NCM::Component::modprobe")});
 
 foreach my $method (@methods) {
@@ -49,8 +49,8 @@ foreach my $i (@methods) {
 
 $cmp->Configure($cfg);
 foreach my $method (@methods) {
-    if ($method =~ m{mkinitrd}) {
-        is($cmp->{uc($method)}, 1, "mkinitrd is not called if there are no changes");
+    if ($method =~ m{dracut}) {
+        is($cmp->{uc($method)}, 1, "dracut is not called if there are no changes");
     } else {
         is($cmp->{uc($method)}, 2, "Method $method is called inconditionally");
     }

@@ -7,9 +7,9 @@
 
 =head1 DESCRIPTION
 
-Test the C<mkinitrd> method.
+Test the C<dracut> method.
 
-Ensures the C<mkinitrd> command will be executed for all the
+Ensures the C<dracut> command will be executed for all the
 C<System.map> files present in a directory.
 
 =cut
@@ -24,7 +24,7 @@ use NCM::Component::modprobe;
 use CAF::FileWriter;
 use CAF::Object;
 
-use constant MKINITRD => "mkinitrd -f /boot/initrd-2.6.35.img 2.6.35";
+use constant DRACUT => "dracut -f /boot/initrd-2.6.35.img 2.6.35";
 
 
 my $mock = Test::MockModule->new('NCM::Component::modprobe');
@@ -36,15 +36,15 @@ $CAF::Object::NoAction = 1;
 my $cmp = NCM::Component::modprobe->new("modprobe");
 
 
-$cmp->mkinitrd();
+$cmp->dracut();
 
-my $cmd = get_command(MKINITRD);
-ok(defined($cmd), "mkinitrd was called");
+my $cmd = get_command(DRACUT);
+ok(defined($cmd), "dracut was called");
 
-set_command_status(MKINITRD, 1);
+set_command_status(DRACUT, 1);
 
-$cmp->mkinitrd();
-is($cmp->{ERROR}, 1, "Errors in mkinitrd are reported");
+$cmp->dracut();
+is($cmp->{ERROR}, 1, "Errors in dracut are reported");
 
 
 done_testing();
