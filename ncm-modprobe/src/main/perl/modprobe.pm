@@ -47,7 +47,7 @@ foreach my $method (qw(alias options install remove blacklist)) {
 use strict 'refs';
 
 # Re-generates the initrds, if needed.
-sub mkinitrd
+sub dracut
 {
     my ($self) = @_;
 
@@ -60,7 +60,7 @@ sub mkinitrd
             my $rl = $1;
             my $target = "/boot/initrd-$rl.img";
             $target = "/boot/initramfs-$rl.img" if -f "/boot/initramfs-$rl.img";
-            CAF::Process->new(["mkinitrd", "-f", $target, $rl], log => $self)->run();
+            CAF::Process->new(["dracut", "-f", $target, $rl], log => $self)->run();
             $self->error("Unable to build the initrd for $rl") if $?;
         }
     }
@@ -83,7 +83,7 @@ sub Configure
     $self->process_remove($t, $fh);
     $self->process_blacklist($t, $fh);
 
-    $self->mkinitrd($fh) if $fh->close();
+    $self->dracut($fh) if $fh->close();
     return 1;
 }
 
