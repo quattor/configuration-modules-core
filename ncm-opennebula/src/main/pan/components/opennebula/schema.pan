@@ -331,6 +331,17 @@ type opennebula_host = {
     "Default" cluster.
     Hosts can be in only one cluster at a time.}
     "cluster" ? string
+    @{Define which Hosts are going to be used to run pinned workloads setting PIN_POLICY.
+    A Host can operate in two modes:
+
+    NONE: Default mode where no NUMA or hardware characteristics are considered.
+    Resources are assigned and balanced by an external component, e.g. numad or kernel.
+
+    PINNED: VMs are allocated and pinned to specific nodes according to different policies.
+
+    See:
+    https://docs.opennebula.io/6.6/management_and_operations/host_cluster_management/numa.html#configuring-the-host}
+    "pin_policy" ? choice('NONE', 'PINNED')
 };
 
 @documentation{
@@ -1101,6 +1112,18 @@ type opennebula_pci = {
             - '^MegaRAID'
     }
     "device_name" ? string[]
+    @{
+    List of NVIDIA vendor IDs, these are used to recognize PCI devices from
+    NVIDIA and use vGPU feature.
+
+    For example:
+        :nvidia_vendors:
+            - '10de'
+
+    On the other hand set an empty list to use full GPU PCI PT with NVIDIA cards:
+            :nvidia_vendors: []
+    }
+    "nvidia_vendors" ? string[]
 };
 
 @documentation{

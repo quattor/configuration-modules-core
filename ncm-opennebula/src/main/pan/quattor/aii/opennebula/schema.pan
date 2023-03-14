@@ -240,6 +240,45 @@ type opennebula_placements = {
     "sched_ds_rank" ? string
 };
 
+@documentation{
+Type that sets Numa topology and huge pages size for the VM.
+More info:
+https://docs.opennebula.io/6.6/management_and_operations/references/template.html#numa-topology-section
+}
+type opennebula_topology = {
+    @{When you need to expose the NUMA topology to the guest, you have to set a pinning policy
+    to map each virtual NUMA node’s resources (memory and vCPUs) onto the hypervisor nodes.
+    OpenNebula can work with four different policies:
+
+    CORE: each vCPU is assigned to a whole hypervisor core.
+    No other threads in that core will be used. This policy can be useful to isolate
+    the VM workload for security reasons.
+
+    THREAD: each vCPU is assigned to a hypervisor CPU thread.
+
+    SHARED: the VM is assigned to a set of the hypervisor CPUS shared by all the VM vCPUs.
+
+    NONE: the VM is not assigned to any hypervisor CPUs.
+    Access to the resources (i.e CPU time) will be limited by the CPU attribute.
+
+    For pinned VMs the CPU (assigned hypervisor capacity) is automatically set to the vCPU number.
+    No overcommitment is allowed for pinned workloads.}
+    "pin_policy" ? choice('CORE', 'THREAD', 'SHARED', 'NONE')
+    @{Number of sockets or NUMA nodes}
+    "sockets" ? long(1..)
+    @{Number of threads per core}
+    "threads" ? long(1..)
+    @{Number of cores per node}
+    "cores" ? long(1..)
+    @{Size of the hugepages (MB). If not defined no hugepages will be used.
+    It should match with the hugepage size configured in the hypervisor.
+    For example: "1024M"
+    see: https://docs.opennebula.io/6.6/management_and_operations/host_cluster_management/numa.html}
+    "hugepage_size" ? string
+    @{Control whether the memory is to be mapped, shared or private}
+    "memory_access" ? choice('shared', 'private')
+};
+
 type opennebula_vmtemplate = {
     @{Set the VNETs opennebula/vnet (bridges) required by each VM network interface}
     "vnet" : opennebula_vmtemplate_vnet
@@ -289,6 +328,11 @@ type opennebula_vmtemplate = {
     from the guest when its running out of memory, which means a malicious guest allocating
     large amounts of locked memory could cause a denial-of-service attach on the host.}
     "memorybacking" ? string[] with is_consistent_memorybacking(SELF)
+    @{Set up OpenNebula to control how VM resources are mapped onto the hypervisor ones.
+    These settings will help you to fine tune the performance of VMs. In OpenNebula the virtual
+    topology of a VM is defined by the number of sockets, cores and threads. We assume that a NUMA
+    node or cell is equivalent to a socket.}
+    "topology" ? opennebula_topology
     @{Request existing VM Group and roles.
     A VM Group defines a set of related VMs, and associated placement constraints for the VMs
     in the group. A VM Group allows you to place together (or separately) ceartain VMs
