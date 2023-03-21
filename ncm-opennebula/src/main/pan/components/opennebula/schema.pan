@@ -1121,7 +1121,7 @@ type opennebula_pci = {
             - '10de'
 
     On the other hand set an empty list to use full GPU PCI PT with NVIDIA cards:
-            :nvidia_vendors: []
+        :nvidia_vendors: []
     }
     "nvidia_vendors" ? string[]
 };

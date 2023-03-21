@@ -344,4 +344,7 @@ type opennebula_vmtemplate = {
     Useful to use PCI PT with some GPU cards or operating systems.
     More info: https://libvirt.org/formatdomain.html#hypervisor-features.}
     "hiddenkvm" ? boolean
+    @{Use Virtual Machine Timer Management:
+    https://libvirt.org/formatdomain.html#time-keeping}
+    "hypervclock" ? boolean
 } = dict();
