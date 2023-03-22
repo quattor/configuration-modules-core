@@ -1,0 +1,50 @@
+Cumulus initialisation script
+---
+/home/cumulus/initialise.sh
+quote
+---
+#!/bin/bash
+
+set -x
+
+
+hostnamectl set-hostname aa.bb.cc.dd
+sed -i '/1.2.3.4/d;/aa.bb.cc.dd/d' /etc/hosts
+echo "1.2.3.4 aa.bb.cc.dd aa" >> /etc/hosts
+
+timedatectl set-timezone 'Europe/Brussels'
+dpkg-reconfigure --frontend noninteractive tzdata
+
+apt-get -o "Dpkg::Options::=--force-confold" update -y --force-yes
+apt-get -o "Dpkg::Options::=--force-confold" dist-upgrade -y --force-yes
+
+
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+
+rm -f /root/.ssh/authorized_keys
+cat > /root/.ssh/authorized_keys <<EOF
+root key 1
+root key 2
+EOF
+chmod 600 /root/.ssh/authorized_keys
+chown root.root /root/.ssh
+chown root.root /root/.ssh/authorized_keys
+
+
+
+mkdir -p /home/cumulus/.ssh
+chmod 700 /home/cumulus/.ssh
+
+rm -f /home/cumulus/.ssh/authorized_keys
+cat > /home/cumulus/.ssh/authorized_keys <<EOF
+cumulus key 1
+cumulus key 2
+EOF
+chmod 600 /home/cumulus/.ssh/authorized_keys
+chown cumulus.cumulus /home/cumulus/.ssh
+chown cumulus.cumulus /home/cumulus/.ssh/authorized_keys
+
+
+
+echo "If all went fine, please reboot"

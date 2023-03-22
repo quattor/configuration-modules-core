@@ -287,3 +287,13 @@ type cumulus_acl_rule = {
 type cumulus_acl = {
     'iptables' ? cumulus_acl_rule[]
 };
+
+@{Some metadata for the initialisation script}
+type cumulus_initialise = {
+    'domainname' : type_fqdn
+    'hostname' : type_shorthostname
+    'ip' : type_ipv4
+    'timezone' : string
+    'root_keys' ? string[]
+    'cumulus_keys' ? string[]
+};

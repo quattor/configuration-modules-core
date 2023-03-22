@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -x
+
+[% fqdn = CCM.contents.hostname _ "." _ CCM.contents.domainname -%]
+
+hostnamectl set-hostname [% fqdn %]
+sed -i '/[% CCM.contents.ip %]/d;/[% fqdn %]/d' /etc/hosts
+echo "[% CCM.contents.ip %] [% fqdn %] [% CCM.contents.hostname %]" >> /etc/hosts
+
+timedatectl set-timezone '[% CCM.contents.timezone %]'
+dpkg-reconfigure --frontend noninteractive tzdata
+
+apt-get -o "Dpkg::Options::=--force-confold" update -y --force-yes
+apt-get -o "Dpkg::Options::=--force-confold" dist-upgrade -y --force-yes
+
+[% IF CCM.contents.defined('root_keys') %]
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+
+rm -f /root/.ssh/authorized_keys
+cat > /root/.ssh/authorized_keys <<EOF
+[% CCM.contents.root_keys.join("\n") %]
+EOF
+chmod 600 /root/.ssh/authorized_keys
+chown root.root /root/.ssh
+chown root.root /root/.ssh/authorized_keys
+[% END %]
+
+[% IF CCM.contents.defined('cumulus_keys') %]
+mkdir -p /home/cumulus/.ssh
+chmod 700 /home/cumulus/.ssh
+
+rm -f /home/cumulus/.ssh/authorized_keys
+cat > /home/cumulus/.ssh/authorized_keys <<EOF
+[% CCM.contents.cumulus_keys.join("\n") %]
+EOF
+chmod 600 /home/cumulus/.ssh/authorized_keys
+chown cumulus.cumulus /home/cumulus/.ssh
+chown cumulus.cumulus /home/cumulus/.ssh/authorized_keys
+[% END %]
+
+
+echo "If all went fine, please reboot"
