@@ -227,10 +227,23 @@ type cumulus_frr_route = {
     'nexthop' : string with is_ipv4(SELF) || SELF == 'null0'
 };
 
+type cumulus_bgp_router = {
+    @{AS number}
+    'asn' : long(1..65535)
+    @{router ID}
+    'routerid' : type_ipv4
+    @{external neighbor}
+    'external' : type_ipv4
+    @{ipv4 networks}
+    'ipv4' : type_ipv4_netmask_pair[]
+};
+
 @{Simple/minimal FRRouting config file, useful for static routing in VRF setup}
 type cumulus_frr = {
     @{Routes per VRF (key is VRF name)}
-    'vrf' : cumulus_frr_route[]{}
+    'vrf' ? cumulus_frr_route[]{}
+    @{List of bgp routers per VRF (VRF is the key)}
+    'bgp' ? cumulus_bgp_router[]{}
 };
 
 type cumulus_acl_rule_tcp_flag = choice('SYN', 'ACK', 'FIN', 'RST', 'URG', 'PSH', 'ALL', 'NONE');
