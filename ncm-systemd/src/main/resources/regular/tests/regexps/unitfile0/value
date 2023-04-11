@@ -37,6 +37,9 @@ contentspath=/unitfile/0
 ^RuntimeDirectoryPreserve=restart$
 ^TTYReset=yes$
 ^TTYVHangup=no$
+^\[Slice\]$
+^MemoryAccounting=yes$
+^MemoryLimit=2048$
 ^\[Socket\]$
 ^ExecStartPre=/some/path arg1$
 ^ExecStartPre=-/some/other/path arg2$

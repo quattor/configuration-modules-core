@@ -407,6 +407,15 @@ type ${project.artifactId}_unitfile_config_timer = {
 };
 
 @documentation{
+the [Slice] section
+http://www.freedesktop.org/software/systemd/man/systemd.slice.html
+}
+type ${project.artifactId}_unitfile_config_slice = {
+    include ${project.artifactId}_unitfile_config_systemd_resource_control
+};
+
+
+@documentation{
 Unit configuration sections
     includes, unit and install are type agnostic
         unit and install are mandatory, but not enforced by schema (possible issues in case of replace=true)
@@ -423,6 +432,7 @@ type ${project.artifactId}_unitfile_config = {
     'automount' ? ${project.artifactId}_unitfile_config_automount
     'timer' ? ${project.artifactId}_unitfile_config_timer
     'unit' ? ${project.artifactId}_unitfile_config_unit
+    'slice' ? ${project.artifactId}_unitfile_config_slice
 };
 
 @documentation{
@@ -463,7 +473,7 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
-    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer') = 'service'
+    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice') = 'service'
     "startstop" : boolean = true
     "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
     @{unitfile configuration}
