@@ -172,6 +172,11 @@ type haproxy_service_stick_table = {
     'peers' ? string
 };
 
+type haproxy_service_reqrep = {
+    'pattern' : string
+    'replace' : string
+};
+
 type haproxy_service_bind_server_params = {
     'ssl' ? boolean
     'ca-file' ? absolute_file_path
@@ -181,6 +186,8 @@ type haproxy_service_bind_server_params = {
     'interface' ? string
     @{enable the TLS ALPN extension}
     'alpn' ? string = "h2,http/1.1"
+    @{interval in milliseconds between healthchecks}
+    'inter' ? long
 };
 
 type haproxy_service_server_params = {
@@ -233,6 +240,8 @@ type haproxy_service_backend = {
     'sticktable' ? haproxy_service_stick_table
     'stick' ? string
     'servers' : haproxy_service_backend_server[]
+    'reqrep' ? haproxy_service_reqrep[]
+    'http-request' ? string[]
 };
 
 @documentation {
