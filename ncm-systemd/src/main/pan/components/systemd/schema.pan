@@ -222,18 +222,29 @@ valid for [Slice], [Scope], [Service], [Socket], [Mount], or [Swap] sections
 type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'CPUAccounting' ? boolean
     'CPUShares' ? long(2..262144)
+    'CPUWeight' ? long(1..10000)
+    'StartupCPUWeight' ? long(1..10000)
     'StartupCPUShares' ? long(2..262144)
     'CPUQuota' ? long(0..100)  # percentages
     'MemoryAccounting' ? boolean
     'MemoryLimit' ? long  # in bytes
+    'MemoryMin' ? long  # in bytes
+    'MemoryMax' ? long  # in bytes
+    'MemoryLow' ? long  # in bytes
+    'MemoryHigh' ? long  # in bytes
+    'MemorySwapMax' ? long  # in bytes
     'TasksAccounting' ? boolean
     'TasksMax' ? string with match(SELF, '^([0-9]+%?|infinity)$')
     'BlockIOAccounting' ? boolean
     'BlockIOWeight' ? long(10..1000)
+    'IOWeight' ? long(1..10000)
+    'StartupIOWeight' ? long(1..10000)
     'StartupBlockIOWeight' ? long(10..1000)
     'BlockIODeviceWeight' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOReadBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOWriteBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
+    'IPAccounting' ? boolean
+    'IPAddressAllow' ? string[]
     'DeviceAllow' ? ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist[]
     'DevicePolicy' ? choice('auto', 'closed', 'strict')
     'Slice' ? string
