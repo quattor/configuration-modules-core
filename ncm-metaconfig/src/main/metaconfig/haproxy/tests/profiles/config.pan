@@ -83,6 +83,7 @@ prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
 "tcpchecks" = list("connect", "send PING\n", 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>');
 "http-request/0" = "hello";
+"acl/whatif" = "match";
 "reqrep/0" = dict(
     "pattern", 'abc\ def',  # need escaped space, so single quotes
     "replace", '\1 \2',

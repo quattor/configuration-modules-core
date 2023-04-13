@@ -62,6 +62,7 @@ Test for config
 ^\s{4}default_backend\sirods-bk$
 ^backend\sirods-bk$
 ^\s{4}option\stcp-check$
+^\s{4}acl\swhatif\smatch$
 ^\s{4}http-request\shello$
 ^\s{4}tcp-check\sconnect$
 ^\s{4}tcp-check\ssend\sPING$

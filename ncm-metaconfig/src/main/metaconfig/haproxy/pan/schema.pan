@@ -242,6 +242,7 @@ type haproxy_service_backend = {
     'servers' : haproxy_service_backend_server[]
     'reqrep' ? haproxy_service_reqrep[]
     'http-request' ? string[]
+    'acl' ? dict()
 };
 
 @documentation {
