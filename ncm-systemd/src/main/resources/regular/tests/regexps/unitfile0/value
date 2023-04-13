@@ -15,6 +15,17 @@ contentspath=/unitfile/0
 ^Type=glusterfs$
 ^What=server:/share$
 ^Where=/data/share$
+^\[Path\]$
+^DirectoryMode=0755$
+^DirectoryNotEmpty=/path/to/dir$
+^MakeDirectory=yes$
+^PathChanged=/path/to/file$
+^PathExists=/path/to/file$
+^PathExistsGlob=/path/to/glob\*$
+^PathModified=/path/to/file$
+^TriggerLimitBurst=5$
+^TriggerLimitIntervalSec=10$
+^Unit=unitname$
 ^\[Service\]$
 ^BlockIODeviceWeight=/var 100$
 ^BlockIODeviceWeight=/tmp 50$

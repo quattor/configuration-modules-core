@@ -386,6 +386,23 @@ type ${project.artifactId}_unitfile_config_socket = {
 };
 
 @documentation{
+the [Path] section
+https://www.freedesktop.org/software/systemd/man/systemd.path.html
+}
+type ${project.artifactId}_unitfile_config_path = {
+    'PathExists' ? absolute_file_path
+    'PathExistsGlob' ? absolute_file_path
+    'PathChanged' ? absolute_file_path
+    'PathModified' ? absolute_file_path
+    'DirectoryNotEmpty' ? absolute_file_path
+    'Unit' ? string
+    'MakeDirectory' ? boolean
+    'DirectoryMode' ? type_octal_mode
+    'TriggerLimitIntervalSec' ? long(0..)
+    'TriggerLimitBurst' ? long(0..)
+};
+
+@documentation{
 the [mount] section
 http://www.freedesktop.org/software/systemd/man/systemd.mount.html
 }
@@ -460,6 +477,7 @@ type ${project.artifactId}_unitfile_config = {
     'socket' ? ${project.artifactId}_unitfile_config_socket
     'mount' ? ${project.artifactId}_unitfile_config_mount
     'automount' ? ${project.artifactId}_unitfile_config_automount
+    'path' ? ${project.artifactId}_unitfile_config_path
     'timer' ? ${project.artifactId}_unitfile_config_timer
     'unit' ? ${project.artifactId}_unitfile_config_unit
     'slice' ? ${project.artifactId}_unitfile_config_slice
@@ -503,7 +521,7 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
-    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice') = 'service'
+    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice', 'path') = 'service'
     "startstop" : boolean = true
     "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
     @{unitfile configuration}
