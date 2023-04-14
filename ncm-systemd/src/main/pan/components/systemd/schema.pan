@@ -261,7 +261,7 @@ type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'BlockIOReadBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOWriteBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'IPAccounting' ? boolean
-    'IPAddressAllow' ? string[]
+    'IPAddressAllow' ? type_network_name[]
     'DeviceAllow' ? ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist[]
     'DevicePolicy' ? choice('auto', 'closed', 'strict')
     'Slice' ? string
