@@ -48,6 +48,23 @@ type ${project.artifactId}_valid_execpath = string with match(SELF, '^([@+!:-]|!
 # type for a relative directory: no leading / and may not include ".."
 type ${project.artifactId}_relative_directory = string with !match(SELF, '(^/|\.\.)');
 
+@documentation{
+    Validate that a property is either a size (in bytes), a relative size (in %)
+    or 'infinity'. Used for memory limits in cgroups.
+}
+function is_absolute_or_relative_size = {
+    l = ARGV[0];
+    if (is_long(l) && l > 0) {
+        return(true);
+    };
+    if (is_string(l) && match(l, '^(infinity|1?[0-9]?[0-9]%)$')) {
+        return(true);
+    };
+    false;
+};
+
+type ${project.artifactId}_absolute_or_relative_size = element with is_absolute_or_relative_size(SELF);
+
 # adding new ones
 # go to http://www.freedesktop.org/software/systemd/man/systemd.directives.html
 # and follow the link to the manual
@@ -227,12 +244,12 @@ type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'StartupCPUShares' ? long(2..262144)
     'CPUQuota' ? long(0..100)  # percentages
     'MemoryAccounting' ? boolean
-    'MemoryLimit' ? long  # in bytes
-    'MemoryMin' ? long  # in bytes
-    'MemoryMax' ? long  # in bytes
-    'MemoryLow' ? long  # in bytes
-    'MemoryHigh' ? long  # in bytes
-    'MemorySwapMax' ? long  # in bytes
+    'MemoryLimit' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryMin' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryMax' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryLow' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryHigh' ? ${project.artifactId}_absolute_or_relative_size
+    'MemorySwapMax' ? ${project.artifactId}_absolute_or_relative_size
     'TasksAccounting' ? boolean
     'TasksMax' ? string with match(SELF, '^([0-9]+%?|infinity)$')
     'BlockIOAccounting' ? boolean

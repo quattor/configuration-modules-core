@@ -82,7 +82,8 @@ bind "/unitfile" = systemd_unitfile_config[];
         ),
     'slice', dict(
         'MemoryAccounting', true,
-        'MemoryLimit', 2048,
+        'MemoryLimit', 'infinity',
+        'MemoryMax', '28%',
         ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),

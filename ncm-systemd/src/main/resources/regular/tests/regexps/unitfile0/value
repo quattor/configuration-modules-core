@@ -39,7 +39,8 @@ contentspath=/unitfile/0
 ^TTYVHangup=no$
 ^\[Slice\]$
 ^MemoryAccounting=yes$
-^MemoryLimit=2048$
+^MemoryLimit=infinity$
+^MemoryMax=28%$
 ^\[Socket\]$
 ^ExecStartPre=/some/path arg1$
 ^ExecStartPre=-/some/other/path arg2$
