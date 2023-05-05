@@ -145,6 +145,9 @@ Readonly my $IPADDR => [qw(ip addr show)];
 Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
 Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
+Readonly my $CHKCONFIG_CMD => '/sbin/chkconfig';
+Readonly my $IFUP_CMD => '/sbin/ifup';
+Readonly my $IFDOWN_CMD => '/sbin/ifdown';
 Readonly my $ROUTING_TABLE => '/etc/iproute2/rt_tables';
 
 Readonly my $NETWORK_PATH => '/system/network';
@@ -1409,29 +1412,34 @@ sub make_ifup
 #   best to also enable the network service with ncm-chkconfig
 sub enable_network_service
 {
-    my ($self) = @_;
+    my ($self, $allow_nm) = @_;
     # do not start it!
-    return $self->runrun([qw(/sbin/chkconfig --level 2345 network on)]);
+    if ($self->_is_executable($CHKCONFIG_CMD)) {
+        return $self->runrun([qw(/sbin/chkconfig --level 2345 network on)]);
+    } elsif (defined($allow_nm) && $allow_nm) {
+        return $self->runrun(['systemctl', 'enable', 'NetworkManager.service']);
+    } else {
+        $self->warn("chkconfig unavailable, NetworkManager not allowed");
+    }
 }
 
 # If allow is defined and false, disable and stop NetworkManager
 sub disable_networkmanager
 {
-    my ($self, $allow) = @_;
+    my ($self, $allow_nm) = @_;
 
     # allow NetworkMnager to run or not?
-    if (defined($allow) && !$allow) {
+    if (defined($allow_nm) && !$allow_nm) {
         # no checking, forcefully stopping NetworkManager
         # warning: this can cause troubles with the recovery to previous state in case of failure
         # it's always better to disable the NetworkManager service with ncm-chkconfig and have it run pre ncm-network
-        my @disablenm_cmds;
-
-        # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it off
-        push(@disablenm_cmds, [qw(/sbin/chkconfig --level 2345 NetworkManager off)]);
-
-        push(@disablenm_cmds, [CAF::Service->new(["NetworkManager"], log => $self), "stop"]);
-
-        $self->runrun(@disablenm_cmds);
+        if ($self->_is_executable($CHKCONFIG_CMD)) {
+            # TODO: do something smart with 'require NCM::Component::Systemd::...' to turn it off
+            return $self->runrun([qw(/sbin/chkconfig --level 2345 network off)]);
+        } else {
+            $self->runrun(['systemctl', 'disable', '--now', 'NetworkManager.service']);
+        }
+        $self->runrun([CAF::Service->new(["NetworkManager"], log => $self), "stop"]);
     };
 };
 
@@ -1471,7 +1479,7 @@ sub set_hostname
 # Returns if something was done or not
 sub stop
 {
-    my ($self, $exifiles, $ifdown, $nwsrv) = @_;
+    my ($self, $exifiles, $ifdown, $nwsrv, $allow_nm) = @_;
 
     my @ifaces = sort keys %$ifdown;
 
@@ -1481,10 +1489,30 @@ sub stop
     if ($nwupdated || @ifaces) {
         if (@ifaces) {
             my @cmds;
+            # delete NetworkManager connections
+            foreach my $file ( glob "/etc/NetworkManager/system-connections/*.nmconnection" ) {
+                push(@cmds, ["rm", "-f", $file]);
+            }
             foreach my $iface (@ifaces) {
-                # how do we actually know that the device was up?
-                # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
-                push(@cmds, ["/sbin/ifdown", $iface]);
+                if ($self->_is_executable($IFDOWN_CMD)) {
+                    # how do we actually know that the device was up?
+                    # eg for non-existing device eth4: /sbin/ifdown eth4 --> usage: ifdown <device name>
+                    push(@cmds, [$IFDOWN_CMD, $iface]);
+                } elsif (defined($allow_nm) && $allow_nm) {
+                    # get NetworkManager connection name
+                    my $nm_con = $self->runrun(["nmcli", "-g", "GENERAL.CONNECTION", "device", "show", $iface]);
+                    chomp($nm_con);
+                    if ($nm_con ne "" ) {
+                        # delete the NetworkManager connection
+                        push(@cmds, ["nmcli", "connection", "delete", $nm_con]);
+                    } else {
+                        # stop the interface
+                        push(@cmds, ["ip", "link", "set", $iface, "down"]);
+                    }
+                } else {
+                    # stop the interface
+                    push(@cmds, ["ip", "link", "set", $iface, "down"]);
+                }
             }
             $self->verbose("Stopping interfaces ",join(', ', @ifaces));
             $action = 1;
@@ -1549,7 +1577,7 @@ sub deploy_config
 # Returns if something was done or not
 sub start
 {
-    my ($self, $exifiles, $ifup, $nwsrv) = @_;
+    my ($self, $exifiles, $ifup, $nwsrv, $allow_nm) = @_;
 
     my @ifaces = sort keys %$ifup;
     my $nwstate = $exifiles->{$NETWORKCFG};
@@ -1562,9 +1590,14 @@ sub start
     } elsif (@ifaces) {
         my @cmds;
         foreach my $iface (@ifaces) {
-            push(@cmds, ["/sbin/ifup", $iface, "boot"]);
+            if ($self->_is_executable($IFUP_CMD)) {
+                push(@cmds, [$IFUP_CMD, $iface, "boot"]);
+            }
             push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
         }
+        if (defined($allow_nm) && $allow_nm) {
+            push(@cmds, ["nmcli", "connection", "reload"]);
+        };
         $self->verbose("Starting interfaces ",join(', ', @ifaces));
         $action = 1;
         $self->runrun(@cmds);
@@ -1970,6 +2003,9 @@ sub Configure
     # main network config
     return if ! defined($self->mk_bu($NETWORKCFG));
 
+    # is NetworkManager is allowed?, false by default
+    my $allow_nm = $nwtree->{allow_nm};
+
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
 
     my $use_hostnamectl = $self->_is_executable($HOSTNAME_CMD);
@@ -2090,9 +2126,9 @@ sub Configure
     # Action starts here
     #
 
-    $self->enable_network_service();
+    $self->enable_network_service($allow_nm);
 
-    $self->disable_networkmanager($nwtree->{allow_nm});
+    $self->disable_networkmanager($allow_nm);
 
     $self->start_openvswitch($ifaces, $ifup);
 
@@ -2112,7 +2148,15 @@ sub Configure
     #   1. stop everythig using old config
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
-    my $nwsrv = CAF::Service->new(['network'], log => $self);
+    my $service_name;
+    if ($self->_is_executable($CHKCONFIG_CMD)) {
+        $service_name = "network";
+    } elsif (defined($allow_nm) && $allow_nm) {
+        $service_name = "NetworkManager";
+    } else {
+        $self->error("chkconfig unavailable, NetworkManager not allowed");
+    };
+    my $nwsrv = CAF::Service->new([$service_name], log => $self);
 
     # Rename special/magic RESOLV_CONF_SAVE, so it does not get picked up by ifdown.
     # If it exists, and contains faulty DNS config, things might go haywire.
@@ -2123,7 +2167,7 @@ sub Configure
     # as it does not manage /etc/resolv.conf). Without working DNS, the ccm-fetch network test will probably fail.
     $self->move($RESOLV_CONF_SAVE, $RESOLV_CONF_SAVE.$RESOLV_SUFFIX);
 
-    my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv);
+    my $stopstart = $self->stop($exifiles, $ifdown, $nwsrv, $allow_nm);
 
     $init_config .= "\nPOST STOP\n";
     $init_config .= $self->get_current_config();
@@ -2161,7 +2205,7 @@ sub Configure
     # Save/Restore last known working (i.e. initial) /etc/resolv.conf
     $resolv_conf_fh->close();
 
-    $stopstart += $self->start($exifiles, $ifup, $nwsrv);
+    $stopstart += $self->start($exifiles, $ifup, $nwsrv, $allow_nm);
 
     # sanity check
     if ($config_changed) {
