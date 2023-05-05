@@ -2148,10 +2148,8 @@ sub Configure
     #   1. stop everythig using old config
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
-    my $service_name;
-    if ($self->_is_executable($CHKCONFIG_CMD)) {
-        $service_name = "network";
-    } elsif (defined($allow_nm) && $allow_nm) {
+    my $service_name = "network";
+    if (!$self->_is_executable($CHKCONFIG_CMD) && defined($allow_nm) && $allow_nm) {
         $service_name = "NetworkManager";
     } else {
         $self->error("chkconfig unavailable, NetworkManager not allowed");
