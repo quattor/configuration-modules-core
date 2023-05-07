@@ -1,0 +1,9 @@
+Config file for slurm mpi
+---
+/etc/slurm/mpi.conf
+quote
+---
+PMIxCollFence=mixed
+PMIxDebug=NO
+PMIxEnv=ABC;FOO
+

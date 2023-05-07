@@ -60,7 +60,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/process";
 
 "SlurmctldParameters" = dict(
-    "preempt_send_user_signal", true,
     "power_save_interval", 20,
     "{cloud_reg_addrs}", false,
     "{user_resv_delete}", false,

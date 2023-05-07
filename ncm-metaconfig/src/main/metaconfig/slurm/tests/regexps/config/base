@@ -84,7 +84,7 @@ PriorityWeightJobSize=2500
 # process
 
 SlurmUser=slurm
-SlurmctldParameters=max_dbd_msg_action=discard,power_save_interval=20,preempt_send_user_signal
+SlurmctldParameters=max_dbd_msg_action=discard,power_save_interval=20
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmdPidFile=/var/run/slurmd.pid

@@ -8,6 +8,8 @@
 [%-     ELSE -%]
 [%-         value ? 'yes' : 'no' -%]
 [%-     END -%]
+[%- ELSIF key == 'PMIxEnv' -%]
+[%-     value.join(';') -%]
 [%- ELSIF CCM.is_list(value) -%]
 [%-     value.join(',') -%]
 [%- ELSIF key.match('^Purge.*?After$') -%]

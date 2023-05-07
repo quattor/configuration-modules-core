@@ -1,0 +1,9 @@
+Config file for slurm oci
+---
+/etc/slurm/oci.conf
+quote
+---
+DisableCleanup=YES
+SrunArgs=foo
+SrunArgs=--bar
+

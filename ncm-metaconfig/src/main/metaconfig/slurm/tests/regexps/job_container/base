@@ -4,7 +4,8 @@ Config file for slurm job_container
 quote
 ---
 
-AutoBasePath=true
+AutoBasePath=YES
 Basepath=/var/tmp/slurm
+Dirs=/tmp,/dev/shm
 
 NodeName=node001,node005 AutoBasePath=YES Basepath=/tmp/slurm
