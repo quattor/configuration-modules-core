@@ -325,7 +325,14 @@ sub file_dump
     # Make hardlinked copy
     #   hardlink is ok, new file will be put in place, no editing of existing file
     if (!$self->file_exists($file) || $self->mk_bu($file, $testcfg)) {
-        my $fh = CAF::FileWriter->new($testcfg, log => $self, keeps_state => 1);
+        my $fh;
+        # files in nmconnection has to be mode 0400 otherwise networkmanager won't read it.
+        if ($file =~ /\.nmconnection$/) {
+            $fh = CAF::FileWriter->new($testcfg, log => $self, mode => 0400, keeps_state => 1);
+        } else {
+            $fh = CAF::FileWriter->new($testcfg, log => $self, keeps_state => 1);
+        };
+        
         print $fh join("\n", @$text, ''); # add trailing newline
 
         # Use 'scheduled' in messages to indicate that this method
@@ -839,6 +846,14 @@ sub process_network
             }
             $iface->{my_inner_ipaddr} .= "/$iface->{my_inner_prefix}";
         }
+
+        # Newly added used when generating the keyfile format config in networkmanager module
+        my $media =  $nic->{media};
+        if ($media) {
+            $iface->{media} = $media;
+            $self->debug(1, "Added media option $media for interface $ifname");
+        }
+
     }
 
     return $nwtree;
