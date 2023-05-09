@@ -1,0 +1,80 @@
+---
+[%- IF routes.config %]
+routes:
+  config:
+    [%-  FOREACH rt IN routes.config %]
+    - destination: [% rt.destination %]
+      next-hop-address: [% rt.next_hop_address %]
+      next-hop-interface: [% rt.next_hop_interface %]
+      [%- IF rt.table_id %]
+      table-id: [% rt.table_id %]
+      [%- END %]
+    [%- END %]
+[%- END %]
+interfaces:
+- name: [% name %]
+  type: [% type %]
+  profile-name: [% name %]
+  state: [% state %]
+  [%- IF hwaddr %]
+  mac-address: [%hwaddr %]
+  [%- END %]
+  [%- IF mtu %]
+  mtu: [% mtu %]
+  [%- END %]
+  [%- IF ipv4.address %]
+  ipv4:
+    address:
+    [%- FOREACH addr IN ipv4.address %]
+    - ip: [%- addr.ip %]
+      prefix-length: [%- addr.prefix %]
+    [%- END %]      
+    enabled: [% enabled %]
+  [%- ELSE %]
+  ipv4:
+    enabled: [% enabled %]
+  [%- END %]
+  [%- IF ipv6.address %]
+  ipv6:
+    address:
+    [%- FOREACH addr IN ipv6.address %]
+    - ip: [%- addr.ip %]
+      prefix-length: [%- addr.prefix %]
+    [%- END %]      
+    enabled: [% enabled %]
+  [%- ELSE %]
+  ipv6:
+    enabled: false
+  [%- END %]
+  [%- IF type == 'bond' %]
+  [%- IF link_aggregation %]
+  link-aggregation:
+    mode: [% link_aggregation.mode %]
+    [%- IF link_aggregation.options %]
+    options:
+      [%- FOREACH opt IN link_aggregation.options %]
+      [% opt.key %]: [% opt.value %]
+      [%- END %]
+    [%- END %]
+    port:
+    [%- FOREACH port IN link_aggregation.port %]
+    - [%- port %]
+    [%- END %]
+    [%- END %]
+    [%- END %]
+  [%- IF vlan %]
+  vlan:
+    base-iface: [% vlan.base_iface %]
+    id: [% vlan.vlan_id %]
+  [%- END %]
+[%- IF route %]
+route-rules:
+  config:
+    [%-  FOREACH rl IN rule %]
+    [%- IF rl.to %] 
+    - ip-to: [% rl.to %]
+      priority: [% rl.priority %]
+      route-table: [% rl.table_id %]
+    [%- END %]
+    [%- END -%]
+[%- END -%]

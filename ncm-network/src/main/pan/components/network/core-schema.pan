@@ -418,6 +418,7 @@ type structure_network = {
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
+    "nm_manage_dns" ? boolean
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6

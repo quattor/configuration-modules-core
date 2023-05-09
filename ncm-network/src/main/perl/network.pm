@@ -146,6 +146,7 @@ Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
 Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
 Readonly my $ROUTING_TABLE => '/etc/iproute2/rt_tables';
+Readonly my $NMSTATECTL => '/usr/bin/nmstatectl';
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -177,7 +178,8 @@ Readonly my $DEVICE_REGEXP => qr{
     $
 }x;
 
-Readonly my $IFCFG_DIR => "/etc/sysconfig/network-scripts";
+my $IFCFG_DIR = "/etc/sysconfig/network-scripts";
+my $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
 Readonly my $RESOLV_CONF => '/etc/resolv.conf';
@@ -185,8 +187,6 @@ Readonly my $RESOLV_CONF_SAVE => '/etc/resolv.conf.save';
 Readonly my $RESOLV_SUFFIX => '.ncm-network';
 
 Readonly my $FAILED_SUFFIX => '-failed';
-Readonly my $BACKUP_DIR => "$IFCFG_DIR/.quattorbackup";
-
 Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
@@ -194,6 +194,26 @@ Readonly my $NEW => 2;
 # changes to file, but same config (eg for new file formats)
 Readonly my $KEEPS_STATE => 3;
 
+# methods needed to get values from other modules.
+sub keeps_state { $KEEPS_STATE }
+sub updated_state { $UPDATED }
+sub remove_state { $REMOVE }
+sub nochanges_state { $NOCHANGES }
+sub new_state { $NEW }
+sub networkcfg { $NETWORKCFG }
+sub resolv_conf { $RESOLV_CONF }
+sub resolv_conf_save { $RESOLV_CONF_SAVE }
+sub resolv_suffix { $RESOLV_SUFFIX }
+sub failed_suffix { $FAILED_SUFFIX }
+sub network_path { $NETWORK_PATH }
+sub hostname_cmd { $HOSTNAME_CMD }
+sub nmstatectl { $NMSTATECTL }
+
+sub set_cfg_dir {
+    my ($self, $cfg_dir) = @_;
+    $IFCFG_DIR = $cfg_dir;
+    $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
+}
 
 # wrapper around -x for easy unittesting
 # is not part of CAF::Path
@@ -467,6 +487,10 @@ sub get_current_config
     $fh = CAF::FileReader->new($RESOLV_CONF, log => $self);
     $output .= "\n$RESOLV_CONF\n$fh";
 
+    # output of nmstate if we using nmstate configs
+    if ($self->_is_executable($NMSTATECTL) && $IFCFG_DIR =~ /nmstate/ ) {
+        $output .= $self->runrun([$NMSTATECTL, "show"]);
+    }
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
     if ($self->_is_executable($BRIDGECMD)) {
@@ -757,6 +781,18 @@ sub process_network
             if (defined($opts) && keys %$opts) {
                 $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
                 $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
+                # for bonding_opts, we need linkagregation settings for nmstate.
+                # this should not impact existing configs as it adds interface/$name/link_aggregation
+                if ($attr eq "bonding_opts"){
+                    foreach my $opt (sort keys %$opts){
+                        if ($opt eq 'mode'){
+                            $iface->{link_aggregation}->{mode} = $opts->{mode};
+                        }else{
+                            $iface->{link_aggregation}->{options}->{$opt} = $opts->{$opt};
+                        }
+                    }
+                }
+                # TODO for briging_opts
             }
         }
 
@@ -1307,7 +1343,8 @@ sub make_ifdown
         my $valid = $self->is_valid_interface($file);
         if ($valid) {
             my ($iface, $ifupdownname) = @$valid;
-
+            my $cfg_filename = "$IFCFG_DIR/ifcfg-$iface";
+            $cfg_filename = "$IFCFG_DIR/$iface.yml" if $IFCFG_DIR =~ /nmstate/;
             # ifdown: all devices that have files with non-zero status
             if ($value == $NOCHANGES) {
                 $self->verbose("No changes for interface $iface (cfg file $file)");
@@ -1344,7 +1381,7 @@ sub make_ifdown
                             $ifdown{$attached} = 1;
                         }
                     }
-                } elsif ($file eq "$IFCFG_DIR/ifcfg-$iface" && $self->any_exists($file)) {
+                } elsif ($file eq "$cfg_filename" && $self->any_exists($file)) {
                     # here's the tricky part: see if it used to be a slave.
                     # the bond-master must be restarted if a device was removed from the bond.
                     # TODO: why read from backup?
@@ -1386,8 +1423,10 @@ sub make_ifup
         # and have state other than REMOVE
         # e.g. master with NOCHANGES state can be added here
         # when a slave had modifications
-        if (exists($exifiles->{"$IFCFG_DIR/ifcfg-$iface"}) &&
-            $exifiles->{"$IFCFG_DIR/ifcfg-$iface"} == $REMOVE) {
+        my $cfg_filename = "$IFCFG_DIR/ifcfg-$iface";
+        $cfg_filename = "$IFCFG_DIR/$iface.yml" if $IFCFG_DIR =~ /nmstate/;
+        if (exists($exifiles->{"$cfg_filename"}) &&
+            $exifiles->{"$cfg_filename"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
         } else {
             if ($ifaces->{$iface}->{master}) {
