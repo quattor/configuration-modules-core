@@ -12,3 +12,4 @@ prefix "/software/components/network";
 # Add dependency that can't be added to rpm directly
 prefix '/software/packages';
 'NetworkManager-initscripts-updown' = dict();
+'NetworkManager-config-server' = dict();
