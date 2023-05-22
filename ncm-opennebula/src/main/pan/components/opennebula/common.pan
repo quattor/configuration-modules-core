@@ -42,11 +42,6 @@ function is_consistent_datastore = {
             };
         };
     };
-    if (ds['ds_mad'] == 'fs') {
-        if (ds['tm_mad'] != 'shared') {
-            error("for a fs datastore only 'shared' tm_mad is supported for the moment");
-        };
-    };
     if (ds['type'] == 'SYSTEM_DS') {
         if (ds['tm_mad'] == 'ceph') {
             error("system datastores do not support '%s' TM_MAD", ds['tm_mad']);
