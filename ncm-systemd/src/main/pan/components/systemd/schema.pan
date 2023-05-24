@@ -57,13 +57,15 @@ function is_absolute_or_relative_size = {
     if (is_long(l) && l > 0) {
         return(true);
     };
-    if (is_string(l) && match(l, '^(infinity|1?[0-9]?[0-9]%)$')) {
+    if (is_string(l) && match(l, '^(infinity|100%|[0-9]?[0-9]%)$')) {
         return(true);
     };
     false;
 };
 
 type ${project.artifactId}_absolute_or_relative_size = element with is_absolute_or_relative_size(SELF);
+
+type ${project.artifactId}_weights = long(1..10000);
 
 # adding new ones
 # go to http://www.freedesktop.org/software/systemd/man/systemd.directives.html
@@ -239,8 +241,8 @@ valid for [Slice], [Scope], [Service], [Socket], [Mount], or [Swap] sections
 type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'CPUAccounting' ? boolean
     'CPUShares' ? long(2..262144)
-    'CPUWeight' ? long(1..10000)
-    'StartupCPUWeight' ? long(1..10000)
+    'CPUWeight' ? ${project.artifactId}_weights
+    'StartupCPUWeight' ? ${project.artifactId}_weights
     'StartupCPUShares' ? long(2..262144)
     'CPUQuota' ? long(0..100)  # percentages
     'MemoryAccounting' ? boolean
@@ -254,8 +256,8 @@ type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'TasksMax' ? string with match(SELF, '^([0-9]+%?|infinity)$')
     'BlockIOAccounting' ? boolean
     'BlockIOWeight' ? long(10..1000)
-    'IOWeight' ? long(1..10000)
-    'StartupIOWeight' ? long(1..10000)
+    'IOWeight' ? ${project.artifactId}_weights
+    'StartupIOWeight' ? ${project.artifactId}_weights
     'StartupBlockIOWeight' ? long(10..1000)
     'BlockIODeviceWeight' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOReadBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
