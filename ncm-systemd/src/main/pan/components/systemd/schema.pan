@@ -409,7 +409,7 @@ http://www.freedesktop.org/software/systemd/man/systemd.automount.html
 type ${project.artifactId}_unitfile_config_automount = {
     'Where': absolute_file_path
     'DirectoryMode' ? type_octal_mode
-    'TimeoutSec' ? long(0..)
+    'TimeoutIdleSec' ? long(0..)
 };
 
 @documentation{
