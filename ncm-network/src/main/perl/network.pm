@@ -116,7 +116,7 @@ Readonly::Hash my %ETHTOOL_OPTION_MAP => {
         tx  => "tx-checksumming",
         rx  => "rx-checksumming",
         ufo => "udp fragmentation offload",
-        gso => "generic segmentation offload",
+        gso => "generic-segmentation-offload",
         gro => "generic-receive-offload",
         sg  => "scatter-gather",
     },
