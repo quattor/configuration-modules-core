@@ -112,11 +112,11 @@ Readonly::Array my @ETHTOOL_OPTION_ROOT => qw(offload ring ethtool);
 
 Readonly::Hash my %ETHTOOL_OPTION_MAP => {
     offload => {
-        tso => "tcp segmentation offload",
+        tso => "tcp-segmentation-offload",
         tx  => "tx-checksumming",
         rx  => "rx-checksumming",
-        ufo => "udp fragmentation offload",
-        gso => "generic segmentation offload",
+        ufo => "udp-fragmentation-offload",
+        gso => "generic-segmentation-offload",
         gro => "generic-receive-offload",
         sg  => "scatter-gather",
     },
