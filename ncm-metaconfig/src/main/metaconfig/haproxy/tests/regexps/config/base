@@ -25,9 +25,12 @@ Test for config
 ^\s{4}retries\s3$
 ^\s{4}timeout\scheck\s3500$
 ^\s{4}timeout\sclient\s10000$
+^\s{4}timeout\sclient-fin\s30000$
 ^\s{4}timeout\sconnect\s3500$
 ^\s{4}timeout\squeue\s3500$
 ^\s{4}timeout\sserver\s10000$
+^\s{4}timeout\sserver-fin\s30000$
+^\s{4}timeout\stunnel\s3600000$
 ^listen\sstats\s:\s$
 ^\s{4}mode\shttp$
 ^\s{4}stats\senabled\s$
@@ -59,12 +62,16 @@ Test for config
 ^\s{4}default_backend\sirods-bk$
 ^backend\sirods-bk$
 ^\s{4}option\stcp-check$
+^\s{4}acl\swhatif\smatch$
+^\s{4}http-request\shello$
 ^\s{4}tcp-check\sconnect$
 ^\s{4}tcp-check\ssend\sPING$
 ^\s{4}tcp-check\sexpect\sstring\s<MsgHeader_PI>\\n<type>RODS_VERSION</type>$
+^\s{4}reqrep abc\\ def \\1 \\2$
+^\s{4}reqrep ghi\\ jkl \\3 \\4$
 ^\s{4}server\slocalhost\s127\.0\.0\.1:1247$
 ^\s{4}server\sother.host\s10\.20\.30\.1\sca-file\s/other/file\sssl$
-^\s{4}server\sothername\s10\.20\.30\.1:1247\scheck\sport\s1247$
+^\s{4}server\sothername\s10\.20\.30\.1:1247\scheck\sinter\s1234\sport\s1247$
 ^backend\ssshproxy$
 ^\s{4}balance\sleastconn$
 ^\s{4}option\stcp-check$

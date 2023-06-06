@@ -35,6 +35,9 @@ prefix 'defaults';
 'timeouts/connect' = 3500;
 'timeouts/client' = 10000;
 'timeouts/server' = 10000;
+'timeouts/client-fin' = 30000;
+'timeouts/server-fin' = 30000;
+'timeouts/tunnel' = 3600 * 1000;
 'config/option' = 'tcpka';
 prefix 'proxys/-1';
 'name' = 'webserver';
@@ -79,9 +82,19 @@ prefix 'frontends/irods-in';
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
 "tcpchecks" = list("connect", "send PING\n", 'expect string <MsgHeader_PI>\n<type>RODS_VERSION</type>');
+"http-request/0" = "hello";
+"acl/whatif" = "match";
+"reqrep/0" = dict(
+    "pattern", 'abc\ def',  # need escaped space, so single quotes
+    "replace", '\1 \2',
+    );
+"reqrep/1" = dict(
+    "pattern", 'ghi\ jkl',
+    "replace", '\3 \4',
+    );
 "servers/0" = dict('name', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
 "servers/1" = dict('name', 'other.host', 'ip', '10.20.30.1', 'params', dict('ssl', true, 'ca-file', '/other/file'));
-"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247));
+"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247, 'inter', 1234));
 
 prefix 'backends/sshproxy';
 "balance" = 'leastconn';
