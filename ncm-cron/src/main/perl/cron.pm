@@ -561,7 +561,7 @@ sub cleanCrontabs
             print $fh "$NCM_START $NCM_MSG\n"  # Set NCM-CRON START:
                 if $configType eq "Configure";
             $self->warn("NCM-CRON END: missing from $path. Deleting to EOF")
-                if $foundNCM eq 1;
+                if $foundNCM == 1;
         } else {
             # Linux: collect the current entries managed by ncm-cron in the cron.d
             # directory and delete those no longer part of the configuration.
