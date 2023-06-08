@@ -2,16 +2,17 @@
 
 =head1 NAME
 
-network: Configure Network Settings using NetworkManager Keyfile format. Most functions and logic is taken from network module. 
+network: Extention of Network to configure Network settings using NetworkManager by configuring in Keyfile format.
+Most functions and logic is taken from network module to minimise changes to current network module.
 
 =head1 DESCRIPTION
 
 The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
-and the keyfile format files in C<< /etc/NetworkManager/system-connections >>.
+and the NM keyfile settings in files C<< /etc/NetworkManager/system-connections >>.
 
 New/changed settings are first tested by retrieving the latest profile from the
-CDB server (using ccm-fetch).
-If this fails, the component reverts all settings to the previous values.
+CDB server (using ccm-fetch). 
+If this fails, the component reverts all settings to the previous values. This is no different to network module.
 
 During this test, a sleep value of 15 seconds is used to make sure the restarted network
 is fully restarted (routing may need some time to come up completely).
@@ -178,13 +179,78 @@ sub disable_nm_manage_dns
 
 }
 
+# Return keyfile route content that is understood in keyfile format of NM
+# every simeple atm, does not include all options in schema.
+# device must be device, not name of interface on system
+sub make_nm_ip_route
+{
+    my ($self, $flavour, $device, $routes, $routing_table_hash) = @_;
+
+    my @text;
+    #my $rt_table={};
+    my $idx=1;
+    foreach my $route (@$routes) {
+        if (!$route->{command}) {
+            my $ip;
+            if ($route->{address} eq 'default') {
+                $ip = $route->{address};
+            } elsif ($route->{prefix}) {
+                $ip = NetAddr::IP->new("$route->{address}/$route->{prefix}");
+            } else {
+                # in absence of netmask, NetAddr::IP uses 32 or 128
+                $ip = NetAddr::IP->new($route->{address}, $route->{netmask});
+            }
+            # Generate it
+            # To record routeN=id once per table.
+            # IP, Gatway if setip, comma seperated.
+            $route->{command} = "route$idx=$ip";
+            $route->{command} .= ",$route->{gateway}" if $route->{gateway};
+            push(@text, $route->{command});
+            #this adds route_options=table=ID to keyfile.
+            $route->{command} = "route".$idx."_options=table=".$routing_table_hash->{$route->{table}} if $route->{table} ;
+            push(@text, $route->{command});
+            $idx++;
+        }
+        
+    }
+    return \@text;
+}
+
+# Return nm keyfile option rule content
+# Very simple atm, only command supported.
+# device must be device, not name of interface on system
+sub make_nm_ip_rule
+{
+    my ($self, $flavour, $device, $rules, $routing_table_hash) = @_;
+
+    my @text;
+    #my $rt_table={};
+    my $idx=1;
+    foreach my $rule (@$rules) {
+        if (!$rule->{command}) {
+            
+            # To record route-table=id once per table.
+            #$rt_table->{$route->{table}} = "route-table=$routing_table_hash->{$route->{table}}" if $route->{table} ;
+            $rule->{command} = "routing-rule$idx=priority 100";
+            $rule->{command} .= " to $rule->{to}" if $rule->{to};
+            $rule->{command} .= " from $rule->{from}" if $rule->{from};
+            $rule->{command} .= " table $routing_table_hash->{$rule->{table}}" if $rule->{table};
+            push(@text, $rule->{command});
+            $idx++;
+        }
+        
+    }
+    return \@text;
+}
+
+
 # generate networkmanager keyfile format config for device
 # Return keyfile format content
 # NOTE: currenly only single interface config and bonding is supportted. more to follow
 # 
 sub make_nm_keyfile { # arg1 = 'eth0'
 
-    my ($self, $device, $net, $ipv6) = @_;
+    my ($self, $device, $net, $ipv6, $routing_table) = @_;
 
     # grab the devices config info
     my $iface = $net->{interfaces}->{$device};
@@ -231,6 +297,7 @@ sub make_nm_keyfile { # arg1 = 'eth0'
         }
     }
 
+
     # if ethernet device, map the mac address to the keyfile
     if ($is_eth) {
         push @data, '[ethernet]';
@@ -240,6 +307,7 @@ sub make_nm_keyfile { # arg1 = 'eth0'
             push @data, 'mtu='.$iface->{mtu};
         }
     }
+
 
     # ipaddr config
     my $msg;
@@ -255,8 +323,37 @@ sub make_nm_keyfile { # arg1 = 'eth0'
             }
             push @data, '[ipv4]';
             push @data, 'address1=' . $ip->cidr . ',' . $iface->{gateway};
+            
+            # TODO: process aliases here,  $iface->{aliases} 
+            # should be added as address2=ip, gateway
+            # alias interfaces have fallen out of favor. https://access.redhat.com/discussions/4221861
+            foreach my $al (sort keys %{$iface->{aliases} || {}}) {
+                $self->warn("Found alias config, not supported");
+            }
+
             push @data, 'ignore-auto-dns=true';
             push @data, 'method=manual';
+
+            # proces policy route
+            if (defined($iface->{route})) {
+                my $routes = $iface->{route};
+                my $idx = 1;
+                my $policy_route4 = $self->make_nm_ip_route('route', $device, $routes, $routing_table);
+                $self->verbose("policy route found, nm will manage it");
+                foreach my $key (@$policy_route4) {
+                    push @data, $key;
+                }
+            }
+            # process policy routing/rule
+             if (defined($iface->{rule})) {
+                my $rules = $iface->{rule};
+                my $idx = 1;
+                my $policy_rule4 = $self->make_nm_ip_rule('rule', $device, $rules, $routing_table);
+                $self->verbose("policy rule found, nm will manage it");
+                foreach my $key (@$policy_rule4) {
+                    push @data, $key;
+                }
+            }
         } else {
             $msg .= " and no (IPv4) ip configured";
             if ($ipv6 && $iface->{ipv6addr}) {
@@ -270,7 +367,6 @@ sub make_nm_keyfile { # arg1 = 'eth0'
             push @data, '[ipv4]';
             push @data, 'method=disabled';
             # TODO: check if ipv6 enabled, do stuff
-    
     }
 
     # add generated options for ethtool settings. offload, ring, pause, calesce.
@@ -317,21 +413,17 @@ sub make_nm_keyfile { # arg1 = 'eth0'
         } 
     }
     # end ethtool section.
-    
     my $bridge_config = $iface->{'bridging_opts'};
     if (scalar $bridge_config) {
         # TODO: findout keyfile config for bridgings_opts
         $self->warn("briging_opts found, but not supported.");
-        # perhaps below will work, needs testing.
-        #foreach my $key (@$bridge_config) {
-        #    push @data, $key;
-        #}
     }
-    # IPv6 additions, for now disabled
+    # IPv6 additions
     push(@data,'[ipv6]');
     if ($ipv6) {
-        # TODO: create ipv6 configs, not yet fully tested or supported.
-        $self->warn("ipv6 is enabled but not supported yet");
+        # TODO: create ipv6 configs, only address is supported.
+        # not tested or yet fully tested or supported.
+        $self->warn("ipv6 is enabled but not fully supported yet, use with caution!");
         push (@data, "address1=" . $iface->{ipv6addr});
         my $ipv6addr_secondaries = $iface->{'ipv6addr_secondaries'};
         if (scalar $ipv6addr_secondaries) {
@@ -341,7 +433,6 @@ sub make_nm_keyfile { # arg1 = 'eth0'
                 $idx++;
             }
         }
-
         push(@data, 'method=manual');
     } else {
         push(@data, 'method=disabled')
@@ -359,8 +450,8 @@ sub enable_network_service
     return $self->runrun([qw(systemctl enable NetworkManager)]);
 }
 
-# For NetworkManager, reload is enough here, 
-# keeping stop the same, but we are only doing reload of config.
+# For NetworkManager, I dont think we need stop interfaces. reload is enough here, 
+# keeping stop  fucntion name saem but we are only doing reload of config.
 # Returns if something was done or not
 sub stop
 {
@@ -375,7 +466,8 @@ sub stop
         if (@ifaces) {
             my @cmds;
             foreach my $iface (@ifaces) {
-                # can do nmcli conn up $iface if required but I dont think its required. relaod is safer.
+                # can do nmcli conn down $iface if required but I dont think its required. 
+                # Maybe if there is interface removed perm, will still remain until reboot?
                 push(@cmds, ["nmcli conn reload $iface"]);
             }
             $self->verbose("reload interfaces ",join(', ', @ifaces));
@@ -397,7 +489,8 @@ sub stop
 }
 
 
-# NetworkManager will be reload. Keeping start/stop as before but doing reload.
+# NetworkManager reload and up will apply any changes.
+# Keeping the function name the same.
 # Returns if something was done or not
 sub start
 {
@@ -414,7 +507,7 @@ sub start
     } elsif (@ifaces) {
         my @cmds;
         foreach my $iface (@ifaces) {
-            # can do nmcli conn up $iface but I dont think its required
+            # reload config, up is needed to start connections with new config.
             push(@cmds, ["nmcli conn reload $iface"]);
             push(@cmds, ["nmcli conn up $iface"]);
             push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
@@ -482,7 +575,7 @@ sub Configure
     # keyfile to manage network manager
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
-        my $keyfile = make_nm_keyfile($self, $ifacename, $net, $ipv6);
+        my $keyfile = make_nm_keyfile($self, $ifacename, $net, $ipv6, $nwtree->{routing_table});
         my $file_name = "$NMCFG_DIR/$ifacename.nmconnection";
         
         $exifiles->{$file_name} = $self->file_dump($file_name, $keyfile);
@@ -497,63 +590,6 @@ sub Configure
             my $no_resolv = $self->make_ifcfg($ifacename, $iface, $ipv6, resolv_mods => 0, peerdns => 0);
             $self->legacy_keeps_state($file_name, $no_resolv, $exifiles);
         }
-
-        # route/rule config, interface based.
-        foreach my $flavour (qw(route route6 rule rule6)) {
-            if (defined($iface->{$flavour})) {
-                my $method = "make_ifcfg_ip_$flavour";
-                $method =~ s/6$//;
-                # pass device, not system interface name
-                my $text = $self->$method($flavour, $iface->{device} || $ifacename, $iface->{$flavour});
-
-                my $file_name = "$NMCFG_DIR/$flavour-$ifacename";
-                $exifiles->{$file_name} = $self->file_dump($file_name, $text);
-            }
-        }
-
-        # legacy IPv4 format
-        # TODO: this won't work with nm, alternative setup?
-        $file_name = "$NMCFG_DIR/route-$ifacename";
-        if (exists($exifiles->{$file_name}) && $exifiles->{$file_name} == $UPDATED) {
-            # IPv4 route data was modified.
-            # Check if it was due to conversion of legacy format or
-            #   if there were actual changes in the config (or both)
-            $self->legacy_keeps_state($file_name, $self->make_ifcfg_route4_legacy($iface->{route}), $exifiles);
-        }
-
-
-        # set up aliases for interfaces
-        # one file per alias
-        # TODO: not done anything to support with keyfile alias approach here.
-        # alias interfaces have fallen out of favor. https://access.redhat.com/discussions/4221861
-        # need to find out how add this in keyfile format.
-        foreach my $al (sort keys %{$iface->{aliases} || {}}) {
-            my $al_dev = ($iface->{device} || $ifacename) . ":$al";
-            my $al_iface = $iface->{aliases}->{$al};
-            my $text = $self->make_ifcfg_alias($al_dev, $al_iface);
-
-            my $file_name = "$NMCFG_DIR/ifcfg-$ifacename:$al";
-            $exifiles->{$file_name} = $self->file_dump($file_name, $text);
-
-            $self->default_broadcast_keeps_state($file_name, $al_dev, $al_iface, $exifiles, 1);
-
-            # This is the only way it will work for VLANs
-            # If vlan device is vlanX and the DEVICE is eg ethY.Z
-            # you need a symlink to ifcfg-ethY.Z:alias <- ifcfg-vlanX:alias
-            # Otherwise ifup 'ifcfg-vlanX:alias' will work, but restart of network will look for
-            # ifcfg-ethY.Z:alias associated with vlan0 (and DEVICE field)
-            # Problem is, we want both
-            # Adding symlinks however is not the best thing to do.
-
-            my $file_name_sym = "$NMCFG_DIR/ifcfg-$al_dev";
-            if ($iface->{vlan} &&
-                $file_name_sym ne $file_name &&
-                ! $self->any_exists($file_name_sym)) { # TODO: should check target with readlink
-                # this will create broken link, if $file_name is not yet existing
-                $self->symlink($file_name, $file_name_sym) ||
-                    $self->error("Failed to create symlink from $file_name to $file_name_sym ($!)");
-            };
-        }
     }
 
     my $dev2mac = $self->make_dev2mac();
@@ -562,16 +598,8 @@ sub Configure
     # Changes to the general network config file are handled separately.
     # For devices: we will create a list of affected devices
 
-    # Since there's per interface reload, interface changes will be applied via ifdown/ifup.
-    # This is very coarse, but reimplementing the ifup/ifdown logic is highly non-trivial.
-    # ifdown: all interfaces that will be stopped
-    # ifup: all interfaces that will be (re)started
+    # Since there's per interface reload, interface changes will be applied via nmcli reload.
 
-    # For now, the order of vlans is not changed and
-    # left completely up to the network scripts.
-    # There's 0 (zero) intention to support things like vlans on bonding slaves,
-    # aliases on bonded vlans ...
-    # If you need this, buy more network adapters ;)
 
     my $ifdown = $self->make_ifdown($exifiles, $ifaces, $dev2mac);
     if (! defined($ifdown)) {
@@ -589,11 +617,13 @@ sub Configure
 
     $self->enable_network_service();
 
+    # TODO: will this work as is with NM? check.
     $self->start_openvswitch($ifaces, $ifup);
 
     $self->set_hostname($hostname);
 
     # TODO: why do that here? should be done after any restarting of devices or whole network?
+    # TODO: NM - not sure we need this for NM, this can be applied through keyfile and reload, up will applied it.
     $self->ethtool_set_options($ifaces);
 
     # Record any changes wrt the init config (e.g. due to stopping of NetworkManager)
@@ -608,6 +638,7 @@ sub Configure
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['NetworkManager'], log => $self);
+    # we dont want networkmanager to manage dns. if you do, set nm_manage_dns to true.
     $self->disable_nm_manage_dns($nwtree->{nm_manage_dns}, $nwsrv);
 
     # Rename special/magic RESOLV_CONF_SAVE, so it does not get picked up by ifdown.
@@ -623,34 +654,6 @@ sub Configure
 
     $init_config .= "\nPOST STOP\n";
     $init_config .= $self->get_current_config();
-
-    my $rename;
-    if ($comp_tree->{rename}) {
-        # Rename the (physical) network devices
-        $rename = $self->make_rename_map($dev2mac, $net->{interfaces});
-
-        if (!$rename) {
-            $self->error("Failed to make rename map, nothing to rename");
-        } else {
-            if (%$rename) {
-                # Rename
-                #   either the devices are scheduled for in ifdown or
-                #   scheduled for start in ifup (but not in ifdown),
-                #   or conifgured but somehow we don't care?
-                #   In any case, it's ok to down any device in the rename map
-                $self->down_rename_devices($rename);
-
-                $init_config .= "\nPOST DOWN RENAME\n";
-                $init_config .= $self->get_current_config();
-
-                # rerun ethtool
-                # TODO: why do that here? should be done after any restarting of devices or whole network?
-                $self->ethtool_set_options($ifaces);
-            } else {
-                $self->verbose("Nothing to rename");
-            }
-        }
-    }
 
     my $config_changed = $self->deploy_config($exifiles);
 
