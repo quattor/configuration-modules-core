@@ -22,4 +22,3 @@ type component_ipmi_type = {
 };
 
 bind "/software/components/ipmi" = component_ipmi_type;
-
