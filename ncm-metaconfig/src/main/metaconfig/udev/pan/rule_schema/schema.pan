@@ -28,7 +28,7 @@ Please refer to udev(7) man page for the list of match and assignment or action
 
 type udev_rule_match_operator = string with match(SELF, '^(={2}|!=)$');
 
-type udev_rule_assign_operator = string with match(SELF, '^(=|\+=|:=)$');
+type udev_rule_assign_operator = choice('=', '+=', ':=');
 
 type string_match_structure = {
     @{ dict of dict with string key, eg ACTION=="add|change" }
