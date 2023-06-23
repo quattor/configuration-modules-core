@@ -26,7 +26,7 @@ of "/sbin/ethtool ..." and operator of '+='.
 Please refer to udev(7) man page for the list of match and assignment or action
 }
 
-type udev_rule_match_operator = string with match(SELF, '^(={2}|!=)$');
+type udev_rule_match_operator = choice('==', '!=');
 
 type udev_rule_assign_operator = choice('=', '+=', ':=');
 
