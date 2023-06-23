@@ -45,7 +45,7 @@ type dict_match_structure = {
 
 type string_assign_structure = {
     @{ dict of dict without key, eg RUN+="/sbin/ethtool --set-priv-flags '%k'" }
-    'value' : string
+    'value' : string_trimmed
     'operator' : udev_rule_assign_operator
 };
 
