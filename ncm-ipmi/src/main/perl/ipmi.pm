@@ -18,7 +18,6 @@ sub Configure
 
   my $users   = $ipmi_config->{users};
   my $channel = $ipmi_config->{channel};
-  my $net_interface = $ipmi_config->{net_interface};
 
   CAF::Process->new([qw(chkconfig ipmi on)], log => $self)->run();
   CAF::Process->new([qw(service ipmi restart)], log => $self)->run();

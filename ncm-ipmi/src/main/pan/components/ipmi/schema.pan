@@ -19,7 +19,6 @@ type component_ipmi_type = {
 
     "channel" : long = 1
     "users" : structure_users[]
-    "net_interface" : string
 };
 
 bind "/software/components/ipmi" = component_ipmi_type;
