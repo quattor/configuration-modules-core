@@ -51,8 +51,8 @@ type string_assign_structure = {
 
 type dict_assign_structure = {
     @{ dict of dict with a key, eg ATTR{vendor}="0x8086" }
-    'key' : string
-    'value' : string
+    'key' : string_trimmed
+    'value' : string_trimmed
     'operator' : udev_rule_assign_operator
 };
 
