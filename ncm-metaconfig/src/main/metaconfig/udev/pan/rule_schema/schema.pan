@@ -38,8 +38,8 @@ type string_match_structure = {
 
 type dict_match_structure = {
     @{ dict of dict with a key, eg ATTRS{device}=="0x1572" }
-    'key' : string
-    'value' : string
+    'key' : string_trimmed
+    'value' : string_trimmed
     'operator' : udev_rule_match_operator
 };
 
