@@ -16,7 +16,25 @@ There could be multiple lines of rules with different matches independent of eac
 example:
 /etc/udev/rules.d/00-x710.rules
 
-ACTION=="add|change", ATTRS{device}=="0x1572", RUN+="/sbin/ethtool -s '%k' speed 10000"
+'rule/0' = dict(
+    'match_rule', dict(
+        'attrs', list(
+            dict(
+                'key', 'device',
+                'operator', '==', 
+                'value', '0x1572',
+            ),
+        ),
+    ),
+    'udev_assign_rule', dict(
+        'run', list(
+             dict(
+                'operator', '+=', 
+                'value', "/sbin/ethtool -s '%k' speed 10000",
+            ),
+        ),
+    ),
+);
 
 
 ACTION is one of the match keys with value of add|change with '==' operator.
@@ -37,7 +55,14 @@ type string_match_structure = {
 };
 
 type dict_match_structure = {
-    @{ dict of dict with a key, eg ATTRS{device}=="0x1572" }
+    @{
+        dict of dict with a key, eg
+        dict(
+            'key', 'device',
+            'operator', '==', 
+            'value', '0x1572',
+        );
+    }
     'key' : string_trimmed
     'value' : string_trimmed
     'operator' : udev_rule_match_operator
@@ -50,7 +75,14 @@ type string_assign_structure = {
 };
 
 type dict_assign_structure = {
-    @{ dict of dict with a key, eg ATTR{vendor}="0x8086" }
+    @{
+        dict of dict with a key, eg
+        dict(
+            'key', 'vendor',
+            'operator', '=', 
+            'value', '0x8086',
+        );
+    }
     'key' : string_trimmed
     'value' : string_trimmed
     'operator' : udev_rule_assign_operator
