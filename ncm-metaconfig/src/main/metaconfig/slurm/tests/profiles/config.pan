@@ -15,6 +15,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "AuthType" = "munge";
 "CryptoType" = "munge";
 "ClusterName" = "thecluster";
+"CommunicationParameters" = dict("block_null_hash", true);
 "DisableRootJobs" = true;
 "EnforcePartLimits" = 'NO';
 #Epilog=
@@ -24,7 +25,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "GresTypes" = list("gpu", "mps");
 "GroupUpdateForce" = false;
 "GroupUpdateTime" = 600;
-"JobCheckpointDir" = "/var/spool/slurm/checkpoint";
 "JobContainerType" = "tmpfs";
 #JobCredentialPrivateKey=
 #JobCredentialPublicCertificate=
@@ -55,12 +55,11 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #RebootProgram=
 "ReturnToService" = 1;
 #SallocDefaultCommand=
-
+"ScronParameters" = dict("enable", true);
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/process";
 
 "SlurmctldParameters" = dict(
-    "preempt_send_user_signal", true,
     "power_save_interval", 20,
     "{cloud_reg_addrs}", false,
     "{user_resv_delete}", false,
@@ -79,7 +78,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "SwitchType" = "none";
 #TaskEpilog=
 "TaskPlugin" = list("affinity" , "cgroup");
-"TaskPluginParam" = dict("Sched", true);
 #TaskProlog=
 #TopologyPlugin=topology/tree
 #TmpFS=/tmp
@@ -156,7 +154,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #AccountingStoragePort=
 "AccountingStorageType" = "slurmdbd";
 #AccountingStorageUser=
-"AccountingStoreJobComment" = true;
+"AccountingStoreFlags" = list("job_comment", "job_env");
 #DebugFlags=
 #JobCompHost=
 "JobCompLoc" = "/var/spool/slurm/job_completions.log";

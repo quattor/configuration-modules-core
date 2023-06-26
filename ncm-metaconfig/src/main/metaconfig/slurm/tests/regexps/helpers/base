@@ -1,0 +1,9 @@
+Config file for slurm helpers
+---
+/etc/slurm/helpers.conf
+quote
+---
+ExecTime=10
+Feature=a Helper=/bin/foo 
+
+NodeName=node001,node005 Feature=b Helper=/bin/bar

@@ -8,6 +8,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/job_container.conf}
 'Default' = dict(
     'AutoBasePath', true,
     'Basepath', '/var/tmp/slurm',
+    'Dirs', list('/tmp', '/dev/shm'),
 );
 'Nodes' = list(
     dict(
