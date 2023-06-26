@@ -48,6 +48,25 @@ type ${project.artifactId}_valid_execpath = string with match(SELF, '^([@+!:-]|!
 # type for a relative directory: no leading / and may not include ".."
 type ${project.artifactId}_relative_directory = string with !match(SELF, '(^/|\.\.)');
 
+@documentation{
+    Validate that a property is either a size (in bytes), a relative size (in %)
+    or 'infinity'. Used for memory limits in cgroups.
+}
+function is_absolute_or_relative_size = {
+    l = ARGV[0];
+    if (is_long(l) && l > 0) {
+        return(true);
+    };
+    if (is_string(l) && match(l, '^(infinity|100%|[0-9]?[0-9]%)$')) {
+        return(true);
+    };
+    false;
+};
+
+type ${project.artifactId}_absolute_or_relative_size = element with is_absolute_or_relative_size(SELF);
+
+type ${project.artifactId}_weights = long(1..10000);
+
 # adding new ones
 # go to http://www.freedesktop.org/software/systemd/man/systemd.directives.html
 # and follow the link to the manual
@@ -222,18 +241,29 @@ valid for [Slice], [Scope], [Service], [Socket], [Mount], or [Swap] sections
 type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'CPUAccounting' ? boolean
     'CPUShares' ? long(2..262144)
+    'CPUWeight' ? ${project.artifactId}_weights
+    'StartupCPUWeight' ? ${project.artifactId}_weights
     'StartupCPUShares' ? long(2..262144)
     'CPUQuota' ? long(0..100)  # percentages
     'MemoryAccounting' ? boolean
-    'MemoryLimit' ? long  # in bytes
+    'MemoryLimit' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryMin' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryMax' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryLow' ? ${project.artifactId}_absolute_or_relative_size
+    'MemoryHigh' ? ${project.artifactId}_absolute_or_relative_size
+    'MemorySwapMax' ? ${project.artifactId}_absolute_or_relative_size
     'TasksAccounting' ? boolean
     'TasksMax' ? string with match(SELF, '^([0-9]+%?|infinity)$')
     'BlockIOAccounting' ? boolean
     'BlockIOWeight' ? long(10..1000)
+    'IOWeight' ? ${project.artifactId}_weights
+    'StartupIOWeight' ? ${project.artifactId}_weights
     'StartupBlockIOWeight' ? long(10..1000)
     'BlockIODeviceWeight' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOReadBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
     'BlockIOWriteBandwidth' ? ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight[]
+    'IPAccounting' ? boolean
+    'IPAddressAllow' ? type_network_name[]
     'DeviceAllow' ? ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist[]
     'DevicePolicy' ? choice('auto', 'closed', 'strict')
     'Slice' ? string
@@ -381,7 +411,7 @@ http://www.freedesktop.org/software/systemd/man/systemd.automount.html
 type ${project.artifactId}_unitfile_config_automount = {
     'Where': absolute_file_path
     'DirectoryMode' ? type_octal_mode
-    'TimeoutSec' ? long(0..)
+    'TimeoutIdleSec' ? long(0..)
 };
 
 @documentation{
@@ -407,6 +437,15 @@ type ${project.artifactId}_unitfile_config_timer = {
 };
 
 @documentation{
+the [Slice] section
+http://www.freedesktop.org/software/systemd/man/systemd.slice.html
+}
+type ${project.artifactId}_unitfile_config_slice = {
+    include ${project.artifactId}_unitfile_config_systemd_resource_control
+};
+
+
+@documentation{
 Unit configuration sections
     includes, unit and install are type agnostic
         unit and install are mandatory, but not enforced by schema (possible issues in case of replace=true)
@@ -423,6 +462,7 @@ type ${project.artifactId}_unitfile_config = {
     'automount' ? ${project.artifactId}_unitfile_config_automount
     'timer' ? ${project.artifactId}_unitfile_config_timer
     'unit' ? ${project.artifactId}_unitfile_config_unit
+    'slice' ? ${project.artifactId}_unitfile_config_slice
 };
 
 @documentation{
@@ -463,7 +503,7 @@ type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
-    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer') = 'service'
+    "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice') = 'service'
     "startstop" : boolean = true
     "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
     @{unitfile configuration}

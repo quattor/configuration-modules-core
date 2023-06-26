@@ -80,6 +80,11 @@ bind "/unitfile" = systemd_unitfile_config[];
         'OnCalendar', list('weekly', '2021-04-07 10:32:01'),
         'Persistent', true,
         ),
+    'slice', dict(
+        'MemoryAccounting', true,
+        'MemoryLimit', 'infinity',
+        'MemoryMax', '28%',
+        ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
         ),
