@@ -12,6 +12,12 @@ jobs:
     - name: Determine hash for caching key
       id: cachekeystep
       run: echo "pomcachekey=${{ hashFiles('**/pom.xml') }}" >> $GITHUB_ENV
+    - name: set up maven
+      run: |
+        mvn_version="3.5.4"
+        cd /tmp
+        curl -s "https://archive.apache.org/dist/maven/maven-3/${mvn_version}/binaries/apache-maven-${mvn_version}-bin.tar.gz" | tar -xvzf -
+        ln -s "/tmp/apache-maven-${mvn_version}/bin/mvn" /usr/local/bin/mvn
     - name: set up dependencies
       run: |
         yum -y install epel-release http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
@@ -19,7 +25,7 @@ jobs:
         # work, but this is a quick way of pulling in a lot of required dependencies.
         # Surprisingly `which` is not installed by default and panc depends on it.
         # libselinux-utils is required for /usr/sbin/selinuxenabled
-        yum install -y maven perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices \
+        yum install -y java-openjdk perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices \
           ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
           perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
           perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
