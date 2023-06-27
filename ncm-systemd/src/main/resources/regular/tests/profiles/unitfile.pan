@@ -69,6 +69,18 @@ bind "/unitfile" = systemd_unitfile_config[];
         'SocketGroup', 'pipegroup',
         'SocketMode', '660',
         ),
+    'path', dict(
+        'PathExists', '/path/to/file',
+        'PathExistsGlob', '/path/to/glob*',
+        'PathChanged', '/path/to/file',
+        'PathModified', '/path/to/file',
+        'DirectoryNotEmpty', '/path/to/dir',
+        'Unit', 'unitname',
+        'MakeDirectory', true,
+        'DirectoryMode', '0755',
+        'TriggerLimitIntervalSec', 10,
+        'TriggerLimitBurst', 5,
+        ),
     'mount', dict(
         'What', 'server:/share',
         'Where', '/data/share',
