@@ -16,5 +16,9 @@ jobs:
           python-version: 3
       - name: Install dependencies
         run: pip install colorama prettytable six
+      - name: Install panlint
+        run: |
+          wget -q https://raw.githubusercontent.com/quattor/pan/master/panc/src/main/scripts/panlint/panlint.py -O /tmp/panlint.py
+          chmod u+x /tmp/panlint.py
       - name: run panlint
-        run: ./travis-build
+        run: git diff --name-only HEAD^ | grep '\.pan$' | xargs -r /tmp/panlint.py --allow_mvn_templates || exit 1
