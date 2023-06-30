@@ -1,5 +1,7 @@
 object template ipmi;
 
+include 'components/ipmi/schema';
+
 prefix "/software/components/ipmi";
 
 "users/0/userid" = "userid";
