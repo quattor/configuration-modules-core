@@ -282,11 +282,11 @@ type ${project.artifactId}_unitfile_config_service = {
     'BusName' ? string
     'BusPolicy' ? string[] with length(SELF) == 2 && match(SELF[1], '^(see|talk|own)$')
     'CapabilityBoundingSet' ? linux_capability[]
-    'ExecReload' ? string
-    'ExecStart' ? string
+    'ExecReload' ? transitional_string_or_list_of_strings
+    'ExecStart' ? transitional_string_or_list_of_strings
     'ExecStartPost' ? transitional_string_or_list_of_strings
     'ExecStartPre' ? transitional_string_or_list_of_strings
-    'ExecStop' ? string
+    'ExecStop' ? transitional_string_or_list_of_strings
     'ExecStopPost' ? transitional_string_or_list_of_strings
     'GuessMainPID' ? boolean
     'NonBlocking' ? boolean
