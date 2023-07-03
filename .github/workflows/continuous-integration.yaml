@@ -52,7 +52,7 @@ jobs:
         chown -R nobody:nobody . /tmp/m2
         # we have to run as a non-root user to pass the spma tests
         # secondly, we first download all maven dependencies and then run the tests because it fails with hanging downloads otherwise.
-        runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve $MVN_ARGS\" && mvn_test" nobody
+        runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve-plugins dependency:go-offline $MVN_ARGS\" && mvn_test" nobody
       env:
         QUATTOR_TEST_TEMPLATE_LIBRARY_CORE: /tmp/template-library-core-master
         MVN_ARGS: -Dmaven.repo.local=/tmp/m2
