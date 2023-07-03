@@ -4,7 +4,7 @@
 [%-      CASE 'user' -%]
 [%-         el -%][% line.exists('group') ? ':' _ line.group : '' -%]
 [%-      CASE 'action' -%]
-[%-         el FILTER upper -%]
+[%-         line.exists('audit') && line.audit ? 'A_' : '' -%][%- el FILTER upper -%]
 [%-      CASE -%]
 [%-         CCM.is_list(el) ? el.join(',') : el -%]
 [%- END -%]

@@ -21,3 +21,10 @@ prefix '/config/2';
 "policy" = "reject";
 "src" = "all";
 "connlimit" = "alot";
+
+prefix '/config/3';
+"dst" = "all";
+"loglevel" = "info";
+"policy" = "reject";
+"src" = "all";
+"audit" = true;

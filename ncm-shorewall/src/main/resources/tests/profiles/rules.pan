@@ -22,3 +22,9 @@ prefix '/config/1';
 "src/address/1" = "5.6.7.8/32";
 "src/interface" = "etx1";
 "src/zone" = "ext";
+
+prefix '/config/2';
+"action" = "reject";
+"dst/zone" = "fww";
+"src/zone" = "extt";
+"audit" = true;
