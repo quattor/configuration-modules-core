@@ -217,7 +217,7 @@ type haproxy_service_frontend = {
     'acl' ? dict()
     'bind' : haproxy_service_bind[]
     'default_backend' : string
-    'use_backend' ? string[]
+    'use_backend' ? string_trimmed[]
     'mode' ? choice("tcp", "http")
     'tcp-request' ? string[]
     'http-request' ? string[]
