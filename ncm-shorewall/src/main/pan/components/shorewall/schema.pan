@@ -157,6 +157,8 @@ type component_shorewall_rules = {
     "helper" ? string
     @{use the audit action}
     "audit" ? boolean
+    @{action loglevel}
+    "loglevel" ? string
 };
 
 type component_shorewall_shorewall_blacklist = string with

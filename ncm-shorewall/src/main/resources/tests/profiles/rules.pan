@@ -28,3 +28,4 @@ prefix '/config/2';
 "dst/zone" = "fww";
 "src/zone" = "extt";
 "audit" = true;
+"loglevel" = "info";
