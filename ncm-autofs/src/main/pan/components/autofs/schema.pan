@@ -14,13 +14,22 @@ type autofs_conf_autofs = {
     "browse_mode" ? boolean
     "append_options" ? boolean
     "logging" ? string with match(SELF, '^(none|verbose|debug)$')
+    "mount_nfs_default_protocol" ? long(0..)
 };
 
 type autofs_conf_amd = {
     include autofs_conf_common
     "dismount_interval" ? long(0..)
+    "map_name" ? string_trimmed
     "map_type" ? string with match(SELF, '^(file|nis|ldap)$')
     "autofs_use_lofs" ? boolean
+    "auto_dir" ? absolute_file_path
+    "browsable_dirs" ? boolean
+    "domain_strip" ? boolean
+    "local_domain" ? string
+    "normalize_hostnames" ? boolean
+    "search_path" ? string_search_path
+    "selectors_on_default" ? boolean
 };
 
 type autofs_conf = {
@@ -67,6 +76,11 @@ type autofs_component = {
     "preserveMaster" : boolean = true
     @{This resource contains one entry per autofs map to manage. The dict key is
     mainly an internal name but it will be used to build the default map name.}
-    "maps" : autofs_map_type{}
+    "maps" ? autofs_map_type{}
     "conf" ? autofs_conf
+} with {
+    maps = is_defined(SELF['maps']) && length(SELF['maps']) > 0;
+    amd_mounts = is_defined(SELF['conf']['mountpoints']) && length(SELF['conf']['mountpoints']) > 0;
+    if (!maps && !amd_mounts) error('No autofs maps or amd style mounts have been defined');
+    true;
 };
