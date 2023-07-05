@@ -1,8 +1,12 @@
 object template ipmi;
 
+include 'components/ipmi/schema';
+
 prefix "/software/components/ipmi";
 
-"users/0/userid" = "userid";
+"channel" = 1;
+
+"users/0/userid" = 1;
 "users/0/login" = "login";
 "users/0/password" = "password";
-"users/0/priv" = "priv";
+"users/0/priv" = 2;
