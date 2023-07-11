@@ -15,7 +15,6 @@ my $mock = Test::MockModule->new('NCM::Component::nmstate');
 my $cfg = get_config_for_profile('nmstate_simple');
 my $cmp = NCM::Component::nmstate->new('network');
 
-
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
 # From here, test custom methods

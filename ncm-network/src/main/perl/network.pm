@@ -178,9 +178,6 @@ Readonly my $DEVICE_REGEXP => qr{
     $
 }x;
 
-my $IFCFG_DIR = "/etc/sysconfig/network-scripts";
-my $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
-
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
 Readonly my $RESOLV_CONF => '/etc/resolv.conf';
@@ -189,6 +186,8 @@ Readonly my $RESOLV_SUFFIX => '.ncm-network';
 
 Readonly my $FAILED_SUFFIX => '-failed';
 
+Readonly my $BACKUP_DIR_SUFFIX => '.quattorbackup';
+
 Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
@@ -196,21 +195,22 @@ Readonly my $NEW => 2;
 # changes to file, but same config (eg for new file formats)
 Readonly my $KEEPS_STATE => 3;
 
-
-# automatic exports
+# automatic exports of readonlys
 our @EXPORT = qw($FAILED_SUFFIX
     $REMOVE $NOCHANGES $UPDATED $NEW $KEEPS_STATE
     $RESOLV_CONF $RESOLV_CONF_SAVE $RESOLV_SUFFIX
     $NETWORKCFG $NETWORK_PATH $HOSTNAME_CMD
     );
 
+# list of constants to allow inheritance via $self->CONSTANTNAME
+use constant IFCFG_DIR => "/etc/sysconfig/network-scripts";
 
-sub set_cfg_dir
+sub backup_dir
 {
-    my ($self, $cfg_dir) = @_;
-    $IFCFG_DIR = $cfg_dir;
-    $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
+    my ($self) = @_;
+    return $self->IFCFG_DIR . "/$BACKUP_DIR_SUFFIX";
 }
+
 
 # wrapper around -x for easy unittesting
 # is not part of CAF::Path
@@ -283,6 +283,12 @@ sub ethtool_get_current
     return %current;
 }
 
+sub iface_filename
+{
+    my ($self, $iface) = @_;
+    return $self->IFCFG_DIR . "/ifcfg-$iface";
+}
+
 # backup_filename: returns backup filename for given file
 sub backup_filename
 {
@@ -291,7 +297,7 @@ sub backup_filename
     my $back = "$file";
     $back =~ s/\//_/g;
 
-    return "$BACKUP_DIR/$back";
+    return $self->backup_dir() . "/$back";
 }
 
 # Generate the filename to hold the test configuration data
@@ -480,8 +486,8 @@ sub get_current_config
     my $fh = CAF::FileReader->new($NETWORKCFG, log => $self);
     my $output = "$NETWORKCFG\n$fh";
 
-    $output .= "\nls -lrt $IFCFG_DIR\n";
-    $output .= $self->runrun(['ls', '-ltr', $IFCFG_DIR]);
+    $output .= "\nls -lrt " . $self->IFCFG_DIR . "\n";
+    $output .= $self->runrun(['ls', '-ltr', $self->IFCFG_DIR]);
 
     $output .= "\n@$IPADDR\n";
     $output .= $self->runrun($IPADDR);
@@ -895,16 +901,16 @@ sub gather_existing
     my (%exifiles, %exilinks);
 
     # read current config
-    my $files = $self->listdir($IFCFG_DIR, test => sub { return $self->is_valid_interface($_[0]); });
+    my $files = $self->listdir($self->IFCFG_DIR, test => sub { return $self->is_valid_interface($_[0]); });
     foreach my $filename (@$files) {
         if ($filename =~ m/^([:\w.-]+)$/) {
             $filename = $1; # untaint
         } else {
-            $self->warn("Cannot untaint filename $IFCFG_DIR/$filename. Skipping");
+            $self->warn("Cannot untaint filename " . $self->IFCFG_DIR . "/$filename. Skipping");
             next;
         }
 
-        my $file = "$IFCFG_DIR/$filename";
+        my $file = $self->IFCFG_DIR . "/$filename";
 
         my $msg;
         if ($self->is_symlink($file)) {
@@ -1348,8 +1354,7 @@ sub make_ifdown
         my $valid = $self->is_valid_interface($file);
         if ($valid) {
             my ($iface, $ifupdownname) = @$valid;
-            my $cfg_filename = "$IFCFG_DIR/ifcfg-$iface";
-            $cfg_filename = "$IFCFG_DIR/$iface.yml" if $IFCFG_DIR =~ /nmstate/;
+            my $cfg_filename = $self->iface_filename($iface);
             # ifdown: all devices that have files with non-zero status
             if ($value == $NOCHANGES) {
                 $self->verbose("No changes for interface $iface (cfg file $file)");
@@ -1428,8 +1433,8 @@ sub make_ifup
         # and have state other than REMOVE
         # e.g. master with NOCHANGES state can be added here
         # when a slave had modifications
-        my $cfg_filename = "$IFCFG_DIR/ifcfg-$iface";
-        $cfg_filename = "$IFCFG_DIR/$iface.yml" if $IFCFG_DIR =~ /nmstate/;
+        my $cfg_filename = $self->iface_filename($iface);
+
         if (exists($exifiles->{"$cfg_filename"}) &&
             $exifiles->{"$cfg_filename"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
@@ -1627,7 +1632,7 @@ sub recover
 
     $self->error("Network restart failed. Reverting back to original config. ",
                  "Failed modified configfiles can be found in ",
-                 "$BACKUP_DIR with suffix $FAILED_SUFFIX. ",
+                 $self->backup_dir() . " with suffix $FAILED_SUFFIX. ",
                  "(If there aren't any, it means only some devices were removed.)");
 
     # stop/recover/start whole network is the only thing that should always work.
@@ -1717,12 +1722,12 @@ sub init_backupdir
 {
     my $self = shift;
 
-    if (!defined($self->cleanup($BACKUP_DIR, undef, keeps_state => 1))) {
-        $self->error("Failed to cleanup previous backup directory $BACKUP_DIR: $self->{fail}");
+    if (!defined($self->cleanup($self->backup_dir(), undef, keeps_state => 1))) {
+        $self->error("Failed to cleanup previous backup directory " . $self->backup_dir() . ": $self->{fail}");
         return;
     }
-    if (!defined($self->directory($BACKUP_DIR, mode => oct(700), keeps_state => 1))) {
-        $self->error("Failed to create backup directory $BACKUP_DIR: $self->{fail}");
+    if (!defined($self->directory($self->backup_dir(), mode => oct(700), keeps_state => 1))) {
+        $self->error("Failed to create backup directory " . $self->backup_dir() . ": $self->{fail}");
         return;
     }
 
@@ -2036,7 +2041,7 @@ sub Configure
         my $iface = $ifaces->{$ifacename};
         my $text = $self->make_ifcfg($ifacename, $iface, $ipv6);
 
-        my $file_name = "$IFCFG_DIR/ifcfg-$ifacename";
+        my $file_name = $self->iface_filename($ifacename);
         $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
         $self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
@@ -2057,13 +2062,13 @@ sub Configure
                 # pass device, not system interface name
                 my $text = $self->$method($flavour, $iface->{device} || $ifacename, $iface->{$flavour});
 
-                my $file_name = "$IFCFG_DIR/$flavour-$ifacename";
+                my $file_name = $self->IFCFG_DIR . "/$flavour-$ifacename";
                 $exifiles->{$file_name} = $self->file_dump($file_name, $text);
             }
         }
 
         # legacy IPv4 format
-        $file_name = "$IFCFG_DIR/route-$ifacename";
+        $file_name = $self->IFCFG_DIR . "/route-$ifacename";
         if (exists($exifiles->{$file_name}) && $exifiles->{$file_name} == $UPDATED) {
             # IPv4 route data was modified.
             # Check if it was due to conversion of legacy format or
@@ -2079,7 +2084,7 @@ sub Configure
             my $al_iface = $iface->{aliases}->{$al};
             my $text = $self->make_ifcfg_alias($al_dev, $al_iface);
 
-            my $file_name = "$IFCFG_DIR/ifcfg-$ifacename:$al";
+            my $file_name = $self->IFCFG_DIR . "/ifcfg-$ifacename:$al";
             $exifiles->{$file_name} = $self->file_dump($file_name, $text);
 
             $self->default_broadcast_keeps_state($file_name, $al_dev, $al_iface, $exifiles, 1);
@@ -2092,7 +2097,7 @@ sub Configure
             # Problem is, we want both
             # Adding symlinks however is not the best thing to do.
 
-            my $file_name_sym = "$IFCFG_DIR/ifcfg-$al_dev";
+            my $file_name_sym = $self->IFCFG_DIR . "/ifcfg-$al_dev";
             if ($iface->{vlan} &&
                 $file_name_sym ne $file_name &&
                 ! $self->any_exists($file_name_sym)) { # TODO: should check target with readlink
