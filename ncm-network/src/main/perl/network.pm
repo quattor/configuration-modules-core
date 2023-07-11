@@ -76,6 +76,7 @@ An example:
 
 =cut
 
+use 5.10.1;
 use parent qw(NCM::Component CAF::Path);
 
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -786,15 +787,18 @@ sub process_network
             if (defined($opts) && keys %$opts) {
                 $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
                 $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
+
                 # for bonding_opts, we need linkagregation settings for nmstate.
                 # this should not impact existing configs as it adds interface/$name/link_aggregation
                 if ($attr eq "bonding_opts"){
                     foreach my $opt (sort keys %$opts){
-                        if ($opt eq 'mode'){
-                            $iface->{link_aggregation}->{mode} = $opts->{mode};
-                        }else{
-                            $iface->{link_aggregation}->{options}->{$opt} = $opts->{$opt};
+                        $iface->{link_aggregation} ||= {};
+                        my $la = $iface->{link_aggregation};
+                        if ($opt ne 'mode') {
+                            $la->{options} ||= {};
+                            $la = $la->{options};
                         }
+                        $la->{$opt} = $opts->{$opt};
                     }
                 }
                 # TODO for briging_opts
