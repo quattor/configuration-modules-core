@@ -79,20 +79,11 @@ sub disable_nm_manage_dns
     my $filename = "/etc/NetworkManager/conf.d/90-quattor-dns-none.conf";
     my @data = ('[main]');
     push @data, 'dns=none';
-    if ( (defined($manage_dns) && !$manage_dns) || (! defined($manage_dns)) ) {
-        $self->verbose("Configuring networkmanager not to manage resolv.conf");
-        my $fh = CAF::FileWriter->new($filename, mode => oct(444), log => $self, keeps_state => 1);
-        print $fh join("\n", @data, '');
-        if ($fh->close())
-        {
-            $self->info("File $filename changed, reload network");
-            $nwsrv->reload();
-        };
-    } else {
+    if ( $manage_dns ) {
         # cleanup the config if was created previously
-        if (-e $filename) {
+        if ($self->file_exists($filename)) {
             my $msg = "REMOVE config $filename, NOTE: networkmanager will manage resolv.conf";
-            if (unlink($filename)) {
+            if ($self->cleanup($filename)) {
                 $self->info($msg);
                 $self->verbose("Reload NetworkManager");
                 $nwsrv->reload();
@@ -100,8 +91,15 @@ sub disable_nm_manage_dns
                 $self->error("$msg failed. ($self->{fail})");
             };
         };
+    } else {
+        $self->verbose("Configuring networkmanager not to manage resolv.conf");
+        my $fh = CAF::FileWriter->new($filename, mode => oct(444), log => $self, keeps_state => 1);
+        print $fh join("\n", @data, '');
+        if ($fh->close()) {
+            $self->info("File $filename changed, reload network");
+            $nwsrv->reload();
+        };
     }
-
 }
 
 # return hasref of policy rule. interface.tt module uses this to create the rule in nmstate file.
@@ -370,7 +368,7 @@ sub is_active_interface
     my @existing_conn = split('\n', $output);
     my %current_conn;
     my $found = 0;
-    foreach  my $conn_name  (@existing_conn) {
+    foreach my $conn_name (@existing_conn) {
         $conn_name =~ s/\s+$//;
         if ($conn_name eq $ifacename){
             $found = 1;
@@ -414,7 +412,7 @@ sub nmstate_apply
         $action = 1;
     }
     if (@ifaces) {
-        $self->info("Applying changes using $NMSTATECTL ",join(', ', @ifaces));
+        $self->info("Applying changes using $NMSTATECTL ", join(', ', @ifaces));
         my @cmds;
         # clear any connections created by NM with 'Wired connection x' to start fresh.
         $self->clear_default_nm_connections();
@@ -480,10 +478,12 @@ sub Configure
     $self->routing_table($nwtree->{routing_table});
 
     # main network config
+    # TODO: aka7, what is the role of /etc/systconfig/network in networkmanager/nmstate managed OS?
     return if ! defined($self->mk_bu($NETWORKCFG));
 
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
 
+    # TODO: aka7, targeted OS is EL9, you can assume hostnamectl exists
     my $use_hostnamectl = $self->_is_executable($HOSTNAME_CMD);
     # if hostnamectl exists, do not set it via the network config file
     # systemd rpm --script can remove it anyway
@@ -492,6 +492,7 @@ sub Configure
     my ($text, $ipv6) = $self->make_network_cfg($nwtree, $net, $nwcfg_hostname);
     $exifiles->{$NETWORKCFG} = $self->file_dump($NETWORKCFG, $text);
 
+    # TODO: aka7 this can be removed as well. this is some piece of legacy code you don't need
     if ($exifiles->{$NETWORKCFG} == $UPDATED && $use_hostnamectl) {
         # Network config was updated, check if it was due to removal of HOSTNAME
         # when hostnamectl is present.
@@ -509,6 +510,7 @@ sub Configure
         #$self->default_broadcast_keeps_state($file_name, $ifacename, $iface, $exifiles, 0);
         $self->ethtool_opts_keeps_state($file_name, $ifacename, $iface, $exifiles);
 
+        # TODO: aka7, this is legacy code, it can go away
         if ($exifiles->{$file_name} == $UPDATED) {
             # interface configuration was changed
             # check if this was due to addition of resolv_mods / peerdns
@@ -558,8 +560,8 @@ sub Configure
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['NetworkManager'], log => $self);
 
-    # NetworkManager manages dns by default, but we manage dns with ncm-resolver, new option to eanble/disable it.
-    $self->disable_nm_manage_dns($nwtree->{nm_manage_dns}, $nwsrv);
+    # NetworkManager manages dns by default, but we manage dns with e.g. ncm-resolver, new option to enable/disable it.
+    $self->disable_nm_manage_dns($nwtree->{nm_manage_dns} || 0, $nwsrv);
 
     # nmstate files are applied uinsg nmstate apply via this componant. We don't want nmstate svc to manage it.
     # If nmstate svc manages the files, it will apply the config for any files found in /etc/nmstate with .yml extension. Once the config is applied,
@@ -580,6 +582,7 @@ sub Configure
     my $config_changed = $self->deploy_config($exifiles);
 
     # Save/Restore last known working (i.e. initial) /etc/resolv.conf
+    # TODO: @aka7, hmmm, if nm is allowed to manage dns, then this should be allowed to have changed
     $resolv_conf_fh->close();
 
     # Since there's per interface reload, interface changes will be applied via nmstatectl.
