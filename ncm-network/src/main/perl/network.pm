@@ -147,7 +147,6 @@ Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
 Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
 Readonly my $ROUTING_TABLE => '/etc/iproute2/rt_tables';
-Readonly my $NMSTATECTL => '/usr/bin/nmstatectl';
 
 Readonly my $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
@@ -181,6 +180,7 @@ Readonly my $DEVICE_REGEXP => qr{
 
 my $IFCFG_DIR = "/etc/sysconfig/network-scripts";
 my $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
+
 Readonly my $NETWORKCFG => "/etc/sysconfig/network";
 
 Readonly my $RESOLV_CONF => '/etc/resolv.conf';
@@ -188,6 +188,7 @@ Readonly my $RESOLV_CONF_SAVE => '/etc/resolv.conf.save';
 Readonly my $RESOLV_SUFFIX => '.ncm-network';
 
 Readonly my $FAILED_SUFFIX => '-failed';
+
 Readonly my $REMOVE => -1;
 Readonly my $NOCHANGES => 0;
 Readonly my $UPDATED => 1;
@@ -195,22 +196,17 @@ Readonly my $NEW => 2;
 # changes to file, but same config (eg for new file formats)
 Readonly my $KEEPS_STATE => 3;
 
-# methods needed to get values from other modules.
-sub keeps_state { $KEEPS_STATE }
-sub updated_state { $UPDATED }
-sub remove_state { $REMOVE }
-sub nochanges_state { $NOCHANGES }
-sub new_state { $NEW }
-sub networkcfg { $NETWORKCFG }
-sub resolv_conf { $RESOLV_CONF }
-sub resolv_conf_save { $RESOLV_CONF_SAVE }
-sub resolv_suffix { $RESOLV_SUFFIX }
-sub failed_suffix { $FAILED_SUFFIX }
-sub network_path { $NETWORK_PATH }
-sub hostname_cmd { $HOSTNAME_CMD }
-sub nmstatectl { $NMSTATECTL }
 
-sub set_cfg_dir {
+# automatic exports
+our @EXPORT = qw($FAILED_SUFFIX
+    $REMOVE $NOCHANGES $UPDATED $NEW $KEEPS_STATE
+    $RESOLV_CONF $RESOLV_CONF_SAVE $RESOLV_SUFFIX
+    $NETWORKCFG $NETWORK_PATH $HOSTNAME_CMD
+    );
+
+
+sub set_cfg_dir
+{
     my ($self, $cfg_dir) = @_;
     $IFCFG_DIR = $cfg_dir;
     $BACKUP_DIR = "$IFCFG_DIR/.quattorbackup";
