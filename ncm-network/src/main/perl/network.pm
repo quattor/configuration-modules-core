@@ -145,10 +145,10 @@ Readonly my $BRIDGECMD => '/usr/sbin/brctl';
 Readonly my $IPADDR => [qw(ip addr show)];
 Readonly my $IPROUTE => [qw(ip route show)];
 Readonly my $OVS_VCMD => '/usr/bin/ovs-vsctl';
-Readonly my $HOSTNAME_CMD => '/usr/bin/hostnamectl';
+Readonly our $HOSTNAME_CMD => '/usr/bin/hostnamectl';
 Readonly my $ROUTING_TABLE => '/etc/iproute2/rt_tables';
 
-Readonly my $NETWORK_PATH => '/system/network';
+Readonly our $NETWORK_PATH => '/system/network';
 Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
 # Regexp for the supported ifcfg-<device> devices.
@@ -178,22 +178,22 @@ Readonly my $DEVICE_REGEXP => qr{
     $
 }x;
 
-Readonly my $NETWORKCFG => "/etc/sysconfig/network";
+Readonly our $NETWORKCFG => "/etc/sysconfig/network";
 
-Readonly my $RESOLV_CONF => '/etc/resolv.conf';
-Readonly my $RESOLV_CONF_SAVE => '/etc/resolv.conf.save';
-Readonly my $RESOLV_SUFFIX => '.ncm-network';
+Readonly our $RESOLV_CONF => '/etc/resolv.conf';
+Readonly our $RESOLV_CONF_SAVE => '/etc/resolv.conf.save';
+Readonly our $RESOLV_SUFFIX => '.ncm-network';
 
-Readonly my $FAILED_SUFFIX => '-failed';
+Readonly our $FAILED_SUFFIX => '-failed';
 
-Readonly my $BACKUP_DIR_SUFFIX => '.quattorbackup';
+Readonly our $BACKUP_DIR_SUFFIX => '.quattorbackup';
 
-Readonly my $REMOVE => -1;
-Readonly my $NOCHANGES => 0;
-Readonly my $UPDATED => 1;
-Readonly my $NEW => 2;
+Readonly our $REMOVE => -1;
+Readonly our $NOCHANGES => 0;
+Readonly our $UPDATED => 1;
+Readonly our $NEW => 2;
 # changes to file, but same config (eg for new file formats)
-Readonly my $KEEPS_STATE => 3;
+Readonly our $KEEPS_STATE => 3;
 
 # automatic exports of readonlys
 our @EXPORT = qw($FAILED_SUFFIX
