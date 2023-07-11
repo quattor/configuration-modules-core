@@ -467,6 +467,13 @@ sub test_network_ccm_fetch
     }
 }
 
+
+sub get_current_config_post
+{
+    my ($self) = @_;
+    return "";
+}
+
 # Gather current network configuration using available tools
 # Is gathered for debugging in case of failure.
 sub get_current_config
@@ -487,10 +494,6 @@ sub get_current_config
     $fh = CAF::FileReader->new($RESOLV_CONF, log => $self);
     $output .= "\n$RESOLV_CONF\n$fh";
 
-    # output of nmstate if we using nmstate configs
-    if ($self->_is_executable($NMSTATECTL) && $IFCFG_DIR =~ /nmstate/ ) {
-        $output .= $self->runrun([$NMSTATECTL, "show"]);
-    }
     # when brctl is missing, this would generate an error.
     # but it is harmless to skip the show command.
     if ($self->_is_executable($BRIDGECMD)) {
@@ -506,6 +509,8 @@ sub get_current_config
     } else {
         $output .= "\nMissing $OVS_VCMD executable or socket.\n";
     };
+
+    $output .= $self->get_current_config_post();
 
     return $output;
 }
