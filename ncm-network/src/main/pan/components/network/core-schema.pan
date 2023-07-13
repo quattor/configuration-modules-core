@@ -418,6 +418,7 @@ type structure_network = {
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
+    @{let Networkmanager manage the dns (nmstate). Default is false}
     "nm_manage_dns" ? boolean
     "primary_ip" ? string
     "routers" ? structure_router{}
