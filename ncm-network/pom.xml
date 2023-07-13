@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.quattor.maven</groupId>
     <artifactId>build-profile</artifactId>
-    <version>1.59</version>
+    <version>1.62</version>
     <relativePath />
   </parent>
   <licenses>
@@ -37,33 +37,7 @@
   <build>
     <pluginManagement>
       <plugins>
-         <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.4.3</version>
-          <executions>
-            <execution>
-              <id>filter-tt-sources</id>
-              <phase>process-sources</phase>
-              <goals>
-                <goal>copy-resources</goal>
-              </goals>
-              <configuration>
-                <encoding>UTF-8</encoding>
-                <outputDirectory>${project.build.directory}/share/templates/quattor/${project.artifactId}</outputDirectory>
-                <resources>
-                  <resource>
-                    <directory>src/main/resources</directory>
-                    <filtering>true</filtering>
-                    <includes>
-                      <include>**/*.tt</include>
-                    </includes>
-                  </resource>
-                </resources>
-              </configuration>
-            </execution>   
-           </executions>       
-          </plugin>
-          <plugin>
+        <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>rpm-maven-plugin</artifactId>
           <configuration>
@@ -71,20 +45,6 @@
               <require>bridge-utils</require>
               <require>net-tools</require>
             </requires>
-            <mappings combine.children="append">
-              <mapping>
-                <directory>/usr/share/templates/</directory>
-                <filemode>644</filemode>
-                <username>root</username>
-                <groupname>root</groupname>
-                <sources>
-                  <source>
-                    <location>${project.build.directory}/share/templates/</location>
-                  </source>
-                </sources>
-                <directoryIncluded>false</directoryIncluded>
-              </mapping>
-            </mappings>
           </configuration>
         </plugin>
       </plugins>
