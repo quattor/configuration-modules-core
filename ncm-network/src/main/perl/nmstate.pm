@@ -34,8 +34,11 @@ Readonly my $NMCLI_CMD => '/usr/bin/nmcli';
 # pick a config name for nmstate yml to configure dns-resolver: settings. if nm_manage_dns=true
 Readonly my $NM_RESOLV_YML => "/etc/nmstate/resolv.yml";
 
-use constant IFCFG_DIR => "/etc/nmstate";
+# generate the correct fake yaml boolean value so TextRender can convert it in a yaml boolean
+Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(1);
+Readonly my $YFALSE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(0);
 
+use constant IFCFG_DIR => "/etc/nmstate";
 
 sub iface_filename
 {
@@ -172,8 +175,8 @@ sub nmstate_file_dump
 {
     my ($self, $filename, $ifaceconfig) = @_;
     # ATM interfaces hash will only have one entry per interface. so looking at first entry is fine. long as file isn't resolv.yml
-    my $iface = $ifaceconfig->{'interfaces'}[0] if ($filename ne $NM_RESOLV_YML); 
-    
+    my $iface = $ifaceconfig->{'interfaces'}[0] if ($filename ne $NM_RESOLV_YML);
+
     my $changes = 0;
 
     my $func = "nmstate_file_dump";
@@ -277,39 +280,42 @@ sub generate_nmstate_config
         }
     }
 
-    if ($eth_bootproto eq 'static') {
-        $ifaceconfig->{state} = "up";
-        if ($is_ip) {
-            # if device has manual ip assigned
-            my $ip;
-            if ($iface->{netmask}) {
-                $ip = NetAddr::IP->new($iface->{ip}."/".$iface->{netmask});
+    if (defined($eth_bootproto)) {
+        if ($eth_bootproto eq 'static') {
+            $ifaceconfig->{state} = "up";
+            if ($is_ip) {
+                # if device has manual ip assigned
+                my $ip_list = {};
+                if ($iface->{netmask}) {
+                    my $ip = NetAddr::IP->new($iface->{ip}."/".$iface->{netmask});
+                    $ip_list->{ip} = $ip->addr;
+                    $ip_list->{'prefix-length'} = $ip->masklen;
+                } else {
+                    $self->error("$name with (IPv4) ip and no netmask configured");
+                }
+
+                # TODO: append alias ip to ip_list as array, providing ips as array of hashref.
+                $ifaceconfig->{ipv4}->{address} = [$ip_list];
+                $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
             } else {
-                $self->error("$name with (IPv4) ip and no netmask configured");
+                # TODO: configure IPV6 enteries
+                if ($iface->{ipv6addr}) {
+                    $self->warn("ipv6 addr found but not supported");
+                    $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
+                    # TODO create ipv6.address entries here. i.e
+                    #$ifaceconfig->{ipv6}->{address} = [$ipv6_list];
+                } else {
+                    $self->verbose("no ipv6 entries");
+                }
             }
-            my $ip_list=();
-            $ip_list->{ip} = $ip->addr;
-            $ip_list->{'prefix-length'} = $ip->masklen;
-            # TODO: append alias ip to ip_list as array, providing ips as array of hashref.
-            $ifaceconfig->{ipv4}->{address} = [$ip_list];
-            $ifaceconfig->{ipv4}->{enabled} = "true";
-        } else {
-            # TODO: configure IPV6 enteries
-            if ($iface->{ipv6addr}) {
-                $self->warn("ipv6 addr found but not supported");
-                $ifaceconfig->{ipv6}->{enabled} = "false";
-                # TODO create ipv6.address entries here. i.e
-                #$ifaceconfig->{ipv6}->{address} = [$ipv6_list];
-            } else {
-                $self->verbose("no ipv6 entries");
-            }
-        }
-    } elsif (($eth_bootproto eq "none") && (!$is_bond_eth)) {
+        } elsif (($eth_bootproto eq "none") && (!$is_bond_eth)) {
             # no ip on interface and is not a bond eth, assume not managed so disable eth.
             $ifaceconfig->{ipv4}->{enabled} = "false";
             $ifaceconfig->{ipv6}->{enabled} = "false";
             $ifaceconfig->{state} = "down";
+        }
     }
+
     # create default route entry.
     my %default_rt;
     if (defined($iface->{gateway})){
@@ -317,7 +323,7 @@ sub generate_nmstate_config
         $default_rt{'next-hop-address'} = $iface->{gateway};
         $default_rt{'next-hop-interface'} = $device;
     }
-    
+
     # combined default route with any policy routing/rule, if any
     # combination of default route, plus any additional policy routes.
     # read and set by tt module as
@@ -327,7 +333,7 @@ sub generate_nmstate_config
     #     next-hop-address:
     #     next-hop-interface:
     #  and so on.
-    my $routes;
+    my $routes = [];
     if (defined($iface->{route})) {
         $self->verbose("policy route found, nmstate will manage it");
         my $route = $iface->{route};
@@ -337,7 +343,7 @@ sub generate_nmstate_config
         push @$routes, \%default_rt if scalar %default_rt;
     }
 
-    my $policy_rule;
+    my $policy_rule = [];
     if (defined($iface->{rule})) {
         my $rule = $iface->{rule};
         $policy_rule = $self->make_nm_ip_rule($iface, $rule, $routing_table);
@@ -345,12 +351,13 @@ sub generate_nmstate_config
     }
     # return hash construct that will match what nmstate yml needs.
     my $interface->{interfaces} = [$ifaceconfig];
-    if (scalar $routes){
+    if (scalar @$routes) {
         $interface->{routes}->{config} = $routes;
     }
-    if (scalar $policy_rule){
+    if (scalar @$policy_rule) {
         $interface->{'route-rules'}->{config} = $policy_rule;
     }
+
     #print (YAML::XS::Dump($interface));
 
     # TODO: ethtool settings to add in config file? setting via cmd cli working as is.
@@ -369,7 +376,7 @@ sub generate_nm_resolver_config
     # resolver content will be empty if mange_dns is false
     my $nm_dns_config->{'dns-resolver'}->{config}->{search} = [];
     $nm_dns_config->{'dns-resolver'}->{config}->{server} = [];
-    if ($manage) 
+    if ($manage)
     {
         # TODO: adding nameservers and domainname from network path, maybe we need to consider similar approach to ncm-resolver?
         my $searchpath;
@@ -417,7 +424,7 @@ sub is_active_interface
         # trim
         if ("$dev" eq "$ifacename") {
             # ncm-network will set connection same as interface name, if this doesn't match,
-            # it means this connection existed before nmstate did its first apply. 
+            # it means this connection existed before nmstate did its first apply.
             # doesn't break anything as nmstate resuses the conn, but worth a warning to highlight it?
             if ("$name" ne "$ifacename"){
                 $self->warn("connection name '$name' doesn't match $ifacename for device $dev, possible connection reuse occured")
@@ -456,7 +463,7 @@ sub nmstate_apply
     my @ifaces = sort keys %$ifup;
     my @ifaces_down = sort keys %$ifdown;
     my $action;
-    
+
     if (@ifaces) {
         $self->info("Applying changes using $NMSTATECTL ", join(', ', @ifaces));
         my @cmds;
@@ -488,7 +495,7 @@ sub nmstate_apply
         my $nwstate = $exifiles->{$NM_RESOLV_YML};
         my @cmds;
         if (($nwstate == $UPDATED) || ($nwstate == $NEW)) {
-            $self->verbose($NM_RESOLV_YML, ($nwstate == $NEW ? 'NEW' : 'UPDATED'), " Apply config");
+            $self->verbose("$NM_RESOLV_YML: going to apply ", ($nwstate == $NEW ? 'NEW' : 'UPDATED'), " config");
             push(@cmds, [$NMSTATECTL, "apply", $NM_RESOLV_YML]);
             my $out = $self->runrun(@cmds);
             $self->verbose($out);
@@ -592,7 +599,7 @@ sub Configure
 
     # TODO: not tested with nmstate. leaving it here. needs work.lol y
     $self->start_openvswitch($ifaces, $ifup);
-    
+
     # TODO: This can be set with nmstate config but we doing the triditional way using hostnamectl
     $self->set_hostname($hostname);
 
