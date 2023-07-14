@@ -419,7 +419,7 @@ type structure_network = {
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
     @{let Networkmanager manage the dns (nmstate). Default is false}
-    "nm_manage_dns" ? boolean
+    "nm_manage_dns" : boolean = false
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
