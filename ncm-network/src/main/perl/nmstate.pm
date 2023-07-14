@@ -108,7 +108,7 @@ sub disable_nm_manage_dns
     }
 }
 
-# return hasref of policy rule.
+# return hasref of ipv4 policy rule
 sub make_nm_ip_rule
 {
     my ($self, $device, $rules, $routing_table_hash) = @_;
@@ -118,6 +118,7 @@ sub make_nm_ip_rule
         my %thisrule;
         my $priority = 100;
         $priority = $rule->{priority} if $rule->{priority};
+        $thisrule{'family'} = "ipv4";
         $thisrule{priority} = $priority;
         $thisrule{'route-table'} = "$routing_table_hash->{$rule->{table}}" if $rule->{table};
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
