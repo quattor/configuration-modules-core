@@ -33,6 +33,7 @@ Readonly my $NMSTATECTL => '/usr/bin/nmstatectl';
 Readonly my $NMCLI_CMD => '/usr/bin/nmcli';
 # pick a config name for nmstate yml to configure dns-resolver: settings. if nm_manage_dns=true
 Readonly my $NM_RESOLV_YML => "/etc/nmstate/resolv.yml";
+Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
 
 # generate the correct fake yaml boolean value so TextRender can convert it in a yaml boolean
 Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(1);
@@ -82,30 +83,21 @@ sub is_valid_interface
 sub disable_nm_manage_dns
 {
     my ($self, $manage_dns, $nwsrv) = @_;
-    my $filename = "/etc/NetworkManager/conf.d/90-quattor-dns-none.conf";
     my @data = ('[main]');
-    push @data, 'dns=none';
+    
     if ( $manage_dns ) {
-        # cleanup the config if was created previously
-        if ($self->file_exists($filename)) {
-            my $msg = "REMOVE config $filename, NOTE: networkmanager will manage resolv.conf";
-            if ($self->cleanup($filename)) {
-                $self->info($msg);
-                $self->verbose("Reload NetworkManager");
-                $nwsrv->reload();
-            } else {
-                $self->error("$msg failed. ($self->{fail})");
-            };
-        };
+        # set nothing, will use default.
+        $self->verbose("Networkmanager defaults will be used to manage resolv.conf");
     } else {
+        push @data, 'dns=none';
         $self->verbose("Configuring networkmanager not to manage resolv.conf");
-        my $fh = CAF::FileWriter->new($filename, mode => oct(444), log => $self, keeps_state => 1);
-        print $fh join("\n", @data, '');
-        if ($fh->close()) {
-            $self->info("File $filename changed, reload network");
-            $nwsrv->reload();
-        };
     }
+    my $fh = CAF::FileWriter->new($NM_DROPIN_CFG_FILE, mode => oct(444), log => $self, keeps_state => 1);
+    print $fh join("\n", @data, '');
+    if ($fh->close()) {
+        $self->info("File $NM_DROPIN_CFG_FILE changed, reload network");
+        $nwsrv->reload();
+    };
 }
 
 # return hasref of ipv4 policy rule
@@ -257,6 +249,8 @@ sub generate_nmstate_config
 
     # create hash of interface entries that will be used by nmstate config.
     my $ifaceconfig->{name} = $name;
+
+    $ifaceconfig->{mtu} = $iface->{mtu} if $iface->{mtu};
     if ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_bond_eth) {
@@ -548,13 +542,6 @@ sub Configure
 
     # current setup, will be printed in case of major failure
     my $init_config = $self->get_current_config();
-    # The original, assumed to be working resolv.conf
-    # Using an FileEditor: it will read the current content, so we can do a close later to save it
-    # in case something changed it behind our back.
-    my $resolv_conf_fh = CAF::FileEditor->new($RESOLV_CONF, backup => $RESOLV_SUFFIX, log => $self);
-    # Need to reset the original content (otherwise the close will not check the possibly updated content on disk)
-    *$resolv_conf_fh->{original_content} = undef;
-
     my $net = $self->process_network($config);
     my $ifaces = $net->{interfaces};
 
@@ -568,6 +555,15 @@ sub Configure
 
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
     my $manage_dns = $nwtree->{nm_manage_dns} || 0;
+
+    # The original, assumed to be working resolv.conf
+    # Using an FileEditor: it will read the current content, so we can do a close later to save it
+    # in case something changed it behind our back. Only if NM is not set to manage dns.
+    my $resolv_conf_fh = CAF::FileEditor->new($RESOLV_CONF, backup => $RESOLV_SUFFIX, log => $self);
+    if (!$manage_dns) {
+        # Need to reset the original content (otherwise the close will not check the possibly updated content on disk)
+        *$resolv_conf_fh->{original_content} = undef;
+    }
 
     my $ipv6 = $nwtree->{ipv6};
     foreach my $ifacename (sort keys %$ifaces) {
