@@ -49,11 +49,11 @@ type structure_route = {
         };
         if (ipv6) {
             if (!is_ipv6_prefix_length(pref)) {
-                error(format("Prefix %s is not a valid IPv6 prefix", pref));
+                error("Prefix %s is not a valid IPv6 prefix", pref);
             };
         } else {
             if (!is_ipv4_prefix_length(pref)) {
-                error(format("Prefix %s is not a valid IPv4 prefix", pref));
+                error("Prefix %s is not a valid IPv4 prefix", pref);
             };
         };
     };
@@ -345,12 +345,12 @@ type structure_interface = {
     };
     if (exists(SELF['ip']) && exists(SELF['netmask'])) {
         if (exists(SELF['gateway']) && ! ip_in_network(SELF['gateway'], SELF['ip'], SELF['netmask'])) {
-            error(format('networkinterface has gateway %s not reachable from ip %s with netmask %s',
-                            SELF['gateway'], SELF['ip'], SELF['netmask']));
+            error('networkinterface has gateway %s not reachable from ip %s with netmask %s',
+                            SELF['gateway'], SELF['ip'], SELF['netmask']);
         };
         if (exists(SELF['broadcast']) && ! ip_in_network(SELF['broadcast'], SELF['ip'], SELF['netmask'])) {
-            error(format('networkinterface has broadcast %s not reachable from ip %s with netmask %s',
-                            SELF['broadcast'], SELF['ip'], SELF['netmask']));
+            error('networkinterface has broadcast %s not reachable from ip %s with netmask %s',
+                            SELF['broadcast'], SELF['ip'], SELF['netmask']);
         };
     };
     if (exists(SELF['plugin']) && exists(SELF['plugin']['vxlan']) && ! exists(SELF['physdev'])) {
