@@ -1,8 +1,4 @@
-unique template common/kafka/config;
-
-include 'components/metaconfig/config';
-include 'components/dirperm/config';
-include 'components/sysconfig/config';
+object template config;
 
 include 'metaconfig/kafka/config';
 
