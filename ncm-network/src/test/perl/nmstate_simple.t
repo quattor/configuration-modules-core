@@ -18,6 +18,19 @@ $mock->mock('_is_executable', sub {diag "executables $_[1] ",explain \%executabl
 my $cfg = get_config_for_profile('nmstate_simple');
 my $cmp = NCM::Component::nmstate->new('network');
 
+# test a few valid filenames
+foreach my $fn (qw(/a/b/c/eth0.yml eth1.yml ens1f2p3.yml bond0.0.yml test123.yml)) {
+    my $name = $fn;
+    $name =~ s/^.*\///;
+    $name =~ s/\.yml$//;
+    is_deeply([$name, $name], $cmp->is_valid_interface($fn), "$fn is a valid interface filename");
+}
+
+# test a few invalid filenames
+foreach my $fn (qw(/etc/nmstate/resolv.yml eth0.json notaninterface.yml)) {
+    ok(!defined($cmp->is_valid_interface($fn)), "$fn not a valid interface filename");
+}
+
 Readonly my $NETWORK => 'x' x 100;
 
 Readonly my $RESOLV => <<EOF;
@@ -39,12 +52,17 @@ interfaces:
   type: bond
 EOF
 
+Readonly my $NOTTOREMOVE => <<EOF;
+something not to remove
+EOF
+
 # TODO: there should e no reason for this. we can assume it's there in EL9
 $executables{'/usr/bin/hostnamectl'} = 1;
 
 set_file_contents("/etc/resolv.conf", "$RESOLV");
 
-set_file_contents("/etc/nmstate/toremove.yml", "something");
+set_file_contents("/etc/nmstate/toremove0.yml", "something to remove");
+set_file_contents("/etc/nmstate/nottoremove.yml", "$NOTTOREMOVE");
 
 
 command_history_reset();
@@ -56,10 +74,13 @@ my $fh;
 is(get_file_contents("/etc/resolv.conf"), $RESOLV, "Exact network config");
 
 # set nm config to disable dns mgmt
-is(get_file_contents("/etc/NetworkManager/conf.d/90-quattor-dns-none.conf"), $NODNS, "disable NM dns mgmt");
+is(get_file_contents("/etc/NetworkManager/conf.d/90-quattor.conf"), $NODNS, "disable NM dns mgmt");
 
 # unconfigure nmstate yml is removed
-ok(!$cmp->file_exists("/etc/nmstate/toremove.yml"), "unconfigured yml nmstate is removed");
+ok(!$cmp->file_exists("/etc/nmstate/toremove0.yml"), "unconfigured yml nmstate is removed");
+
+# keep non-interface files
+is(get_file_contents("/etc/nmstate/nottoremove.yml"), $NOTTOREMOVE, "disable NM dns mgmt");
 
 my $eth0yml = get_file_contents("/etc/nmstate/eth0.yml");
 is($eth0yml, $ETH0_YML, "Exact eth0 yml config");
@@ -87,6 +108,7 @@ ok(command_history_ok([
   '/usr/bin/nmstatectl apply /etc/nmstate/eth0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/resolv.yml',
   'service NetworkManager reload',
+  '/usr/bin/nmcli connection delete toremove0',
   'ls -ltr /etc/nmstate',
   'ip addr show',
   'ip route show',

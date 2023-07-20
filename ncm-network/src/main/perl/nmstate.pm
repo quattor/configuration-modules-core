@@ -47,7 +47,6 @@ sub iface_filename
     return $self->IFCFG_DIR . "/$iface.yml";
 }
 
-# Given the configuration in nmconnection
 # Determine if this is a valid interface for ncm-network to manage,
 # Return arrayref tuple [interface name, ifdown/ifup name] when valid,
 # undef otherwise.
@@ -70,7 +69,8 @@ sub is_valid_interface
     ) {
         # name and id for nmstate, this will make connection id and name the same.
         my $name = $1;
-        # previous is_valid_interface reuqires suffix, not concerned about this in nmstate so just return $name as suffix too.
+        # network.pm is_valid_interface supports suffix, not concerned about this in nmstate
+        #    so just return name.
         return [$name, $name];
     } else {
         return;
@@ -84,7 +84,7 @@ sub disable_nm_manage_dns
 {
     my ($self, $manage_dns, $nwsrv) = @_;
     my @data = ('[main]');
-    
+
     if ( $manage_dns ) {
         # set nothing, will use default.
         $self->verbose("Networkmanager defaults will be used to manage resolv.conf");
