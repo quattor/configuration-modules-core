@@ -1,0 +1,32 @@
+Base test for config
+---
+/etc/hnormalise.yaml
+---
+^fields:$
+^- - '@source_host'$
+^  - hostname$
+^- - message$
+^  - msg$
+^- - syslog_version$
+^  - version$
+^- - syslog_abspri$
+^  - pri$
+^- - program$
+^  - app_name$
+^input:$
+^  zeromq:$
+^    host: lo$
+^    method: pull$
+^    port: 31338$
+^logging:$
+^  frequency: 100000$
+^output:$
+^  zeromq:$
+^    failure:$
+^      host: localhost$
+^      method: push$
+^      port: 27002$
+^    success:$
+^      host: localhost$
+^      method: push$
+^      port: 27001$
