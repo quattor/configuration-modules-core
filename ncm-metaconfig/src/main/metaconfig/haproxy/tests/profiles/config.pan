@@ -3,7 +3,7 @@ object template config;
 include 'metaconfig/haproxy/config';
 
 prefix '/software/components/metaconfig/services/{/etc/haproxy/haproxy.cfg}/contents';
-'proxys' = append(dict());
+'proxys' = append(SELF, dict());
 
 prefix 'global';
 'logs/{/dev/log}' = list('local0', 'notice');
@@ -21,11 +21,13 @@ prefix 'global';
 "config/ssl-default-server-options" = list('no-sslv3', 'no-tlsv10', 'no-tlsv11');
 'stats/socket' = '/var/lib/haproxy/stats';
 'logs/{127.0.0.1}' = list('local2');
+
 prefix 'stats';
 'mode' = 'http';
 'options/enabled' = '';
 'options/hide-version' = '';
 'options/refresh' = 5;
+
 prefix 'defaults';
 'config/log' = 'global';
 'config/retries' = 3;
@@ -39,6 +41,7 @@ prefix 'defaults';
 'timeouts/server-fin' = 30000;
 'timeouts/tunnel' = 3600 * 1000;
 'config/option' = 'tcpka';
+
 prefix 'proxys/-1';
 'name' = 'webserver';
 'port' = 80;
@@ -50,19 +53,19 @@ prefix 'proxys/-1';
 'config/balance' = 'source';
 'options' = list('tcpka', 'httplog', 'httpchk', 'forwardfor', 'httpclose');
 'defaultoptions' = dict(
-    'inter' , 2,
-    'downinter' , 5,
-    'rise' , 3,
-    'fall' , 2,
-    'slowstart' , 60,
-    'maxqueue' , 128,
-    'weight' , 100,
-    );
+    'inter', 2,
+    'downinter', 5,
+    'rise', 3,
+    'fall', 2,
+    'slowstart', 60,
+    'maxqueue', 128,
+    'weight', 100,
+);
 'serveroptions/cookie' = 'control';
 'servers' = dict(
     'server1' , '192.168.0.11',
     'server2', '192.168.0.12',
-    );
+);
 
 prefix 'frontends/irods-in';
 "bind" = list(
@@ -73,16 +76,18 @@ prefix 'frontends/irods-in';
             "ssl", true,
             "crt", "/some/file",
             "alpn", "h2,http/1.1",
-            )));
+        ),
+    ),
+);
 "default_backend" = "irods-bk";
 "acl/network_allowed" = "src -f /etc/haproxy/whitelist.static";
 "tcp-request" = list("connection reject if !network_allowed");
 "http-request" = list("redirect scheme https unless { ssl_fc }");
 "use_backend/0" = "some-bk if some_acl";
-"errorfile" = append(dict(
+"errorfile" = append(SELF, dict(
     'code', 403,
     'filename', "/some/abs/path.code.http",
-    ));
+));
 
 prefix 'backends/irods-bk';
 "options/0" = "tcp-check";
@@ -92,14 +97,34 @@ prefix 'backends/irods-bk';
 "reqrep/0" = dict(
     "pattern", 'abc\ def',  # need escaped space, so single quotes
     "replace", '\1 \2',
-    );
+);
 "reqrep/1" = dict(
     "pattern", 'ghi\ jkl',
     "replace", '\3 \4',
-    );
-"servers/0" = dict('name', 'localhost', 'ip', '127.0.0.1', 'port', 1247);
-"servers/1" = dict('name', 'other.host', 'ip', '10.20.30.1', 'params', dict('ssl', true, 'ca-file', '/other/file'));
-"servers/2" = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247, 'inter', 1234));
+);
+"servers/0" = dict(
+    'name', 'localhost',
+    'ip', '127.0.0.1',
+    'port', 1247,
+);
+"servers/1" = dict(
+    'name', 'other.host',
+    'ip', '10.20.30.1',
+    'params', dict(
+        'ssl', true,
+        'ca-file', '/other/file',
+    ),
+);
+"servers/2" = dict(
+    'name', 'othername',
+    'ip', '10.20.30.1',
+    'port', 1247,
+    'params', dict(
+        'check', true,
+        'port', 1247,
+        'inter', 1234,
+    ),
+);
 
 prefix 'backends/sshproxy';
 "balance" = 'leastconn';
@@ -110,13 +135,27 @@ prefix 'backends/sshproxy';
     'inverse', true,
     'match', 'status',
     'pattern', '404',
-    );
+);
 "sticktable" = dict(
     'type', 'ip',
     'size', '1m',
-    'peers', 'mypeers');
-
-'servers/0' = dict('name', 'othername', 'ip', '10.20.30.1', 'port', 1247, 'params', dict('check', true, 'port', 1247));
+    'peers', 'mypeers',
+);
+'servers/0' = dict(
+    'name', 'othername',
+    'ip', '10.20.30.1',
+    'port', 1247,
+    'params', dict(
+        'check', true,
+        'port', 1247,
+    ),
+);
 
 prefix 'peers';
-'mypeers/peers' = list(dict('name', 'testhost', 'ip', '10.20.30.4', 'port', 1024));
+'mypeers/peers' = list(
+    dict(
+        'name', 'testhost',
+        'ip', '10.20.30.4',
+        'port', 1024,
+    ),
+);
