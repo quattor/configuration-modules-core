@@ -78,6 +78,7 @@ type rsyslog_input_kafka = {
     'broker': string[]
     'topic': string
     'consumergroup' ? string
+    'ConfParam' ? string[]
     'ParseHostname' ? string with match(SELF, '^(on|off)$')
 };
 

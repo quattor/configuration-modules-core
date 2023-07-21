@@ -7,7 +7,7 @@ bind "/software/components/metaconfig/services/{/etc/rsyslog.conf}/contents" = r
 prefix "/software/components/metaconfig/services/{/etc/rsyslog.conf}";
 "daemons/rsyslog" = "restart";
 "module" = "rsyslog/main";
-"mode" = 0644;
+"mode" = 0640;
 
 bind "/software/components" = dict with {
     if (exists(SELF['syslog'])) {
