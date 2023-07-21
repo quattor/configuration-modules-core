@@ -160,7 +160,7 @@ type haproxy_service_peer = {
     configuration of peers
 }
 type haproxy_service_peers = {
-        'peers': haproxy_service_peer[]
+    'peers': haproxy_service_peer[]
 };
 
 @documentation {
