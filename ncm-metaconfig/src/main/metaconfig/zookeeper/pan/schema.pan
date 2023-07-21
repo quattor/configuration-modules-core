@@ -22,6 +22,7 @@ type zookeeper_main = {
     "autopurge.snapRetainCount" ? long
     "autopurge.purgeInterval" ? long
     "syncEnabled" ? boolean
+    "4lw.commands.whitelist" ? string
 
     # cluster/ensemble
     "initLimit" : long = 10
