@@ -128,7 +128,7 @@ type ssh_daemon_options_type = {
     "NoneEnabled" ? legacy_binary_affirmation_string
     "PermitEmptyPasswords" ? legacy_binary_affirmation_string
     "PermitRootLogin" ? choice(
-        'yes', 
+        'yes',
         'prohibit-password',
         'without-password',
         'forced-commands-only',
