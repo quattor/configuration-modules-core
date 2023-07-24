@@ -7,7 +7,8 @@ declaration template metaconfig/named/schema;
 
 include 'pan/types';
 
-type named_acl_name = string with exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/" + SELF) ||
+type named_acl_name = string with
+    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/" + SELF) ||
     match (SELF, "^(none|localhost|any|localnets)$") ||
     error ("ACL with name " + SELF + " is not defined");
 
@@ -16,32 +17,39 @@ type named_source = {
     "port" : type_port
 };
 
+type named_common_options = {
+    "allow-recursion" ? named_acl_name[]
+    "allow-transfer" ? named_acl_name[]
+    "forwarders" ? type_ip[]
+    "notify" : boolean = true
+    "notify-source" ? named_source[]
+    "transfer-source" ? named_source[]
+};
+
 @{
     Named options
 }
 type named_options = {
+    include named_common_options
     "allow-query" : named_acl_name[]
-    "allow-recursion" ? named_acl_name[]
-    "allow-transfer" ? named_acl_name[]
-    "blackhole" ? named_acl_name[]
-    "forwarders" ? type_ip[]
-    "listen-on" ? type_ip[]
-    "notify" : boolean = true
-    "recursion" : boolean = true
-    "dnssec-enable" : boolean = true
-    "dnssec-validation" : boolean = true
-    "transfer-source" ? named_source[]
-    "query-source" ? named_source[]
-    "notify-source" ? named_source[]
-    "directory" : string = "/var/named"
-    "dump-file" : string = "/var/named/data/cache_dump.db"
-    "statistics-file" : string = "/var/named/data/named_stats.txt"
-    "memstatistics-file" : string = "/var/named/data/named_mem_stats.txt"
+    "forward" : choice('first', 'only') = "first"
+
     "bindkeys-file" : string = "/etc/named.iscdlv.key"
+    "blackhole" ? named_acl_name[]
+    "directory" : string = "/var/named"
+    "dnssec-enable" : boolean = true
     "dnssec-lookaside" : string = 'auto'
+    "dnssec-validation" : boolean = true
+    "dump-file" : string = "/var/named/data/cache_dump.db"
     "empty-zones-enable" ? boolean
-    "forward" : string = "first" with match(SELF,'^(first|only)$')
+    "listen-on" ? type_ip[]
     "max-cache-size" ? long
+    "memstatistics-file" : string = "/var/named/data/named_mem_stats.txt"
+    "query-source" ? named_source[]
+    "recursion" : boolean = true
+    @{run rndc stats before anything is written to the statistics file}
+    "statistics-file" : string = "/var/named/data/named_stats.txt"
+    "zone-statistics" ? boolean
 };
 
 @{
@@ -57,16 +65,38 @@ type named_log_channel = {
     Named zones
 }
 type named_zone = {
-    "type" : string with match (SELF, "^(master|slave|hint)$")
+    include named_common_options
+    "allow-query" ? named_acl_name[]
+    "forward" ? choice('first', 'only') = "first"
+
+    "type" : choice("master", "slave", "hint", "forward")
     "transfers-in" ? long(1..)
     "transfers-out" ? long(1..)
-    "file" : string
+    "file" ? string
     "name" : string
     "class" : string = "IN"
     "masters" ? type_ip[]
+} with {
+    if (SELF['type'] == 'forward') {
+        if (!(exists(SELF['forward']) && exists(SELF['forwarders']))) {
+            error("Missing forward and/or forwarders zone config for type forward for %s", SELF["name"]);
+        };
+        if (exists(SELF["file"])) {
+            error("Cannot have file config for forward type for %s", SELF["name"]);
+        };
+    } else {
+        if (exists(SELF['forward']) || exists(SELF['forwarders'])) {
+            error("Cannot have forward and/or forwarders zone config and not type forward for %s", SELF["name"]);
+        };
+        if (!exists(SELF["file"])) {
+            error("Missing file config for %s", SELF["name"]);
+        };
+    };
+    true;
 };
 
-type named_channel_name = string with exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/" + SELF) ||
+type named_channel_name = string with
+    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/" + SELF) ||
     error (SELF + " doesn't refer to a logging channel");
 
 @{
@@ -84,4 +114,3 @@ type named_config = {
     "options" : named_options
     "acls" ? type_network_name[]{}
 };
-
