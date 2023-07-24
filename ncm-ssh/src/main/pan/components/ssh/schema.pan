@@ -127,7 +127,18 @@ type ssh_daemon_options_type = {
     "MaxStartups" ? long
     "NoneEnabled" ? legacy_binary_affirmation_string
     "PermitEmptyPasswords" ? legacy_binary_affirmation_string
-    "PermitRootLogin" ? string with match (SELF, '^(yes|without-password|forced-commands-only|no)$')
+    "PermitRootLogin" ? choice(
+        'yes',
+        'prohibit-password',
+        'without-password',
+        'forced-commands-only',
+        'no'
+    ) with {
+        if (SELF == 'without-password') {
+            deprecated(0, '"without-password" is deprecated and should be updated to "prohibit-password"');
+        };
+        true;
+    }
     "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
     "PermitUserEnvironment" ? legacy_binary_affirmation_string
     "PidFile" ? string
