@@ -7,6 +7,8 @@ use Test::Quattor::Object;
 use CAF::Object;
 use Test::MockModule;
 use Readonly;
+use EDG::WP4::CCM::Path qw(escape);
+
 
 my $mock = Test::MockModule->new('NCM::Component::grub');
 
@@ -14,17 +16,56 @@ $CAF::Object::NoAction = 1;
 
 my $cmp = NCM::Component::grub->new("grub");
 
-=head1 grubby_args_options
+=head1 grubby_arguments_options
 
 =cut
 
-is_deeply([$cmp->grubby_args_options()], [], "undef args returns empty options list");
-is_deeply([$cmp->grubby_args_options("a -b c")],
+my $arguments = $cmp->convert_grubby_arguments();
+is_deeply($arguments, {add =>{}, remove => {}}, "undef args returns empty add/remove hash");
+is_deeply([$cmp->grubby_arguments_options($arguments)], [], "undef args returns empty options list");
+
+
+$arguments = $cmp->convert_grubby_arguments("a -b c");
+is_deeply($arguments, {add =>{a => undef, c => undef}, remove => {b => undef}}, "string args returns add/remove hash");
+
+is_deeply([$cmp->grubby_arguments_options($arguments)],
           ['--args', 'a c', '--remove-args', 'b'],
           "args returns options list");
-is_deeply([$cmp->grubby_args_options("a -b c", 1)],
+
+is_deeply([$cmp->grubby_arguments_options($arguments, 1)],
           ['--mbargs', 'a c', '--remove-mbargs', 'b'],
           "args returns multiboot options list");
+
+=head1 convert_grubby_arguments
+
+=cut
+
+is_deeply($cmp->convert_grubby_arguments({}), {add =>{}, remove => {}}, "emptyhashref args returns empty add/remove hash");
+is_deeply($cmp->convert_grubby_arguments({
+    a => {enable => 1},
+    b => {enable => 0},
+    c => {enable => 1},
+}), {
+    add =>{a => undef, c => undef},
+    remove => {b => undef},
+}, "hashref args returns add/remove hash");
+
+is_deeply($cmp->convert_grubby_arguments({
+    escape("a.a.a") => {enable => 1, value => 0},
+    bbb => {enable => 0, value => [qw(x1 x2 x3)]},
+    ccc => {enable => 1, value => ["y3", "y 2", "y1"]},
+    escape("d.d") => {enable => 0},
+}), {
+    add =>{
+        "a.a.a" => 0,
+        ccc => '"y3,y 2,y1"',
+    },
+    remove => {
+        bbb => "x1,x2,x3",
+        "d.d" => undef,
+    }
+}, "hashref args returns add/remove hash complicated example");
+
 
 =head1 grub_conf / password
 
@@ -115,7 +156,7 @@ is("$grubfh", $GRUB2USERCFG, "grub2 user.cfg edited as expected");
 $NCM::Component::grub::GRUB_MAJOR = 1;
 
 is($cmp->grub_conf($passwdcfg),
-   "console=ttyS0,5678n8",
+   "ttyS0,5678n8",
    "grub_conf returns console kernel parameters (if any)");
 $grubfh = get_file($GRUBCFGFN);
 isa_ok($grubfh, 'CAF::FileEditor', "grub config file is an editor instance");
@@ -256,11 +297,11 @@ my $kernel = {
 command_history_reset();
 # commands to test the kernels using --info return success by default
 # so this is an update first
-ok($cmp->kernel($kernel, '/boot', 'console=myconsole'), 'kernel settings returns SUCCESS update');
+ok($cmp->kernel($kernel, '/boot', 'myconsole'), 'kernel settings returns SUCCESS update');
 ok(command_history_ok([
   '/sbin/grubby --info /boot/vmlinuz-1.2.3',
   '/sbin/grubby --info /boot/dunno',
-  '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3 --args a c e f console=myconsole --remove-args b d --add-multiboot /boot/dunno --mbargs mba mbc --remove-mbargs mbb',
+  '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3 --args a c console=myconsole e f --remove-args b d --add-multiboot /boot/dunno --mbargs console=myconsole mba mbc --remove-mbargs mbb',
 ]), 'grubby commands from kernel settings update');
 
 
@@ -269,11 +310,11 @@ set_command_status('/sbin/grubby --info /boot/vmlinuz-1.2.3', 5);
 set_command_status('/sbin/grubby --info /boot/dunno', 5);
 # commands to test the kernels using --info fail
 # so now this is adding a new entry
-ok($cmp->kernel($kernel, '/boot', 'console=myconsole'), 'kernel settings returns SUCCESS add');
+ok($cmp->kernel($kernel, '/boot', 'myconsole'), 'kernel settings returns SUCCESS add');
 ok(command_history_ok([
   '/sbin/grubby --info /boot/vmlinuz-1.2.3',
   '/sbin/grubby --info /boot/dunno',
-  '/sbin/grubby --add-kernel /boot/vmlinuz-1.2.3 --title superkernel --args a c e f console=myconsole --remove-args b d --initrd /boot/some/file --add-multiboot /boot/dunno --mbargs mba mbc --remove-mbargs mbb',
+  '/sbin/grubby --add-kernel /boot/vmlinuz-1.2.3 --title superkernel --args a c console=myconsole e f --remove-args b d --initrd /boot/some/file --add-multiboot /boot/dunno --mbargs console=myconsole mba mbc --remove-mbargs mbb',
 ]), 'grubby commands from kernel settings add');
 
 
@@ -332,15 +373,30 @@ ok(command_history_ok([
 ]), 'grubby commands from default options non-fullcontrol');
 
 command_history_reset();
+# start with non-fullcontrol
+# no --info call
+# test with arguments instead of args
+ok($cmp->default_options({arguments => {
+    a => {enable => 1},
+    b => {enable => 0},
+    escape("c_aa") => {enable => 1, value => 'xyz'},
+    escape("d.e.f") => {enable => 0, value => 'ghi'},
+    }}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
+ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c_aa=xyz --remove-args b d.e.f=ghi',
+]), 'grubby commands from default options non-fullcontrol from arguments');
+
+command_history_reset();
 # fullcontrol, existing options will not match;
 # but there are current args to remove first
 # settings args with a - with fullcontrol is pointless; all current args are removed first
 set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4', "blablah\nargs=\"something special\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
-ok($cmp->default_options({fullcontrol => 1, args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
+ok($cmp->default_options({fullcontrol => 1, args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on fullcontrol");
 ok(command_history_ok([
    '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
-   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c --remove-args b',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c',  # no remove opts, they make no sense
 ]), 'grubby commands from default options fullcontrol');
 
 
@@ -362,5 +418,21 @@ ok(command_history_ok([
    "$ebm -v",
    "$ebm -o 4,3,2",
 ]), "efibootmgr called, correct bootorder set");
+
+
+=head1 sanitize_arguments
+
+=cut
+
+command_history_reset();
+set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+                   "blablah\nargs=\"something special=2 special=1 something nothing\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
+ok($cmp->sanitize_arguments('/boot/vmlinuz-1.2.3.4'), "sanitize_arguments returns success");
+ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args something special=1',
+]), 'grubby commands from sanitize');
+
 
 done_testing;
