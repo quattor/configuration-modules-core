@@ -158,7 +158,7 @@ sub generate_sources
             $changes += $fh->close() || 0; # handle undef
         } else {
             $self->error("Invalid template '$template' passed to generate_sources");
-            return 0;
+            return;
         }
     }
 
@@ -177,7 +177,7 @@ sub configure_apt
         return $fh->close() || 0; # handle undef
     }
     $self->error('configure_apt: TextRender failed to render configuration');
-    return 0;
+    return;
 }
 
 # Returns a set of all installed packages
@@ -345,20 +345,20 @@ sub Configure
     my $tree_component = $config->getTree($self->prefix());
     $self->debug(5, 'tree_component ', $self->prefix, Dumper $tree_component);
 
-    $self->configure_apt($tree_component) or return 0;
+    defined($self->configure_apt($tree_component)) or return 0;
 
-    $self->initialize_sources_dir($DIR_SOURCES) or return 0;
+    defined($self->initialize_sources_dir($DIR_SOURCES)) or return 0;
 
     # Remove unknown sources if allow_user_sources is not set
     if (! $tree_component->{usersources}) {
         $self->cleanup_old_sources($DIR_SOURCES, $tree_sources) or return 0;
     };
 
-    $self->generate_sources(
+    defined($self->generate_sources(
         $DIR_SOURCES,
         $tree_sources,
         $TEMPLATE_SOURCES,
-    ) or return 0;
+    )) or return 0;
 
     $self->resynchronize_package_index() or return 0;
 

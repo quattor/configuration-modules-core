@@ -84,7 +84,7 @@ to disk.
 =cut
 
 remove_any("$SOURCES_DIR/$name.list");
-is($cmp->generate_sources($SOURCES_DIR, $sources, "an invalid template name"), 0, "Invalid template name is detected");
+is($cmp->generate_sources($SOURCES_DIR, $sources, "an invalid template name"), undef, "Invalid template name is detected");
 is($cmp->{ERROR}, 1, "Errors on template rendering are reported");
 $fh = get_file("$SOURCES_DIR/$name.list");
 ok(!defined($fh), "No file could be opened, render failed");
