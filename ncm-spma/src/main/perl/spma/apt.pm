@@ -351,17 +351,21 @@ sub Configure
 
     # Remove unknown sources if allow_user_sources is not set
     if (! $tree_component->{usersources}) {
+        $self->info('Removing unknown source lists');
         $self->cleanup_old_sources($DIR_SOURCES, $tree_sources) or return 0;
     };
 
+    $self->info('Generating ', scalar(@$tree_sources), ' source lists');
     defined($self->generate_sources(
         $DIR_SOURCES,
         $tree_sources,
         $TEMPLATE_SOURCES,
     )) or return 0;
 
+    $self->info('Synchronizing package index');
     $self->resynchronize_package_index() or return 0;
 
+    $self->info('Applying upgrades to installed packages');
     $self->upgrade_packages() or return 0;
 
     my $packages_installed = $self->get_installed_pkgs() or return 0;
@@ -376,11 +380,13 @@ sub Configure
     $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
     my $apt_packages_to_install = $self->apply_package_version_arch($packages_to_install, $tree_pkgs);
+    $self->info('Installing ', $packages_to_install->size,' missing packages');
     $self->install_packages($apt_packages_to_install) or return 0;
 
     # If user installed packages are not permitted, mark all unlisted packages as automatically installed and
     # ask apt to remove any of these that are not required to satisfy dependencies of the desired package list
     if (! $tree_component->{userpkgs}) {
+        $self->info('Marking ', $packages_unwanted->size, ' packages as unwanted and removing any that are not dependencies of installed packages');
         $self->mark_packages_auto($packages_unwanted) or return 0;
         $self->autoremove_packages() or return 0;
     }
