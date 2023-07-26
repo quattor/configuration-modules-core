@@ -71,12 +71,14 @@ Readonly my $TREE_SOURCES => "/software/repositories";
 Readonly my $TREE_PKGS => "/software/packages";
 Readonly my $BIN_APT_GET => "/usr/bin/apt-get";
 Readonly my $BIN_APT_MARK => "/usr/bin/apt-mark";
+Readonly my $BIN_APT_CACHE => "/usr/bin/apt-cache";
 Readonly my $BIN_DPKG_QUERY => "/usr/bin/dpkg-query";
 Readonly my $CMD_APT_UPDATE => [$BIN_APT_GET, qw(-qq update)];
 Readonly my $CMD_APT_UPGRADE => [$BIN_APT_GET, qw(-qq dist-upgrade)];
 Readonly my $CMD_APT_INSTALL => [$BIN_APT_GET, qw(-qq install)];
 Readonly my $CMD_APT_AUTOREMOVE => [$BIN_APT_GET, qw(-qq autoremove)];
 Readonly my $CMD_APT_MARK => [$BIN_APT_MARK, qw(-qq)];
+Readonly my $CMD_APT_AVAILABLE => [$BIN_APT_CACHE, qw(pkgnames)];
 Readonly my $CMD_DPKG_QUERY => [$BIN_DPKG_QUERY, qw(-W -f=${db:Status-Abbrev};${Package}\n)];
 
 our $NoActionSupported = 1;
@@ -197,6 +199,23 @@ sub get_installed_pkgs
     #   package status  i (indicating currently installed)
     #   error flag      a single space (indicating no error condition)
     my @pkgs = map { substr $_, 4 } grep {m/^.i /} split("\n", $out);
+
+    return Set::Scalar->new(@pkgs);
+}
+
+# Returns a set of all available package names
+sub get_available_pkgs
+{
+    my ($self) = @_;
+    $self->debug(5, 'get_available_pkgs: Called');
+
+    my $out = CAF::Process->new($CMD_APT_AVAILABLE, keeps_state => 1) ->output();
+    my $exitstatus = $? >> 8; # Get exit status from highest 8-bits
+    if ($exitstatus) {
+        $self->debug(5, "dpkg command returned $exitstatus");
+        return 0;
+    }
+    my @pkgs = split("\n", $out);
 
     return Set::Scalar->new(@pkgs);
 }
@@ -369,13 +388,20 @@ sub Configure
     $self->upgrade_packages() or return 0;
 
     my $packages_installed = $self->get_installed_pkgs() or return 0;
+    my $packages_available = $self->get_available_pkgs() or return 0;
     my $packages_desired = $self->get_desired_pkgs($tree_pkgs) or return 0;
 
     my $packages_unwanted = $packages_installed->difference($packages_desired);
     my $packages_to_install = $packages_desired->difference($packages_installed);
+    my $packages_unavailable = $packages_desired->difference($packages_available);
+
+    if ($packages_unavailable->size > 0) {
+        $self->warn('The following packages are unavailable, they may have been renamed or virtual: ', $packages_unavailable);
+    }
 
     $self->debug(4, 'Installed packages: ', $packages_installed);
     $self->debug(4, 'Desired packages: ', $packages_desired);
+    $self->debug(4, 'Unavailable packages: ', $packages_unavailable);
     $self->debug(4, 'Packages installed but unwanted: ', $packages_unwanted);
     $self->debug(4, 'Packages to install (desired but not installed): ', $packages_to_install);
 
