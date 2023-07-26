@@ -90,7 +90,7 @@ sub process_path {
         $gid = (getgrnam($group))[2] if ($group);
 
         if (!defined($uid) or !defined($gid)) {
-            $self->error("Bad owner or group ($owner/".($group ? $group : 'default user group').")");
+            $self->error("Bad owner or group ($user/".($group ? $group : 'default user group').")");
             return 0;
         }
     } else {
