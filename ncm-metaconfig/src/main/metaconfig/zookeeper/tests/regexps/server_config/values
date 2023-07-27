@@ -3,6 +3,7 @@ Values test for zookeeper main server config
 multiline
 metaconfigservice=/etc/zookeeper/zoo.cfg
 ---
+^4lw.commands.whitelist=stat, srvr, mntr$
 ^clientPort=2181$
 ^dataDir=/var/lib/zookeeper$
 ^initLimit=10$
