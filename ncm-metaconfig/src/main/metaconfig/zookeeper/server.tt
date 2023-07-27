@@ -1,9 +1,12 @@
 [%- booleans = ["leaderServes", "syncEnabled"] -%]
+[%- lists = ["4lw.commands.whitelist",] -%]
 [%- FOREACH pair IN main.pairs -%]
 [%      pair.key %]=
 [%-     SWITCH pair.key -%]
 [%-         CASE booleans -%]
 [%-             pair.value ? "yes" : "no" %]
+[%-         CASE lists -%]
+[%-             pair.value.join(', ') %]
 [%-         CASE -%]
 [%-             pair.value %]
 [%-     END %]

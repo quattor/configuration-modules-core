@@ -22,7 +22,8 @@ type zookeeper_main = {
     "autopurge.snapRetainCount" ? long
     "autopurge.purgeInterval" ? long
     "syncEnabled" ? boolean
-    "4lw.commands.whitelist" ? string
+    "4lw.commands.whitelist" ? choice('conf', 'cons', 'crst', 'dump', 'envi', 'mntr',
+        'ruok', 'srst', 'srvr', 'stat', 'wchc', 'wchp', 'wchs') []
 
     # cluster/ensemble
     "initLimit" : long = 10
