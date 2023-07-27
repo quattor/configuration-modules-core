@@ -60,6 +60,8 @@ Test for config
 ^\s{4}tcp-request\sconnection\sreject\sif\s\!network_allowed$
 ^\s{4}http-request\sredirect\sscheme\shttps\sunless\s\{\sssl_fc\s\}$
 ^\s{4}default_backend\sirods-bk$
+^\s{4}use_backend some-bk if some_acl$
+^\s{4}errorfile 403 /some/abs/path.code.http$
 ^backend\sirods-bk$
 ^\s{4}option\stcp-check$
 ^\s{4}acl\swhatif\smatch$

@@ -160,7 +160,7 @@ type haproxy_service_peer = {
     configuration of peers
 }
 type haproxy_service_peers = {
-        'peers': haproxy_service_peer[]
+    'peers': haproxy_service_peer[]
 };
 
 @documentation {
@@ -208,13 +208,20 @@ type haproxy_service_bind = {
     'port' ? type_port
 };
 
+type haproxy_service_frontend_errorfile = {
+    'code' : long(200..600)
+    'filename' : absolute_file_path
+};
+
 type haproxy_service_frontend = {
     'acl' ? dict()
     'bind' : haproxy_service_bind[]
     'default_backend' : string
+    'use_backend' ? string_trimmed[]
     'mode' ? choice("tcp", "http")
     'tcp-request' ? string[]
     'http-request' ? string[]
+    'errorfile' ? haproxy_service_frontend_errorfile[]
 };
 
 type haproxy_service_backend_server = {
