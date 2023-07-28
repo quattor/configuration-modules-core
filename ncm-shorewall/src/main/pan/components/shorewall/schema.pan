@@ -88,6 +88,8 @@ type component_shorewall_policy = {
     "burst" ? string
     "limit" ? string
     "connlimit" ? string
+    @{enable audit on the policy}
+    "audit" ? boolean
 };
 
 # Keep this list in sync with list from TT file
@@ -153,6 +155,10 @@ type component_shorewall_rules = {
     "headers" ? string
     "switch" ? string
     "helper" ? string
+    @{use the audit action}
+    "audit" ? boolean
+    @{action loglevel}
+    "loglevel" ? string
 };
 
 type component_shorewall_shorewall_blacklist = string with

@@ -2,7 +2,7 @@
 [%-      CASE 'burst' -%]
 [%-         el -%][% line.exists('limit') ? ':' _ line.limit : '' -%]
 [%-      CASE 'policy' -%]
-[%-         el FILTER upper -%]
+[%-         el FILTER upper -%][% line.exists('audit') && line.audit ? ':audit' : '' -%]
 [%-      CASE -%]
 [%-         CCM.is_list(el) ? el.join(',') : el -%]
 [%- END -%]
