@@ -2,7 +2,7 @@ unique template metaconfig/hnormalise/config;
 
 include 'metaconfig/hnormalise/schema';
 
-bind "/software/components/metaconfig/services/{/etc/hnormalise.yaml}/contents" = type_hnormalise;
+bind "/software/components/metaconfig/services/{/etc/hnormalise.yaml}/contents" = hnormalise;
 
 prefix "/software/components/metaconfig/services/{/etc/hnormalise.yaml}";
 "daemons/hnormalise" = "restart";

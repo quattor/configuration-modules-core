@@ -1,9 +1,9 @@
 Base test for config
 ---
-/etc/elasticsearch/elasticsearch.yml
+/etc/kafka/server.properties
 ---
 ^advertised.listeners=INTERNAL://kafka.cluster.log:9092,EXTERNAL://kafka.cluster.os:9093,EXTERNAL_LOG://kafka.cluster.log:9094$
-^broker.id=21$
+^broker.id=42$
 ^inter.broker.listener.name=INTERNAL$
 ^listener.security.protocol.map=EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL_LOG:PLAINTEXT$
 ^listeners=INTERNAL://kafka.cluster.log:9092,EXTERNAL://kafka.cluster.os:9093,EXTERNAL_LOG://kafka.cluster.log:9094$

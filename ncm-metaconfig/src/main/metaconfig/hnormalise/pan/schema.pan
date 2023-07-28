@@ -39,9 +39,14 @@ type hnormalise_output = {
     "zeromq" ? hnormalise_output_zeromq
 };
 
+type hnormalise_logging = {
+    "frequency" ? long(0..)
+};
+
 
 type hnormalise = {
     "input": hnormalise_input
     "output": hnormalise_output
     "fields": string[][]
+    "logging" ? hnormalise_logging
 };
