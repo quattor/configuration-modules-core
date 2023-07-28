@@ -23,7 +23,7 @@ jobs:
         # work, but this is a quick way of pulling in a lot of required dependencies.
         # Surprisingly `which` is not installed by default and panc depends on it.
         # libselinux-utils is required for /usr/sbin/selinuxenabled
-        dnf install -y maven which panc ncm-lib-blockdevices \
+        dnf install -y maven which rpm-build panc ncm-lib-blockdevices \
           ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
           perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
           perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \

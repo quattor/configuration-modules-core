@@ -155,9 +155,11 @@ type ${project.artifactId}_component = {
     'principals' ? component_${project.artifactId}_principal{} with {
         foreach (k; v; SELF) {
             if (!match(k, '^(client|server|aii)$')) {
-                error(format("Unsupported principal %s (must be one of client, server or aii)", k));
+                error("Unsupported principal %s (must be one of client, server or aii)", k);
             };
         };
         true;
     }
+    @{Packages required for CLI installation (e.g. in kickstart)}
+    'cli_packages' : string[]
 };

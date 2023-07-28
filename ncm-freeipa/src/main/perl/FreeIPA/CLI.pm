@@ -3,6 +3,7 @@
 use parent qw(CAF::Application NCM::Component::freeipa CAF::Reporter CAF::Object Exporter);
 
 use NCM::Component::freeipa;
+use version;
 
 our @EXPORT = qw(install);
 
@@ -15,8 +16,10 @@ use Readonly;
 Readonly::Array my @TIME_SERVICES => qw(ntpd chronyd ptpd ptpd2);
 Readonly::Array my @NTPDATE_SYNC => qw(/usr/sbin/ntpdate -U ntp -b -v);
 
-Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --debug --noac);
-Readonly::Array my @IPA_INSTALL_NOS => qw(sssd sudo sshd ssh ntp dns-sshfp nisdomain);
+Readonly::Array my @IPA_INSTALL => qw(ipa-client-install --unattended --debug);
+Readonly::Array my @IPA_INSTALL_PRE47 => qw(--noac);
+Readonly::Array my @IPA_INSTALL_NOS => qw(sudo sshd ssh ntp dns-sshfp nisdomain);
+Readonly::Array my @IPA_INSTALL_NOS_PRE47 => qw(sssd);
 
 # Location based discovery
 # http://www.freeipa.org/page/V4/DNS_Location_Mechanism
@@ -215,6 +218,28 @@ sub location_based_discovery
     return;
 }
 
+# Return version instance C<v$major.$minor.$remainder> version information (from C<ipa-client-install --version>)
+# Return undef in case of problem.
+sub get_ipa_install_version
+{
+    my ($self) = @_;
+
+    my $proc = CAF::Process->new(
+        [$IPA_INSTALL[0], "--version"],
+        log => $self,
+        keeps_state => 1,
+        );
+    my $output = $proc->output();
+
+    # e.g. '4.6.5'
+    if ($output && $output =~ m/\D((?:\d+)(?:\.\d+)+)\s*$/) {
+        return version->new("v$1");
+    } else {
+        $self->error("Failed to parse output from $proc: $output");
+        return;
+    }
+}
+
 
 # TODO: ipa-join is enough?
 sub ipa_install
@@ -224,17 +249,24 @@ sub ipa_install
     my $ec = SUCCESS;
     $self->debug(1, "begin ipa_install with primary $primary realm $realm");
 
+    my @ipa_install = @IPA_INSTALL;
+    my @ipa_install_nos = @IPA_INSTALL_NOS;
+    my $version = $self->get_ipa_install_version();
+    if ($version < version->new('4.7.0')) {
+        push(@ipa_install, @IPA_INSTALL_PRE47);
+        push(@ipa_install_nos, @IPA_INSTALL_NOS_PRE47);
+    }
 
     #$self->pre_time($opts{ntpserver});
 
     # It is ok to log this, the password is an OTP
     # TODO: set expiration window on password or cron job to reset password
     my $cmd = [
-        @IPA_INSTALL,
+        @ipa_install,
         '--realm', $realm,
         '--domain', $domain,
         '--password', $otp,
-        map {"--no-$_"} @IPA_INSTALL_NOS, # Nothing after this, will all be map'ped
+        map {"--no-$_"} @ipa_install_nos, # Nothing after this, will all be map'ped
         ];
 
     if ($self->location_based_discovery($domain, $primary)) {
