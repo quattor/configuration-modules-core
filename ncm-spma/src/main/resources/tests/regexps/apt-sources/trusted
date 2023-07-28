@@ -1,0 +1,10 @@
+Check that trusted (gpgcheck=false) apt sources are rendered correctly
+---
+renderpath=/software
+rendermodule=apt/source
+contentspath=/software/repositories/1
+---
+^# Name: trusted_source$
+^# Owner: localuser@localdomain$
+^# Protocol type: http$
+^deb \[trusted=yes\] http://another.example.org/another/path trusty main
