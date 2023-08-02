@@ -194,7 +194,7 @@ type beats_filebeat_input = {
         'utf-16be',
         'utf-16be-bom',
         'utf-16le',
-        'utf-8',
+        'utf-8'
     )
     'type' ? choice('log', 'stdin')
     'exclude_lines' ? string_trimmed[]
