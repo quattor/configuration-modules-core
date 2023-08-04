@@ -707,7 +707,7 @@ sub Configure
     foreach my $link (sort keys %$exilinks) {
         if (! $self->file_exists($link)) {
             if ($self->cleanup($link)) {
-                $self->debug(1, "Succesfully cleaned up broken symlink $link");
+                $self->debug(1, "Successfully cleaned up broken symlink $link");
             } else {
                 $self->error("Failed to unlink broken symlink $link: $self->{fail}");
             };
