@@ -12,3 +12,5 @@ prefix "/software/components/network";
 # Add dependency that can't be added to rpm directly
 prefix '/software/packages';
 'nmstate' = dict();
+prefix "/system/aii/osinstall/ks";
+"NetworkManager-config-server" = dict();
