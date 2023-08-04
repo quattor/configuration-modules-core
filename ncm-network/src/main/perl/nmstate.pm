@@ -110,7 +110,7 @@ sub make_nm_ip_rule
         my %thisrule;
         my $priority = 100;
         $priority = $rule->{priority} if $rule->{priority};
-        $thisrule{'family'} = "ipv4";
+        $thisrule{family} = "ipv4";
         $thisrule{priority} = $priority;
         $thisrule{'route-table'} = "$routing_table_hash->{$rule->{table}}" if $rule->{table};
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
