@@ -56,7 +56,7 @@ Readonly my $NOTTOREMOVE => <<EOF;
 something not to remove
 EOF
 
-# TODO: there should e no reason for this. we can assume it's there in EL9
+# TODO: there should be no reason for this. we can assume it's there in EL9
 $executables{'/usr/bin/hostnamectl'} = 1;
 
 set_file_contents("/etc/resolv.conf", "$RESOLV");

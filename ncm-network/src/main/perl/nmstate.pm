@@ -2,13 +2,13 @@
 
 =head1 NAME
 
-network: Extention of Network to configure Network settings using NetworkManager by configuring in Keyfile format.
+network: Extension of Network to configure Network settings using NetworkManager by configuring with nmstate.
 Most functions and logic is taken from network module to minimise changes to current network module.
 
 =head1 DESCRIPTION
 
 The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
-and the NM keyfile settings in files C<< /etc/NetworkManager/system-connections >>.
+and the YAML files in C<< /etc/nmstate >>.
 
 New/changed settings are first tested by retrieving the latest profile from the
 CDB server (using ccm-fetch).
@@ -55,7 +55,7 @@ sub is_valid_interface
     my ($self, $filename) = @_;
 
     # Very primitive, based on regex only
-    # matchs eth0.yml bond0.yml, or bond0.101.yml
+    # matches eth0.yml bond0.yml, or bond0.101.yml
     if (
         $filename =~ m{
             # Filename is either right at the beginning or following a slash
@@ -100,7 +100,7 @@ sub disable_nm_manage_dns
     };
 }
 
-# return hasref of ipv4 policy rule
+# return hashref of ipv4 policy rule
 sub make_nm_ip_rule
 {
     my ($self, $device, $rules, $routing_table_hash) = @_;
@@ -121,7 +121,7 @@ sub make_nm_ip_rule
 }
 
 # construct all routes found into array of hashref
-# return array of hashref
+# return arrayref of hashref
 sub make_nm_ip_route
 {
     my ($self, $device, $routes, $routing_table_hash) = @_;
@@ -167,7 +167,7 @@ sub get_bonded_eth
 sub nmstate_file_dump
 {
     my ($self, $filename, $ifaceconfig) = @_;
-    # ATM interfaces hash will only have one entry per interface. so looking at first entry is fine. long as file isn't resolv.yml
+    # ATM interfaces hash will only have one entry per interface, so looking at first entry is fine, as long as the file isn't resolv.yml
     my $iface = $ifaceconfig->{'interfaces'}[0] if ($filename ne $NM_RESOLV_YML);
 
     my $changes = 0;
@@ -201,14 +201,14 @@ sub nmstate_file_dump
         } else {
             if ($filename ne $NM_RESOLV_YML)
             {
-                # if it's interface file, lets check if there is a active connection.
+                # if it's an interface file, let's check if there is a active connection.
                 my $is_active = is_active_interface($self, $iface->{name});
                 if (( $is_active != 1 ) && ($iface->{state}) eq "up") {
-                    # if we find no active connection for interface we are managing, lets attempt to start it.
-                    # mark the enterface schedule to be updated.
+                    # if we find no active connection for the interface we are managing, let's attempt to start it.
+                    # mark the interface as scheduled to be updated.
                     # this will allow nm to report issues with config on every run instead of just first run when change is made.
-                    # or if someone deletes the conneciton.
-                    # if no changes to file, then this will never get applied again.
+                    # or if someone deletes the connection.
+                    # if no changes to the file, then this will never get applied again.
                     $self->info("$func: file $filename has no active connection, scheduled for update.");
                     $filestatus = $UPDATED;
                 } else {
@@ -230,7 +230,7 @@ sub nmstate_file_dump
     }
 }
 
-# generates the hasrefs for interface in yaml file format needed by nmstate.
+# generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
 # to add additional options, it should be constructed here.
 sub generate_nmstate_config
@@ -260,7 +260,7 @@ sub generate_nmstate_config
         }
     } elsif ($is_vlan_eth) {
         my $vlan_id = $name;
-        # replace eveything upto and including . to get vlan id of the interface.
+        # replace everything up-to and including . to get vlan id of the interface.
         # TODO: instead of this, should perhaps add valid-id  in schema? but may not be backward compatible for existing host entreis, aqdb will need updating?
         $vlan_id =~ s/^[^.]*.//;;
         $ifaceconfig->{type} = "vlan";
@@ -324,7 +324,7 @@ sub generate_nmstate_config
     # read and set by tt module as
     # routes:
     #   config:
-    #   - desitionation:
+    #   - destination:
     #     next-hop-address:
     #     next-hop-interface:
     #  and so on.
@@ -363,7 +363,7 @@ sub generate_nmstate_config
     return $interface;
 };
 
-# Genareate hash of dns-resolver config for nmstate.
+# Generate hash of dns-resolver config for nmstate.
 # only used if nm_manage_dns = true.
 sub generate_nm_resolver_config
 {
@@ -393,7 +393,7 @@ sub enable_network_service
     return $self->runrun([qw(systemctl enable NetworkManager)]);
 }
 
-# keep nmstate service disbaled (vendor preset anyway), we will apply config ncm component.
+# keep nmstate service disabled (vendor preset anyway), we will apply config ncm component.
 # nmstate service applies all files found in /etc/nmstate and changes to .applied, which will keep changing if component is managing the .yml file.
 # we don't need this.
 #
@@ -410,7 +410,7 @@ sub is_active_interface
 {
     my ($self, $ifacename) = @_;
     my $output = $self->runrun([$NMCLI_CMD, "-t", "-f", "name,device", "conn", "show", "--active"]);
-    # outoput returned by nmclie -t is colon seperated
+    # output returned by nmcli -t is colon separated
     # i.e eth0:eth0
     my @existing_conn = split('\n', $output);
     my $found = 0;
@@ -594,10 +594,10 @@ sub Configure
     #
     $self->enable_network_service();
 
-    # TODO: not tested with nmstate. leaving it here. needs work.lol y
+    # TODO: not tested with nmstate. leaving it here. needs work.
     $self->start_openvswitch($ifaces, $ifup);
 
-    # TODO: This can be set with nmstate config but we doing the triditional way using hostnamectl
+    # TODO: This can be set with nmstate config but we doing the traditional way using hostnamectl
     $self->set_hostname($hostname);
 
     # TODO: ethtool options are set using cli, but do we need to update in nmstate config? works for now
@@ -612,7 +612,7 @@ sub Configure
     # capturing system output/exit-status here is not useful.
     # network status is tested separately
     # flow:
-    #   1. stop everythig using old config
+    #   1. stop everything using old config
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['NetworkManager'], log => $self);
@@ -622,7 +622,7 @@ sub Configure
 
     my $dnsconfig = $self->generate_nm_resolver_config($nwtree, $manage_dns);
     $exifiles->{$NM_RESOLV_YML} = $self->nmstate_file_dump($NM_RESOLV_YML, $dnsconfig);
-    # nmstate files are applied uinsg nmstate apply via this componant. We don't want nmstate svc to manage it.
+    # nmstate files are applied uinsg nmstate apply via this component. We don't want nmstate svc to manage it.
     # If nmstate svc manages the files, it will apply the config for any files found in /etc/nmstate with .yml extension. Once the config is applied,
     # the file name changes to .applied, which won't be ideal if ncm-component is managing .yml files.
     # for this reason we don't really need nmstate service running. It comes disabled by default anyway.
@@ -645,15 +645,15 @@ sub Configure
 
     # Save/Restore last known working (i.e. initial) /etc/resolv.conf
     # if nm is allowed to manage dns, then this should be allowed to have changed
-    # TODO: @stdweird still reverts back to orignal resolv.conf when manage_dns=true, why?
+    # TODO: @stdweird still reverts back to original resolv.conf when manage_dns=true, why?
     if (!$manage_dns) {
         $resolv_conf_fh->close();
     }
 
     # Since there's per interface reload, interface changes will be applied via nmstatectl.
     # nmstatectl manages rollback too when options are misconfigured in yml config
-    # This is still used to marke interfaces to apply any changes via nmstatectl
-    # This will also down/delete any interface conection for which config was removed.
+    # This is still used to mark interfaces to apply any changes via nmstatectl
+    # This will also down/delete any interface connection for which config was removed.
     my $stopstart += $self->nmstate_apply($exifiles, $ifup, $ifdown, $nwsrv);
     $init_config .= "\nPOST APPLY\n";
     $init_config .= $self->get_current_config();
