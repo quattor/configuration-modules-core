@@ -53,6 +53,11 @@ prefix "/software/components/metaconfig/services/&lbrace;/etc/udev/rules.d/51-qu
 'udev_assign_rule/run/0/operator' = "+=";
 }
 include 'metaconfig/udev/rule_schema/schema';
+
+bind "/software/components/metaconfig/services/{/etc/udev/rules.d/51-quattor.rules}/contents" = udev_rules;
+
+prefix "/software/components/metaconfig/services/{/etc/udev/rules.d/51-quattor.rules}";
+
 "mode" = 0644;
 "owner" = "root";
 "group" = "root";
