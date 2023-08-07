@@ -225,7 +225,6 @@
                 <sources>
                   <source>
                     <excludes>
-                      <exclude>**/apt.pm</exclude>
                       <exclude>**/ips.pm</exclude>
                       <exclude>**/spma-run</exclude>
                     </excludes>
@@ -240,7 +239,6 @@
                 <sources>
                   <source>
                     <excludes>
-                      <exclude>**/*apt*</exclude>
                       <exclude>**/*ips*</exclude>
                       <!-- no - here, this is the pod of the package -->
                       <exclude>**/*spmarun*</exclude>
