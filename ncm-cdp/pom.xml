@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>cdp</artifactId>
   <packaging>pom</packaging>
-  <version>23.6.0-rc3-SNAPSHOT</version>
+  <version>23.6.0-rc3</version>
   <name>ncm-cdp</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
