@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>pnp4nagios</artifactId>
   <packaging>pom</packaging>
-  <version>23.6.0-rc2-SNAPSHOT</version>
+  <version>23.6.0-rc4</version>
   <name>ncm-pnp4nagios</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
