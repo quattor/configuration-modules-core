@@ -101,6 +101,24 @@ type structure_interface_alias = {
     "fqdn" ? type_fqdn
 };
 
+
+############################################################
+#
+# Defines virtual IP addresses as loopback interface
+#
+############################################################
+@documentation{
+    Define vip interfaces for configuring loopback interface. Used with frr/zebra configuration
+}
+
+type structure_vip = {
+    "interfaces" : valid_interface[]
+    "ip"         : type_ip
+    "fqdn"       ? type_fqdn
+    "netmask"    ? type_ip
+    "broadcast"  ? type_ip
+};
+
 @documentation{
     Describes the bonding options for configuring channel bonding on EL5 and similar.
 }
@@ -423,6 +441,8 @@ type structure_network = {
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
+    "manage_vips" : boolean = false
+    "vips" ? structure_vip{}
     @{Manage custom routing table entries; key is the name; value is the id}
     "routing_table" ? long(1..252){} with {
         if (exists(SELF['main']) || exists(SELF['local']) || exists(SELF['default']) || exists(SELF['unspec'])) {
