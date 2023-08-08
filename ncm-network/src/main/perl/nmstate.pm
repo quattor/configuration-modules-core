@@ -2,13 +2,14 @@
 
 =head1 NAME
 
-network: Extension of Network to configure Network settings using NetworkManager by configuring with nmstate.
+network: New module to configure networking using nmstate and NetworkManager.
 Most functions and logic is taken from network module to minimise changes to current network module.
 
 =head1 DESCRIPTION
 
-The I<network> component sets the network settings through C<< /etc/sysconfig/network >>
-and the YAML files in C<< /etc/nmstate >>.
+The I<network> component sets the network settings through nmstate.
+Configuration are created in yaml file at C<< /etc/nmstate >> and applied using nmstatectl.
+NetworkManager acts as the main (and currently the only) provider supported by nmstate.
 
 New/changed settings are first tested by retrieving the latest profile from the
 CDB server (using ccm-fetch).
@@ -87,10 +88,10 @@ sub disable_nm_manage_dns
 
     if ( $manage_dns ) {
         # set nothing, will use default.
-        $self->verbose("Networkmanager defaults will be used to manage resolv.conf");
+        $self->verbose("Networkmanager defaults will be used");
     } else {
         push @data, 'dns=none';
-        $self->verbose("Configuring networkmanager not to manage resolv.conf");
+        $self->verbose("Configuring networkmanager not to manage dns");
     }
     my $fh = CAF::FileWriter->new($NM_DROPIN_CFG_FILE, mode => oct(444), log => $self, keeps_state => 1);
     print $fh join("\n", @data, '');
@@ -120,8 +121,8 @@ sub make_nm_ip_rule
     return \@rule_entry;
 }
 
-# construct all routes found into array of hashref
-# return arrayref of hashref
+# construct all routes found into arrayref
+# return arrayref
 sub make_nm_ip_route
 {
     my ($self, $device, $routes, $routing_table_hash) = @_;
@@ -261,7 +262,7 @@ sub generate_nmstate_config
     } elsif ($is_vlan_eth) {
         my $vlan_id = $name;
         # replace everything up-to and including . to get vlan id of the interface.
-        # TODO: instead of this, should perhaps add valid-id  in schema? but may not be backward compatible for existing host entreis, aqdb will need updating?
+        # TODO: instead of this, should perhaps add valid-id in schema? but may not be backward compatible for existing host entreis, aqdb will need updating?
         $vlan_id =~ s/^[^.]*.//;;
         $ifaceconfig->{type} = "vlan";
         $ifaceconfig->{vlan}->{'base-iface'} = $iface->{physdev};
@@ -390,22 +391,29 @@ sub enable_network_service
 {
     my ($self) = @_;
     # vendor preset anyway
-    return $self->runrun([qw(systemctl enable NetworkManager)]);
+    my @cmds;
+    push(@cmds, ["systemctl", "enable", "NetworkManager"]);
+    # adding to start the service here will mean it does this every ncm run, we don't really want this.
+    # NetworkManager is started by default on el7+, but if it doesn't do this one off in ks post perhaps?
+    return $self->runrun(@cmds);
 }
 
 # keep nmstate service disabled (vendor preset anyway), we will apply config ncm component.
 # nmstate service applies all files found in /etc/nmstate and changes to .applied, which will keep changing if component is managing the .yml file.
-# we don't need this.
+# we don't need this, as this component will manage it.
 #
 sub disable_nmstate_service
 {
     my ($self) = @_;
     # vendor preset anyway
-    return $self->runrun([qw(systemctl disable nmstate)]);
+    my @cmds;
+    push(@cmds, ["systemctl", "disable", "nmstate"]);
+    push(@cmds, ["systemctl", "stop", "nmstate"]);
+    return $self->runrun(@cmds);
 }
 
 # check to see if we have active connection for interface we manage.
-# this allow ability to start a connection again if last config run failed to nmstate apply.
+# this is to allow ability to start a connection again if last config run failed on nmstate apply.
 sub is_active_interface
 {
     my ($self, $ifacename) = @_;
@@ -422,7 +430,7 @@ sub is_active_interface
             # it means this connection existed before nmstate did its first apply.
             # doesn't break anything as nmstate resuses the conn, but worth a warning to highlight it?
             if ("$name" ne "$ifacename"){
-                $self->warn("connection name '$name' doesn't match $ifacename for device $dev, possible connection reuse occured")
+                $self->warn("connection name '$name' doesn't match $ifacename for device $dev, possible connection reuse occured. $output");
             }
             $found = 1;
             return $found ;
@@ -594,8 +602,8 @@ sub Configure
     #
     $self->enable_network_service();
 
-    # TODO: not tested with nmstate. leaving it here. needs work.
-    $self->start_openvswitch($ifaces, $ifup);
+    # TODO: openvswitch configs for nmstate. Commented out for now.
+    # $self->start_openvswitch($ifaces, $ifup);
 
     # TODO: This can be set with nmstate config but we doing the traditional way using hostnamectl
     $self->set_hostname($hostname);
@@ -645,7 +653,6 @@ sub Configure
 
     # Save/Restore last known working (i.e. initial) /etc/resolv.conf
     # if nm is allowed to manage dns, then this should be allowed to have changed
-    # TODO: @stdweird still reverts back to original resolv.conf when manage_dns=true, why?
     if (!$manage_dns) {
         $resolv_conf_fh->close();
     }
