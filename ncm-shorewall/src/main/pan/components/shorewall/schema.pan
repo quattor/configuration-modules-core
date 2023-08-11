@@ -191,6 +191,7 @@ type component_shorewall_shorewall = {
     "delete_then_add" ? boolean
     "detect_dnat_ipaddrs" ? boolean
     "disable_ipv6" ? boolean
+    "docker" ? boolean
     "dont_load" ? string[]
     "drop_default" ? string
     "dynamic_blacklist" ? boolean
