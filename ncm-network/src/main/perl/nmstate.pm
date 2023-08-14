@@ -231,6 +231,34 @@ sub nmstate_file_dump
     }
 }
 
+# given ip/netmask address return cidr mask length
+sub get_masklen {
+    my ($self, $ip_netmask) = @_;
+    $self->debug(1, "Converting $ip_netmask to cidr notation");
+    my $ip = NetAddr::IP->new($ip_netmask);
+    return $ip->masklen;
+}
+
+# generate dummy interface config (aka loopback) for all service address vip
+# return hashrefs needed by nmstate interface config
+sub generate_vip_config {
+    my ($self, $iface_name, $vip) = @_;
+    my %dummy_iface;
+    my $ip_list = {};
+    my $netmask = $vip->{netmask} || "255.255.255.255";
+    my $ip = $vip->{ip};
+    $ip_list->{ip} = $ip;
+    $ip_list->{'prefix-length'} = get_masklen($self, "$ip/$netmask");
+    $dummy_iface{name} = $iface_name;
+    $dummy_iface{'profile-name'} = $iface_name;
+    $dummy_iface{type} = "dummy";
+    $dummy_iface{state} = "up";
+    $dummy_iface{ipv4}->{enabled} = "true";
+    $dummy_iface{ipv4}->{address} = [$ip_list];   
+    my $iface_cfg->{'interfaces'} = [\%dummy_iface];
+    return $iface_cfg;
+}
+
 # generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
 # to add additional options, it should be constructed here.
@@ -424,7 +452,6 @@ sub is_active_interface
     my $found = 0;
     foreach my $conn_name (@existing_conn) {
         my ($name, $dev) = split(':', $conn_name);
-        # trim
         if ("$dev" eq "$ifacename") {
             # ncm-network will set connection same as interface name, if this doesn't match,
             # it means this connection existed before nmstate did its first apply.
@@ -583,6 +610,21 @@ sub Configure
         $self->ethtool_opts_keeps_state($file_name, $ifacename, $iface, $exifiles);
     }
 
+    # configure vips defined under path /system/network/vips/ as dummy interface
+    # only if manage_vips is set to true.
+    if ($net->{manage_vips} && defined($net->{vips})) {
+        $self->verbose("Service address vips found, configuring dummy interfaces");
+        my $vips = $net->{vips};
+        my $idx = 0;
+        foreach my $name (sort keys %$vips) {
+            my $dummy_name="dummy$idx";
+            my $nmstate_dummy_cfg = $self->generate_vip_config($dummy_name, $vips->{$name});
+            my $dummy_filename = $self->iface_filename($dummy_name);
+            $exifiles->{$dummy_filename} = $self->nmstate_file_dump($dummy_filename, $nmstate_dummy_cfg);
+            $idx++;
+        }
+    };
+    
     my $dev2mac = $self->make_dev2mac();
 
     # We now have a map with files and values.
