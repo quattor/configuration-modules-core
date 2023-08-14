@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>ipmi</artifactId>
   <packaging>pom</packaging>
-  <version>23.6.0</version>
+  <version>23.6.1-SNAPSHOT</version>
   <name>ncm-ipmi</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
