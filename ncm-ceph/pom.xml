@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>ceph</artifactId>
   <packaging>pom</packaging>
-  <version>23.6.0-rc5-SNAPSHOT</version>
+  <version>23.6.0</version>
   <name>ncm-ceph</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
