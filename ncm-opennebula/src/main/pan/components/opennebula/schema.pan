@@ -11,7 +11,7 @@ include 'quattor/aii/opennebula/schema';
 
 include 'components/opennebula/common';
 include 'components/opennebula/monitord';
-
+include 'components/opennebula/sched';
 
 type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
@@ -331,6 +331,17 @@ type opennebula_host = {
     "Default" cluster.
     Hosts can be in only one cluster at a time.}
     "cluster" ? string
+    @{Define which Hosts are going to be used to run pinned workloads setting PIN_POLICY.
+    A Host can operate in two modes:
+
+    NONE: Default mode where no NUMA or hardware characteristics are considered.
+    Resources are assigned and balanced by an external component, e.g. numad or kernel.
+
+    PINNED: VMs are allocated and pinned to specific nodes according to different policies.
+
+    See:
+    https://docs.opennebula.io/6.6/management_and_operations/host_cluster_management/numa.html#configuring-the-host}
+    "pin_policy" ? choice('NONE', 'PINNED')
 };
 
 @documentation{
@@ -890,16 +901,6 @@ type opennebula_instance_types = {
 } = dict();
 
 @documentation{
-type for opennebula service common RPC attributes.
-}
-type opennebula_rpc_service = {
-    @{OpenNebula daemon RPC contact information}
-    "one_xmlrpc" : type_absoluteURI = 'http://localhost:2633/RPC2'
-    @{authentication driver to communicate with OpenNebula core}
-    "core_auth" : string = 'cipher' with match (SELF, '^(cipher|x509)$')
-};
-
-@documentation{
 Type that sets the OpenNebula
 sunstone_server.conf file
 }
@@ -933,7 +934,7 @@ type opennebula_sunstone = {
     "mode" : string = 'mixed'
     "marketplace_username" ? string
     "marketplace_password" ? string
-    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.systems/appliance'
+    "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.io/'
     "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
     "instance_types" : opennebula_instance_types[] = list (
         dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128,
@@ -949,7 +950,10 @@ type opennebula_sunstone = {
         dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192,
                 "description", "General purpose instance for high-load servers"),
     )
-    "routes" : string[] = list("oneflow", "vcenter", "support")
+    @{List of Ruby files containing custom routes to be loaded}
+    "routes" : string[] = list("oneflow", "vcenter", "support", "nsx")
+    @{List of filesystems to offer when creating new image}
+    "support_fs" : string[] = list("ext4", "ext3", "ext2", "xfs")
 };
 
 @documentation{
@@ -990,6 +994,8 @@ type opennebula_oneflow = {
         3 = DEBUG
     }
     "debug_level" : long(0..3) = 2
+    @{Endpoint for ZeroMQ subscriptions}
+    "subscriber_endpoint" : string = 'tcp://localhost:2101'
 };
 
 @documentation{
@@ -1052,6 +1058,73 @@ type opennebula_untouchables = {
     "vmgroups" ? string[]
 };
 
+@documentation{
+Type that sets the OpenNebula
+pci.conf file
+}
+type opennebula_pci = {
+    @{
+    This option specifies the main filters for PCI card monitoring. The format
+    is the same as used by lspci to filter on PCI card by vendor:device(:class)
+    identification. Several filters can be added as a list, or separated
+    by commas. The NULL filter will retrieve all PCI cards.
+
+    From lspci help:
+        -d [<vendor>]:[<device>][:<class>]
+            Show only devices with specified vendor, device and  class  ID.
+            The  ID's  are given in hexadecimal and may be omitted or given
+            as "*", both meaning "any value"
+
+    For example:
+    :filter:
+      - '10de:*'      # all NVIDIA VGA cards
+      - '10de:11bf'   # only GK104GL [GRID K2]
+      - '*:10d3'      # only 82574L Gigabit Network cards
+      - '8086::0c03'  # only Intel USB controllers
+    or
+    :filter: '*:*'    # all devices
+    or
+    :filter: '0:0'    # no devices
+
+    No devices filter is set by default.
+    }
+    "filter" : string[] = list('0:0')
+    @{
+    The PCI cards list restricted by the :filter option above can be even more
+    filtered by the list of exact PCI addresses (bus:device.func).
+
+    For example:
+        :short_address:
+            - '07:00.0'
+            - '06:00.0'
+    }
+    "short_address" ? string[]
+    @{
+    The PCI cards list restricted by the :filter option above can be even more
+    filtered by matching the device name against the list of regular expression
+    case-insensitive patterns.
+
+    For example:
+        :device_name:
+            - 'Virtual Function'
+            - 'Gigabit Network'
+            - 'USB.*Host Controller'
+            - '^MegaRAID'
+    }
+    "device_name" ? string[]
+    @{
+    List of NVIDIA vendor IDs, these are used to recognize PCI devices from
+    NVIDIA and use vGPU feature.
+
+    For example:
+        :nvidia_vendors:
+            - '10de'
+
+    On the other hand set an empty list to use full GPU PCI PT with NVIDIA cards:
+        :nvidia_vendors: []
+    }
+    "nvidia_vendors" ? string[]
+};
 
 @documentation{
 Type to define ONE basic resources
@@ -1073,6 +1146,9 @@ type component_opennebula = {
     'sunstone' ? opennebula_sunstone
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
+    'sched' ? opennebula_sched
+    @{set pci pt filter configuration}
+    'pci' ? opennebula_pci
     @{set vnm remote configuration}
     'vnm_conf' ? opennebula_vnm_conf
     @{set ssh host multiplex options}

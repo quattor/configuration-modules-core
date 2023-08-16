@@ -9,11 +9,11 @@ Function to validate all aii_opennebula hooks
 }
 function validate_aii_opennebula_hooks = {
     if (ARGC != 1) {
-        error(format("%s: requires only one argument", FUNCTION));
+        error("%s: requires only one argument", FUNCTION);
     };
 
     if (! exists(SELF[ARGV[0]])) {
-        error(format("%s: no %s hook found.", FUNCTION, ARGV[0]));
+        error("%s: no %s hook found.", FUNCTION, ARGV[0]);
     };
 
     hk = SELF[ARGV[0]];
@@ -22,7 +22,7 @@ function validate_aii_opennebula_hooks = {
     foreach(i; v; hk) {
         if (exists(v['module']) && v['module'] == OPENNEBULA_AII_MODULE_NAME) {
             if (found) {
-                error(format("%s: second aii_opennebula %s hook found", FUNCTION, ARGV[0]));
+                error("%s: second aii_opennebula %s hook found", FUNCTION, ARGV[0]);
             } else {
                 found = true;
                 ind = i;
@@ -31,12 +31,12 @@ function validate_aii_opennebula_hooks = {
     };
 
     if (! found) {
-        error(format("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]));
+        error("%s: no aii_opennebula %s hook found", FUNCTION, ARGV[0]);
     };
 
     if (ind != length(hk) - 1) {
-        error(format("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
-        FUNCTION, ARGV[0], ind, length(hk)));
+        error("%s: aii_opennebula %s hook has to be last hook (idx %s of %s)",
+        FUNCTION, ARGV[0], ind, length(hk));
     };
 
     # validate the hook
@@ -61,7 +61,7 @@ type opennebula_vmtemplate_vnet = string{} with {
     # check if all entries in the map have a network interface
     foreach (k; v; SELF) {
         if (! exists("/system/network/interfaces/" + k)) {
-            error(format("entry: %s in the vnet map is not available from /system/network/interfaces tree", k));
+            error("entry: %s in the vnet map is not available from /system/network/interfaces tree", k);
         };
     };
     # check if all interfaces have an entry in the map
@@ -72,7 +72,7 @@ type opennebula_vmtemplate_vnet = string{} with {
             (! (exists(v['driver']) && (v['driver'] == 'bonding'))) && # bonding interface is no real device
             (! (match(k, '^ib\d+$') && exists("/hardware/cards/ib/" + k))) # It's ok if this is an IB device
             ) {
-            error(format("/system/network/interfaces/%s has no entry in the vnet map", k));
+            error("/system/network/interfaces/%s has no entry in the vnet map", k);
         };
     };
     true;
@@ -81,7 +81,7 @@ type opennebula_vmtemplate_vnet = string{} with {
 type opennebula_rdm_disk = string{} with {
     foreach (k; v; SELF) {
         if (! is_absolute_file_path(v)) {
-            error(format("entry: %s in the RDM disk map %s is not a valid file path", v, k));
+            error("entry: %s in the RDM disk map %s is not a valid file path", v, k);
         };
     };
     true;
@@ -91,13 +91,13 @@ type opennebula_vmtemplate_datastore = string{} with {
     # check is all entries in the map have a hardrive
     foreach (k; v; SELF) {
         if (! exists("/hardware/harddisks/" + k)) {
-            error(format("/hardware/harddisks/%s has no entry in the datastores map", k));
+            error("/hardware/harddisks/%s has no entry in the datastores map", k);
         };
     };
     # check if all interfaces have an entry in the map
     foreach (k; v; value("/hardware/harddisks")) {
         if (! exists(SELF[k])) {
-            error(format("entry: %s in the datastore map is not available from /hardware/harddisks tree", k));
+            error("entry: %s in the datastore map is not available from /hardware/harddisks tree", k);
         };
     };
     true;
@@ -109,13 +109,13 @@ function is_consistent_memorybacking = {
     foreach (memory; data; SELF) {
         foreach (memory2; data2; SELF) {
             if (SELF[memory] == SELF[memory2] && memory != memory2) {
-                error(format("entry: %s appears several times within memorybacking list", data));
+                error("entry: %s appears several times within memorybacking list", data);
             };
         };
     };
     foreach (memory; data; SELF) {
         if (! match('^(hugepages|nosharepages|locked)$', SELF[memory])) {
-            error(format("entry: %s is not a valid memorybacking value", data));
+            error("entry: %s is not a valid memorybacking value", data);
         };
     };
     true;
@@ -126,7 +126,7 @@ Type that checks if the network interface is available from the quattor tree
 }
 type valid_interface_ignoremac = string with {
     if (! exists("/system/network/interfaces/" + SELF)) {
-        error(format("ignoremac.interface: '%s' is not available from /system/network/interfaces tree", SELF));
+        error("ignoremac.interface: '%s' is not available from /system/network/interfaces tree", SELF);
     };
     true;
 };
@@ -240,6 +240,45 @@ type opennebula_placements = {
     "sched_ds_rank" ? string
 };
 
+@documentation{
+Type that sets Numa topology and huge pages size for the VM.
+More info:
+https://docs.opennebula.io/6.6/management_and_operations/references/template.html#numa-topology-section
+}
+type opennebula_topology = {
+    @{When you need to expose the NUMA topology to the guest, you have to set a pinning policy
+    to map each virtual NUMA node’s resources (memory and vCPUs) onto the hypervisor nodes.
+    OpenNebula can work with four different policies:
+
+    CORE: each vCPU is assigned to a whole hypervisor core.
+    No other threads in that core will be used. This policy can be useful to isolate
+    the VM workload for security reasons.
+
+    THREAD: each vCPU is assigned to a hypervisor CPU thread.
+
+    SHARED: the VM is assigned to a set of the hypervisor CPUS shared by all the VM vCPUs.
+
+    NONE: the VM is not assigned to any hypervisor CPUs.
+    Access to the resources (i.e CPU time) will be limited by the CPU attribute.
+
+    For pinned VMs the CPU (assigned hypervisor capacity) is automatically set to the vCPU number.
+    No overcommitment is allowed for pinned workloads.}
+    "pin_policy" ? choice('CORE', 'THREAD', 'SHARED', 'NONE')
+    @{Number of sockets or NUMA nodes}
+    "sockets" ? long(1..)
+    @{Number of threads per core}
+    "threads" ? long(1..)
+    @{Number of cores per node}
+    "cores" ? long(1..)
+    @{Size of the hugepages (MB). If not defined no hugepages will be used.
+    It should match with the hugepage size configured in the hypervisor.
+    For example: "1024M"
+    see: https://docs.opennebula.io/6.6/management_and_operations/host_cluster_management/numa.html}
+    "hugepage_size" ? string
+    @{Control whether the memory is to be mapped, shared or private}
+    "memory_access" ? choice('shared', 'private')
+};
+
 type opennebula_vmtemplate = {
     @{Set the VNETs opennebula/vnet (bridges) required by each VM network interface}
     "vnet" : opennebula_vmtemplate_vnet
@@ -289,6 +328,11 @@ type opennebula_vmtemplate = {
     from the guest when its running out of memory, which means a malicious guest allocating
     large amounts of locked memory could cause a denial-of-service attach on the host.}
     "memorybacking" ? string[] with is_consistent_memorybacking(SELF)
+    @{Set up OpenNebula to control how VM resources are mapped onto the hypervisor ones.
+    These settings will help you to fine tune the performance of VMs. In OpenNebula the virtual
+    topology of a VM is defined by the number of sockets, cores and threads. We assume that a NUMA
+    node or cell is equivalent to a socket.}
+    "topology" ? opennebula_topology
     @{Request existing VM Group and roles.
     A VM Group defines a set of related VMs, and associated placement constraints for the VMs
     in the group. A VM Group allows you to place together (or separately) ceartain VMs
@@ -296,4 +340,11 @@ type opennebula_vmtemplate = {
     (e.g. not placing all the cpu bound VMs in the same host) or improve the fault tolerance
     (e.g. not placing all your front-ends in the same host) of your multi-VM applications.}
     "vmgroup" ? opennebula_vmtemplate_vmgroup[]
+    @{Hide the KVM hypervisor from standard MSR based discovery.
+    Useful to use PCI PT with some GPU cards or operating systems.
+    More info: https://libvirt.org/formatdomain.html#hypervisor-features.}
+    "hiddenkvm" ? boolean
+    @{Use Virtual Machine Timer Management:
+    https://libvirt.org/formatdomain.html#time-keeping}
+    "hypervclock" ? boolean
 } = dict();

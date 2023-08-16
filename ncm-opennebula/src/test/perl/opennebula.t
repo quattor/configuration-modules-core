@@ -18,7 +18,7 @@ is($NCM::Component::OpenNebula::Server::ONEADMINGRP, 4, "One admin group id");
 $CAF::Object::NoAction = 1;
 
 # Set OpenNebula file version
-set_file_contents("/var/lib/one/remotes/VERSION", "5.0.0");
+set_file_contents("/var/lib/one/remotes/VERSION", "6.0.0.2");
 
 my $cmp = NCM::Component::opennebula->new("opennebula");
 
@@ -73,6 +73,12 @@ isa_ok($monitord, "CAF::FileWriter", "monitord.conf CAF::FileWriter instance");
 like("$monitord", qr{^DB\s?=\s?\[$}m, "monitord.conf has expected content");
 $monitord->close();
 
+# sched conf file
+my $sched = get_file($NCM::Component::opennebula::SCHED_CONF_FILE);
+isa_ok($sched, "CAF::FileWriter", "sched.conf CAF::FileWriter instance");
+like("$sched", qr{^COLD_MIGRATE_MODE\s?=\s?\d+$}m, "sched.conf has expected content");
+$sched->close();
+
 # oneflow conf file
 my $oneflow = get_file($NCM::Component::opennebula::ONEFLOW_CONF_FILE);
 isa_ok($oneflow, "CAF::FileWriter", "oneflow-server.conf CAF::FileWriter instance");
@@ -90,5 +96,11 @@ my $vnm_conf = get_file($NCM::Component::OpenNebula::Server::VNM_CONF_FILE);
 isa_ok($vnm_conf, "CAF::FileWriter", "vnm_conf CAF::FileWriter instance");
 like("$vnm_conf", qr{^:arp_cache_poisoning:\s{1}.+$}m, "vnm_conf has expected content");
 $vnm_conf->close();
+
+# pci conf file
+my $pci_conf = get_file($NCM::Component::OpenNebula::Server::PCI_CONF_FILE);
+isa_ok($pci_conf, "CAF::FileWriter", "pci_conf CAF::FileWriter instance");
+like("$pci_conf", qr{^:filter:$}m, "pci_conf has expected content");
+$pci_conf->close();
 
 done_testing();

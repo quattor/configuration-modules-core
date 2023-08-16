@@ -2,6 +2,7 @@
 
 use NCM::Component::OpenNebula::Server qw($ONEADMIN_USER);
 use Readonly;
+use EDG::WP4::CCM::TextRender;
 
 Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
@@ -83,7 +84,7 @@ sub process_template_aii
         $tree->{system}->{opennebula}->{boot} = $BOOT_V4;
     };
 
-    my $tpl = CAF::TextRender->new(
+    my $tpl = EDG::WP4::CCM::TextRender->new(
         $tt_name,
         $tree,
         relpath => 'opennebula',

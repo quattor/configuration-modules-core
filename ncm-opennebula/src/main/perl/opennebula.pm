@@ -52,6 +52,8 @@ Features that are implemented at this moment:
 
 =item * Updates VNM OpenNebulaNetwork config file
 
+=item * Updates KVM PCI passthrough filter config file
+
 =item * Cloud resource labels (OpenNebula >= 5.x)
 
 =back
@@ -124,7 +126,7 @@ use CAF::FileReader;
 use CAF::Service;
 use Set::Scalar;
 use Config::Tiny;
-use Net::OpenNebula 0.316.0;
+use Net::OpenNebula 0.317.0;
 use Data::Dumper;
 use Readonly;
 use 5.10.1;
@@ -133,11 +135,12 @@ Readonly our $ONED_CONF_FILE => "/etc/one/oned.conf";
 Readonly our $MONITORD_CONF_FILE => "/etc/one/monitord.conf";
 Readonly our $SUNSTONE_CONF_FILE => "/etc/one/sunstone-server.conf";
 Readonly our $ONEFLOW_CONF_FILE => "/etc/one/oneflow-server.conf";
+Readonly our $SCHED_CONF_FILE => "/etc/one/sched.conf";
 
 # Required by process_template to detect
 # if it should return a text template or
 # CAF::FileWriter instance
-Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned monitord one_auth kvmrc vnm_conf sunstone remoteconf_ceph oneflow);
+Readonly::Array my @FILEWRITER_TEMPLATES => qw(oned monitord one_auth kvmrc pci vnm_conf sunstone remoteconf_ceph oneflow sched);
 Readonly::Array my @OPENNEBULA_CONSUMERS => qw(user group cluster);
 
 
@@ -457,6 +460,11 @@ sub Configure
     # Set monitord conf
     if (exists $tree->{monitord}) {
         $self->set_one_service_conf($tree->{monitord}, "monitord", $MONITORD_CONF_FILE);
+    }
+
+    # Set scheduler conf
+    if (exists $tree->{sched}) {
+        $self->set_one_service_conf($tree->{sched}, "sched", $SCHED_CONF_FILE);
     }
 
     # Set Sunstone server

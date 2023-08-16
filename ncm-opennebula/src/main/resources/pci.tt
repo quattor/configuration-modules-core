@@ -1,0 +1,8 @@
+[%- FOR pair IN pci.pairs -%]
+:[%    pair.key %]:
+[%     FILTER indent -%]
+[%     FOREACH item IN pci.${pair.key} -%]
+- '[%       item %]'
+[%     END -%]
+[%     END -%]
+[%- END -%]

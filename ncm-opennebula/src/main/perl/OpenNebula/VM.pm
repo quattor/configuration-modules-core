@@ -99,7 +99,7 @@ sub stop_and_remove_one_vms
     foreach my $t (@runningvms) {
         if ($t->{extended_data}->{USER_TEMPLATE}->[0]->{QUATTOR}->[0]) {
             $self->info("Running VM will be removed: ",$t->name);
-            $t->delete();
+            $t->terminate();
         } else {
             $self->info("No QUATTOR flag found for Running VM: ", $t->name);
         }

@@ -8,5 +8,16 @@ DATA = "<vcpu>[% vcpus %]</vcpu><cpu mode='host-passthrough'>
 [%-     END %]
 </memoryBacking>
 [%- END -%]
+[%- IF system.opennebula.hiddenkvm %]
+<features><acpi/><kvm><hidden state='on'/></kvm></features>
+[%- END -%]
+[%- IF system.opennebula.hypervclock %]
+<clock offset='localtime'>
+<timer name='rtc' tickpolicy='catchup' track='guest'/>
+<timer name='pit' tickpolicy='delay'/>
+<timer name='hpet' present='yes'/>
+<timer name='hypervclock' present='yes'/>
+</clock>
+[%- END -%]
 ",
 TYPE = "kvm"

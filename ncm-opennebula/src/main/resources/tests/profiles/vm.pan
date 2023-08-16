@@ -24,14 +24,30 @@ prefix "/hardware";
             ),
         ),
     ),
-    "video", dict(
-        "video0", dict(
+    "gpu", list(
+        dict(
             "media", "Integrated Graphics",
             "name", "Broadwell-U Integrated Graphics",
             "pci", dict(
                 "vendor", 0x8086,
                 "device", 0x1616,
                 "class", 0x0300,
+            ),
+        ),
+        dict(
+            "bus", "PCIe",
+            "manufacturer", "nvidia",
+            "model", "GP107",
+            "name", "quadro_p1000",
+            "pci", dict(
+                "class", 0x0300,
+                "device", 0x1cb1,
+                "vendor", 0x10de,
+            ),
+            "power", 47,
+            "ram", dict(
+                "bus", "128-bit",
+                "size", 4096,
             ),
         ),
     ),

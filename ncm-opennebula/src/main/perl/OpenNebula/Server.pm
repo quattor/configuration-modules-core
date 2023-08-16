@@ -18,6 +18,7 @@ Readonly our $ONEADMINUSR => (getpwnam("oneadmin"))[2];
 Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $VNM_CONF_FILE => "/var/lib/one/remotes/vnm/OpenNebulaNetwork.conf";
+Readonly our $PCI_CONF_FILE => "/var/lib/one/remotes/etc/im/kvm-probes.d/pci.conf";
 
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
@@ -43,11 +44,13 @@ sub restart_opennebula_service {
     my $srv;
     if ($service eq "oned" or $service eq "monitord") {
         $srv = CAF::Service->new(['opennebula'], log => $self);
+    } elsif ($service eq "sched") {
+        $srv = CAF::Service->new(['opennebula-scheduler'], log => $self);
     } elsif ($service eq "sunstone") {
         $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
     } elsif ($service eq "oneflow") {
         $srv = CAF::Service->new(['opennebula-flow'], log => $self);
-    } elsif ($service eq "kvmrc" or $service eq "vnm_conf") {
+    } elsif ($service eq "kvmrc" or $service eq "vnm_conf" or $service eq "pci") {
         $self->info("Updated $service file. onehost sync is required.");
         $self->sync_opennebula_hosts();
     }
@@ -74,7 +77,7 @@ sub detect_opennebula_version
     my $version;
     my $msg = '';
     # untaint value
-    if ("$fh" =~ m/^(\d+\.\d+(?:\.\d+)?$)/m ) {
+    if ("$fh" =~ m/^(\d+\.\d+\.\d+)?$/m ) {
         local $@;
         eval {
             $version = version->new($1);
@@ -282,6 +285,10 @@ sub set_one_server
     # Set VNM conf
     if (exists $tree->{vnm_conf}) {
         $self->set_one_service_conf($tree->{vnm_conf}, "vnm_conf", $VNM_CONF_FILE);
+    }
+    # Set PCI conf
+        if (exists $tree->{pci}) {
+        $self->set_one_service_conf($tree->{pci}, "pci", $PCI_CONF_FILE);
     }
 
     return 1;

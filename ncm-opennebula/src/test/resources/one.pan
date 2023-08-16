@@ -42,6 +42,16 @@ prefix "/software/components/opennebula/monitord";
     "address", "192.168.0.2",
 );
 
+prefix "/software/components/opennebula/sched";
+"log" = dict(
+    "system", "file",
+    "debug_level", 4,
+);
+"sched_interval" = 5;
+"live_rescheds" = 1;
+"cold_migrate_mode" = 1;
+"max_vm" = 9000;
+
 prefix "/software/components/opennebula/sunstone";
 "host" = "0.0.0.0";
 "tmpdir" = "/tmp";
@@ -57,6 +67,9 @@ prefix "/software/components/opennebula/kvmrc";
 
 prefix "/software/components/opennebula/vnm_conf";
 "arp_cache_poisoning" = false;
+
+prefix "/software/components/opennebula/pci";
+"filter" = list('*:*');
 
 prefix "/software/components/opennebula";
 

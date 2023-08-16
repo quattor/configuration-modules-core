@@ -767,8 +767,7 @@ TARGET = "vda"
 SIZE = 20480
 DESCRIPTION = "QUATTOR image for node630.cubone.os: vda"
 LABELS = "quattor,quattor/CE"
-DRIVER = "raw"
-FSTYPE = "raw"
+FORMAT = "raw"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_image}{params} = [$data, 102];
@@ -785,8 +784,7 @@ TARGET = "vdb"
 SIZE = 10480
 DESCRIPTION = "QUATTOR image for node630.cubone.os: vdb"
 LABELS = "quattor,quattor/CE"
-DRIVER = "raw"
-FSTYPE = "raw"
+FORMAT = "raw"
 QUATTOR = 1
 EOF
 $cmds{rpc_create_image2}{params} = [$data, 102];

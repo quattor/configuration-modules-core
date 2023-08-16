@@ -1,0 +1,16 @@
+OpenNebula sched test
+---
+multiline
+---
+^COLD_MIGRATE_MODE\s?=\s*\d+\s*$
+^DEFAULT_DS_SCHED\s?=\s?\[$
+^\s*policy\s?=\s*"\d+"\s*$
+^DEFAULT_NIC_SCHED\s?=\s?\[$
+^\s*policy\s?=\s*"\d+"\s*$
+^DEFAULT_SCHED\s?=\s?\[$
+^\s*policy\s?=\s*"\d+"\s*$
+^DIFFERENT_VNETS\s?=\s*".+"\s*$
+^LIVE_RESCHEDS\s?=\s*\d+\s*$
+^LOG\s?=\s?\[$
+^\s*debug_level\s?=\s*\d+,\s*$
+^\s*system\s?=\s*".+"\s*$
