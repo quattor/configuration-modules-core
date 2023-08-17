@@ -95,7 +95,7 @@ type altlogrotate_component = {
     if(!exists(SELF['entries']['global'])) {
         foreach(name; entry; SELF['entries']) {
             if(exists(entry['global']) && entry['global']) {
-                error(format("Cannot have altlogrotate entry %s (with global=true) without 'global' entry", name));
+                error("Cannot have altlogrotate entry %s (with global=true) without 'global' entry", name);
             };
         };
     };
