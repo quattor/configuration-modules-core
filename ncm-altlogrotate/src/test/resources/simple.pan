@@ -20,6 +20,8 @@ prefix '/software/components/altlogrotate/entries/test1';
 "scripts" = dict("lastaction", "/run/this");
 "tabooext" = list('a', 'b');
 "taboo_replace" = true;
+"su/user" = 'foouser';
+"su/group" = 'bargroup';
 
 prefix '/software/components/altlogrotate/entries/global';
 "include" = "some_file";
