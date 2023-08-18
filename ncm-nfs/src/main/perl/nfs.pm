@@ -477,9 +477,9 @@ sub Configure
     if (! exists($tree->{server}) || $tree->{server}) {
         if ($self->exports($tree))  {
             # Force a reload of the nfs daemon.
-            $self->info("Forcing nfs reload");
+            $self->info("Forcing ", $tree->{daemon}, " reload");
             # report error on failure
-            CAF::Service->new(["nfs"], log => $self)->reload();
+            CAF::Service->new([$tree->{daemon}], log => $self)->reload();
         };
     } else {
         $self->verbose("Not a NFS server configuration");
