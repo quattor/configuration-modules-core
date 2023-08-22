@@ -248,14 +248,17 @@ sub generate_vip_config {
     my $netmask = $vip->{netmask} || "255.255.255.255";
     my $ip = $vip->{ip};
     $ip_list->{ip} = $ip;
-    $ip_list->{'prefix-length'} = get_masklen($self, "$ip/$netmask");
-    $dummy_iface{name} = $iface_name;
-    $dummy_iface{'profile-name'} = $iface_name;
-    $dummy_iface{type} = "dummy";
-    $dummy_iface{state} = "up";
-    $dummy_iface{ipv4}->{enabled} = "true";
-    $dummy_iface{ipv4}->{address} = [$ip_list];   
-    my $iface_cfg->{'interfaces'} = [\%dummy_iface];
+    $ip_list->{'prefix-length'} = $self->get_masklen("$ip/$netmask");
+    my $iface_cfg->{interfaces} = [{
+        'profile-name' => $iface_name,
+        name => $iface_name,
+        type => "dummy",
+        state => "up",
+        ipv4 => {
+            enabled => $YTRUE,
+            address => [$ip_list],
+        },
+    }];
     return $iface_cfg;
 }
 
@@ -617,7 +620,7 @@ sub Configure
         my $vips = $net->{vips};
         my $idx = 0;
         foreach my $name (sort keys %$vips) {
-            my $dummy_name="dummy$idx";
+            my $dummy_name = "dummy$idx";
             my $nmstate_dummy_cfg = $self->generate_vip_config($dummy_name, $vips->{$name});
             my $dummy_filename = $self->iface_filename($dummy_name);
             $exifiles->{$dummy_filename} = $self->nmstate_file_dump($dummy_filename, $nmstate_dummy_cfg);
