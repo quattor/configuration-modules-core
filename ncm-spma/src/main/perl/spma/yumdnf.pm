@@ -10,6 +10,8 @@ use constant YUM_CONF_FILE => "/etc/dnf/dnf.conf";
 
 use constant DNF_MODULES_DIR => "/etc/dnf/modules.d";
 
+use constant REPOGROUP => qw(true);
+
 use constant REPOQUERY_FORMAT => qw(--nevra);
 
 use constant REPO_DEPS => qw(repoquery -C --requires --resolve --qf %{NAME};%{ARCH});
