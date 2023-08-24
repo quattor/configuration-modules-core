@@ -1,34 +1,35 @@
-# Use an official centos image as a parent image
-FROM centos:7
+# Use an official RockyLinux image as a parent image
+FROM rockylinux:8
 
 # Set the working directory to install dependencies to /quattor
 WORKDIR /quattor
 
 # install library core in /quattor, tests need it
-ADD https://codeload.github.com/quattor/template-library-core/tar.gz/master /quattor/template-library-core-master.tar.gz
-RUN tar xvfz template-library-core-master.tar.gz
+ADD https://codeload.github.com/quattor/template-library-core/tar.gz/master template-library-core-master.tar.gz
+RUN tar -xzf template-library-core-master.tar.gz
 
-# Install dependencies
-RUN yum install -y maven epel-release
-RUN rpm -U http://yum.quattor.org/devel/quattor-release-1-1.noarch.rpm
+# point library core to where we downloaded it
+ENV QUATTOR_TEST_TEMPLATE_LIBRARY_CORE /quattor/template-library-core-master
+
+# Prepare to install dependencies
+RUN dnf -y install dnf-plugins-core && \
+  dnf config-manager --set-enabled appstream && \
+  dnf config-manager --set-enabled powertools && \
+  dnf -y install epel-release http://yum.quattor.org/devel/quattor-yum-repo-2-1.noarch.rpm
 
 # The available version of perl-Test-Quattor is too old for mvnprove.pl to
 # work, but this is a quick way of pulling in a lot of required dependencies.
 # Surprisingly `which` is not installed by default and panc depends on it.
 # libselinux-utils is required for /usr/sbin/selinuxenabled
-RUN yum install -y perl-Test-Quattor which panc aii-ks ncm-lib-blockdevices \
-    ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
-    perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
-    perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
-    perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
-    perl-Set-Scalar perl-Text-Glob
-#perl-Git-Repository perl-Data-Structure-Util
-# Hack around the two missing Perl rpms for ncm-ceph
-RUN yum install -y cpanminus gcc
-RUN cpanm install Git::Repository Data::Structure::Util
-
-# point library core to where we downloaded it
-ENV QUATTOR_TEST_TEMPLATE_LIBRARY_CORE /quattor/template-library-core-master
+RUN dnf install -y maven which rpm-build panc ncm-lib-blockdevices \
+  ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
+  perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
+  perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
+  perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
+  perl-Set-Scalar perl-Text-Glob cpanminus gcc wget \
+  perl-Git-Repository perl-Data-Structure-Util \
+  http://yum.quattor.org/devel/perl-Test-Quattor-18.3.0-SNAPSHOT20180406083650.noarch.rpm \
+  http://yum.quattor.org/devel/aii-ks-21.12.1-SNAPSHOT20230627130118.noarch.rpm
 
 # set workdir to where we'll run the tests
 COPY --chown=99 . /quattor_test
