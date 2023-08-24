@@ -74,6 +74,8 @@ type structure_rule = {
     "not" ? boolean
     @{routing table action}
     "table" ? network_valid_routing_table
+    @{priority, The priority of the rule over the others. Required by Network Manager when setting routing rules.}
+    "priority" ? long(0..0xffffffff)
     @{rule add options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
@@ -167,6 +169,7 @@ type structure_ethtool_offload = {
     @{Set the TCP segment offload parameter to "off" or "on"}
     "tso" ? string with match (SELF, '^(on|off)$')
     "gro" ? string with match (SELF, '^(on|off)$')
+    "gso" ? string with match (SELF, '^(on|off)$')
 };
 
 @documentation{
