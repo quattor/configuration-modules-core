@@ -74,6 +74,10 @@ sub process_entry
     print $fh 'tabooext ', $entry->{taboo_replace} ? '' : '+ ', join(',', @{$entry->{tabooext}}), "\n"
         if defined($entry->{tabooext});
 
+    if (defined($entry->{su})) {
+        print $fh join(' ', 'su', $entry->{su}->{user}, $entry->{su}->{group}), "\n";
+    }
+
     foreach my $name (sort keys %{$entry->{scripts} || {}}) {
         print $fh "$name\n\n", $entry->{scripts}->{$name}, "\n\nendscript\n";
     }

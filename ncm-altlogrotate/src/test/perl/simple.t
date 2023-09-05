@@ -32,6 +32,7 @@ create 0751 someuser agroup
 mailfirst
 nomail
 tabooext a,b
+su foouser bargroup
 lastaction
 
 /run/this

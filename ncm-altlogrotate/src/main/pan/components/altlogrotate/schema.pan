@@ -16,6 +16,11 @@ type structure_altlogrotate_create_params = {
     'group' : string
 };
 
+type structure_altlogrotate_su = {
+    'user' : string_trimmed
+    'group' : string_trimmed
+};
+
 type structure_altlogrotate_logrot = {
     'pattern' ? string
     @{part of global configuration file, requires an entry called 'global'.
@@ -65,6 +70,8 @@ type structure_altlogrotate_logrot = {
     'frequency' ? choice('daily', 'weekly', 'monthly', 'yearly')
 
     'scripts' ? structure_altlogrotate_scripts
+
+    'su' ? structure_altlogrotate_su
 } with {
     if (exists(SELF['pattern']) && exists(SELF['include'])) {
         error('altlogrotate entry: pattern and include are mutually exclusive');
@@ -88,7 +95,7 @@ type altlogrotate_component = {
     if(!exists(SELF['entries']['global'])) {
         foreach(name; entry; SELF['entries']) {
             if(exists(entry['global']) && entry['global']) {
-                error(format("Cannot have altlogrotate entry %s (with global=true) without 'global' entry", name));
+                error("Cannot have altlogrotate entry %s (with global=true) without 'global' entry", name);
             };
         };
     };
