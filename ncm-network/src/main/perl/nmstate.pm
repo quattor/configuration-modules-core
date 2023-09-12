@@ -108,6 +108,10 @@ sub make_nm_ip_rule
 
     my @rule_entry;
     foreach my $rule (@$rules) {
+        if ($rule->{command}){
+            $self->warn("Rule command entry not supported with nmstate, ignoring '$rule->{command}'");
+            next;
+        };
         my %thisrule;
         my $priority = 100;
         $priority = $rule->{priority} if $rule->{priority};
@@ -128,6 +132,12 @@ sub make_nm_ip_route
     my ($self, $device, $routes, $routing_table_hash) = @_;
     my @rt_entry;
     foreach my $route (@$routes) {
+        if ($route->{command}){
+            # TODO: perhaps run ip add route $route->{command} ?
+            # Speak to RHEL for support for unreachable route with nmstate.
+            $self->warn("Route command entry not supported with nmstate, ignoring '$route->{command}'");
+            next;
+        };
         my %rt;
         if ($route->{address} eq 'default') {
                 $rt{destination} = '0.0.0.0/0';
