@@ -13,4 +13,4 @@ prefix "/software/components/network";
 prefix '/software/packages';
 'nmstate' = dict();
 prefix "/system/aii/osinstall/ks";
-"NetworkManager-config-server" = dict();
+'packages' = append("NetworkManager-config-server");
