@@ -1,0 +1,7 @@
+[%- FOREACH array IN nest -%]
+[%-     FOREACH table IN array.value -%]
+[%-         path = name _ '.' _ array.key %]
+[%          '[[' _ path _ ']]' %]
+[%          INCLUDE 'metaconfig/telegraf/table.tt' path=path table=table FILTER indent -%]
+[%-     END -%]
+[%- END -%]

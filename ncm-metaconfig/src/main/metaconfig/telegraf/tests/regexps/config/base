@@ -1,0 +1,60 @@
+Base test for config
+---
+/etc/telegraf/telegraf.conf
+---
+^\[global_tags\]$
+^    model = "test_model"$
+^    personality = "test_personality"$
+^$
+^\[agent\]$
+^    collection_jitter = "0s"$
+^    debug = false$
+^    flush_interval = "300s"$
+^    flush_jitter = "60s"$
+^    interval = "60s"$
+^    metric_buffer_limit = 5000$
+^    omit_hostname = false$
+^    quiet = false$
+^    round_interval = true$
+^$
+^\[\[inputs\.cpu\]\]$
+^    fielddrop = \[$
+^        "time_\*",$
+^    \]$
+^    percpu = false$
+^    totalcpu = true$
+^    \[inputs\.cpu\.tagdrop\]$
+^        cpu = \[$
+^            "cpu6",$
+^            "cpu7",$
+^        \]$
+^$
+^\[\[inputs\.disk\]\]$
+^    ignore_fs = \[$
+^        "tmpfs",$
+^        "devtmpfs",$
+^    \]$
+^    mount_points = \[$
+^        "/",$
+^        "/pool",$
+^    \]$
+^    \[inputs\.disk\.tagpass\]$
+^        fstype = \[$
+^            "ext4",$
+^            "xfs",$
+^        \]$
+^        path = \[$
+^            "/opt",$
+^            "/home\*",$
+^        \]$
+^$
+^\[\[outputs\.influxdb\]\]$
+^    database = "testnodes"$
+^    password = "test_password"$
+^    precision = "s"$
+^    skip_database_creation = true$
+^    timeout = "5s"$
+^    urls = \[$
+^        "http://influxdb01\.example\.org:8086"\,$
+^    ]$
+^    username = "write_testnodes"$
