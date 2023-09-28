@@ -293,6 +293,7 @@ sub generate_nmstate_config
     my $ifaceconfig->{name} = $name;
 
     $ifaceconfig->{mtu} = $iface->{mtu} if $iface->{mtu};
+    $ifaceconfig->{'mac-address'} = $iface->{hwaddr} if $iface->{hwaddr};
     if ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_bond_eth) {
