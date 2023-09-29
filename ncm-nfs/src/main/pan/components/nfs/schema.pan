@@ -29,6 +29,8 @@ type ${project.artifactId}_component = {
       If true, missing exports forces an empty exports file and a NFS service reload.
       If false, missing exports has no effect.}
     'server' : boolean = true
+    @{ Daemon to reload when changes are made }
+    'daemon' : string_trimmed = 'nfs-server'
     @{This is a list of dicts with "path" giving the export path and
       "hosts" being a dict of host/option entries where the key is the escaped host name and
       the value the export options(e.g. for "nfsclient.example.org(rw)",
