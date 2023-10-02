@@ -7,7 +7,7 @@ BEGIN {
 }
 
 use Test::More;
-use Test::Quattor qw(simple simple_ethtool simple_noethtool simple_realhostname simple_nobroadcast simple_tun);
+use Test::Quattor qw(simple simple_ethtool simple_noethtool simple_realhostname simple_shortrealhostname simple_nobroadcast simple_tun);
 use Test::MockModule;
 
 use NCM::Component::network;
@@ -292,6 +292,19 @@ unlike(get_file_contents("/etc/sysconfig/network"),
 ok(command_history_ok([
     '/usr/bin/hostnamectl set-hostname realhost.example.com --static',
 ]), "hostnamectl called with realhostname");
+
+
+command_history_reset();
+$cfg = get_config_for_profile('simple_shortrealhostname');
+$executables{'/usr/bin/hostnamectl'} = 1;
+is($cmp->Configure($cfg), 1, "Component runs correctly with shortrealhostname test profile w hostnamectl");
+unlike(get_file_contents("/etc/sysconfig/network"),
+     qr/HOSTNAME=/m,
+     "shortrealhostname not used as hostname w hostnamectl");
+ok(command_history_ok([
+     '/usr/bin/hostnamectl set-hostname shortrealhost --static',
+]), "hostnamectl called with shortrealhostname");
+
 
 
 # removing broadcast that was same as computed default is ok (triggers no network restart)

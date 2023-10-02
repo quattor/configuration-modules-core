@@ -421,7 +421,7 @@ type structure_ipv6 = {
 type structure_network = {
     "domainname" : type_fqdn
     "hostname" : type_shorthostname
-    "realhostname" ? type_fqdn
+    "realhostname" ? string with is_shorthostname(SELF) || is_fqdn(SELF)
     "default_gateway" ? type_ip
     @{When default_gateway is not set, the component will try to guess the default
       gateway using the first configured gateway set on an interface.
