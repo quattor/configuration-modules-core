@@ -309,7 +309,7 @@ type slurm_conf_control = {
     'MaxNodeCount' ? long(0..)
     'MaxStepCount' ? long(0..)
     'MaxTasksPerNode' ? long(0..65533)
-    'MpiDefault' ? choice("openmpi", "pmi2", "pmix", "none")
+    'MpiDefault' ? choice("pmi2", "pmix", "none")
     'MpiParams' ? slurm_mpi_params
     'PluginDir' ? absolute_file_path[]  # colon-separated
     'PlugStackConfig' ? absolute_file_path  # defaults to plugstack.conf in the slurm conf dir
@@ -684,7 +684,6 @@ type slurm_cgroups_conf = {
     'MaxSwapPercent' ? double(0..)
     'MemorySwappiness' ? long(0..100)
     'MinRAMSpace' ? long(0..)
-    'TaskAffinity' ? boolean
 };
 
 type slurm_spank_plugin = {
@@ -848,7 +847,7 @@ type slurm_mpi_conf = {
     'PMIxDirectConn' ? boolean
     'PMIxDirectConnEarly' ? boolean
     'PMIxDirectConnUCX' ? boolean
-    'PMIxDirectSameArc' ? boolean
+    'PMIxDirectSameArch' ? boolean
     'PMIxEnv' ? string[]
     'PMIxFenceBarrier' ? boolean
     'PMIxNetDevicesUCX' ? string
