@@ -12,5 +12,3 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/cgroup.conf}/conten
 'ConstrainSwapSpace' = true;
 
 'AllowedSwapSpace' = 10;
-
-'TaskAffinity' = true;
