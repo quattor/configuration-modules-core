@@ -9,4 +9,3 @@ CgroupAutomount=yes
 ConstrainCores=yes
 ConstrainRAMSpace=yes
 ConstrainSwapSpace=yes
-TaskAffinity=yes
