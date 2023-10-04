@@ -1,30 +1,28 @@
-[% spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'UserKnownHostsFile' ] -%]
-[% commalist = ['Ciphers', 'HostbasedKeyTypes','HostKeyAlgorithms', 'KbdInteractiveDevices', 'KbdInteractiveDevices',
-    'MACs', 'PreferredAuthentications', 'CanonicalDomains', 'CanonicalizePermittedCNAMEs', 'KexAlgorithms',
-    ] -%]
-[% multilinelist = ['IdentityFile', 'RevokedHostKeys'] -%]
-[% booleans = ['BatchMode', 'CanonicalizeFallbackLocal', 'ChallengeResponseAuthentication', 'CheckHostIP', 
-    'ClearAllForwardings', 'Compression', 'EnableSSHKeysign', 'ExitOnForwardFailure', 'ForwardAgent', 'ForwardX11', 
-    'ForwardX11Trusted', 'GatewayPorts', 'GSSAPIAuthentication', 'GSSAPIDelegateCredentials', 'HashKnownHosts', 
-    'HostbasedAuthentication', 'IdentitiesOnly', 'KbdInteractiveAuthentication', 'NoHostAuthenticationForLocalhost', 
-    'PasswordAuthentication', 'PermitLocalCommand', 'ProxyUseFdpass', 'PubkeyAuthentication', 'RhostsRSAAuthentication', 
-    'RSAAuthentication', 'StreamLocalBindUnlink', 'TCPKeepAlive', 'UsePrivilegedPort', 'VisualHostKey',
-    ] -%]
-
+[% # different forms of list handling, default for list type is comma separated
+    spacelist = ['SendEnv', 'GlobalKnownHostsFile', 'IgnoreUnknown', 'Include', 'UserKnownHostsFile' ];
+    multilinelist = ['CertificateFile', 'IdentityFile', 'RevokedHostKeys'];
+     -%]
 [%- FOREACH pair IN data.pairs -%]
-[%     NEXT IF pair.key == 'hostnames' || pair.key == 'matches' -%] 
 [%     SWITCH pair.key -%]
-[%         CASE booleans -%]
-[%             pair.key %] [% pair.value ? 'Yes' : 'No' %]
+[%         CASE ['hostnames', 'matches'] %][% # Do nothing -%]
 [%         CASE spacelist -%]
 [%             pair.key %] [% pair.value.join(' ') %]
-[%         CASE commalist -%]
-[%             pair.key %] [% pair.value.join(',') %]
 [%         CASE multilinelist -%]
 [%             FOREACH line IN pair.value -%]
 [%                 pair.key %] [% line %]
 [%             END -%]
+[%         CASE 'SetEnv' -%]
+[%             FOREACH item IN pair.value.pairs -%]
+SetEnv [% item.key %]="[% item.value %]"
+[%             END -%]
 [%         CASE -%]
-[%             pair.key %] [% pair.value %]
-[%     END -%]
+[%             pair.key %] [% -%]
+[%             IF pair.value.is_boolean -%]
+[%                  pair.value ? 'yes' : 'no' -%]
+[%             ELSIF CCM.is_list(pair.value) -%]
+[%                  pair.value.join(',') -%]
+[%             ELSE -%]
+[%                  pair.value -%]
+[%             END -%]
+[%     END %]
 [% END -%]
