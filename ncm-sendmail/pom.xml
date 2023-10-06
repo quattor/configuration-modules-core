@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>sendmail</artifactId>
   <packaging>pom</packaging>
-  <version>23.6.0-rc2-SNAPSHOT</version>
+  <version>23.9.0-rc1</version>
   <name>ncm-sendmail</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
