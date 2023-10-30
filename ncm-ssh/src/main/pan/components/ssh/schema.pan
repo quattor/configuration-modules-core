@@ -125,6 +125,7 @@ type ssh_daemon_options_type = {
     "LoginGraceTime" ? long
     "MaxAuthTries" ? long
     "MaxStartups" ? long
+    "MaxSessions" ? long(0..)
     "NoneEnabled" ? legacy_binary_affirmation_string
     "PermitEmptyPasswords" ? legacy_binary_affirmation_string
     "PermitRootLogin" ? choice(
