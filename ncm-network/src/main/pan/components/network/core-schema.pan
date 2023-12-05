@@ -443,6 +443,8 @@ type structure_network = {
     "allow_nm" ? boolean
     @{let NetworkManager manage the dns (only for nmstate)}
     "nm_manage_dns" : boolean = false
+    @{let ncm-network cleanup inactive connections (only for nmstate)}
+    "nm_clean_inactive_conn" : boolean = true
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
