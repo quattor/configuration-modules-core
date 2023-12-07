@@ -800,7 +800,12 @@ sub process_network
                             $la->{options} ||= {};
                             $la = $la->{options};
                         }
-                        $la->{$opt} = $opts->{$opt};
+                        # nmstate config requires arp_ip_target as comma seperated string
+                        if ($opt eq 'arp_ip_target') {
+                            $la->{$opt} = join(',', @{$opts->{$opt}});
+                        } else {
+                            $la->{$opt} = $opts->{$opt};
+                        }
                     }
                 }
                 # TODO for briging_opts
