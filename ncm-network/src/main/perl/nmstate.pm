@@ -518,6 +518,8 @@ sub nmstate_apply
             # apply config using nmstatectl
             my $ymlfile = $self->iface_filename($iface);
             if ($self->any_exists($ymlfile)){
+                $self->verbose("Applying config for interface $iface");
+                push(@cmds, [$NMCLI_CMD, "conn", "down", $iface ]) if $self->is_active_interface($iface);
                 push(@cmds, [$NMSTATECTL, "apply", $ymlfile]);
                 push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
             } else {
