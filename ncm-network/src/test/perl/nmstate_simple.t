@@ -51,6 +51,10 @@ interfaces:
   name: eth0
   profile-name: eth0
   type: bond
+routes:
+  config:
+  - next-hop-interface: eth0
+    state: absent
 EOF
 
 Readonly my $NOTTOREMOVE => <<EOF;

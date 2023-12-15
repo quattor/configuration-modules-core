@@ -159,6 +159,16 @@ sub make_nm_ip_route
     return \@rt_entry;
 }
 
+# create an absent route entry.
+# if you prepend the routes with the 'absent', then nmstate will clear the existing matches and apply the routes
+# This will allow nmstate to clear all routes for the interface and only apply routes defined in config.
+# useful when routes are changed later on in profile once host is built.
+# return arrayref
+sub make_nm_route_absent {
+    my ($self, $device) = @_;
+    return { 'state' => 'absent', 'next-hop-interface' => $device };
+}
+
 # group all eth bound to a bond together in a hashref for to be used as
 # - port in nmstate config file
 sub get_bonded_eth
@@ -377,13 +387,13 @@ sub generate_nmstate_config
     #     next-hop-interface:
     #  and so on.
     my $routes = [];
+    push @$routes, ($self->make_nm_route_absent($name));
+    push @$routes, \%default_rt if scalar %default_rt;
     if (defined($iface->{route})) {
         $self->verbose("policy route found, nmstate will manage it");
         my $route = $iface->{route};
-        $routes = $self->make_nm_ip_route($name, $route, $routing_table);
-        push @$routes, \%default_rt if scalar %default_rt;
-    } elsif (scalar %default_rt){
-        push @$routes, \%default_rt if scalar %default_rt;
+        my $policyroutes = $self->make_nm_ip_route($name, $route, $routing_table);
+        push @$routes, @{$policyroutes};
     }
 
     my $policy_rule = [];
