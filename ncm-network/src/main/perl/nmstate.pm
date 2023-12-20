@@ -480,21 +480,19 @@ sub is_active_interface
     return $found;
 }
 
-# check for existing connections, will clear the default connections created by 'NM with Wired connecton x'
+# check for existing connections, any connections which are not active.
 # good to have.
-sub clear_default_nm_connections
+sub clear_inactive_nm_connections
 {
     my ($self) = @_;
-    # NM creates auto connections with Wired connection x
-    # Delete all connections with name 'Wired connection', everything ncm-network creates will have connection name set to interface name.
-    my $output = $self->runrun([$NMCLI_CMD, "-t", "-f", "name", "conn"]);
-    my @existing_conn = split('\n', $output);
-    my %current_conn;
-    foreach  my $conn_name  (@existing_conn) {
-        $conn_name =~ s/\s+$//;
-        if ($conn_name =~ /Wired connection/){
-            $self->verbose("Clearing default connections created automatically by NetworkManager [ $conn_name ]");
-            $output = $self->runrun([$NMCLI_CMD,"conn", "delete", $conn_name]);
+    # clean any inactive connections
+    my $output = $self->runrun([$NMCLI_CMD, "-t", "-f", "uuid,device,name,state,active", "conn"]);
+    my @all_conn = split('\n', $output);
+    foreach  my $conn  (@all_conn) {
+        my ($uuid,$device,$name,$state,$active) = split(':', $conn);
+        if ($active eq 'no') {
+           $self->verbose("Clearing inactive connection for [ uuid=$uuid, name=$name, state=$state, active=$active ]");
+           $output = $self->runrun([$NMCLI_CMD,"conn", "delete", $uuid]);
             $self->verbose($output);
         }
     }
@@ -510,9 +508,7 @@ sub nmstate_apply
 
     if (@ifaces) {
         $self->info("Applying changes using $NMSTATECTL ", join(', ', @ifaces));
-        my @cmds;
-        # clear any connections created by NM with 'Wired connection x' to start fresh.
-        $self->clear_default_nm_connections();
+        my @cmds;     
         foreach my $iface (@ifaces) {
             # apply config using nmstatectl
             my $ymlfile = $self->iface_filename($iface);
@@ -737,6 +733,14 @@ sub Configure
             $self->debug(1, "Configuration not changed and nothing was stopped and/or started");
         }
     };
+
+    # cleanup dangling inactive connections after ncm network changes are applied.
+    # defaults to cleanup
+    my $clean_inactive_conn = $net->{nm_clean_inactive_conn};
+    if ($clean_inactive_conn and $stopstart) {
+        # look to cleanup connections only when something is changed.
+        $self->clear_inactive_nm_connections;
+    }
 
     # test network
     my $ccm_tree = $config->getTree("/software/components/ccm");

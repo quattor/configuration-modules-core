@@ -104,7 +104,6 @@ ok(command_history_ok([
   '/usr/bin/nmcli connection',
   'service NetworkManager reload',
   'systemctl disable nmstate',
-  '/usr/bin/nmcli -t -f name conn',
   '/usr/bin/nmstatectl apply /etc/nmstate/eth0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/resolv.yml',
   'service NetworkManager reload',
@@ -115,6 +114,7 @@ ok(command_history_ok([
   '/usr/bin/nmstatectl show',
   '/usr/bin/nmcli dev status',
   '/usr/bin/nmcli connection',
+  '/usr/bin/nmcli -t -f uuid,device,name,state,active conn',
   'ccm-fetch'
 ], []));
 
