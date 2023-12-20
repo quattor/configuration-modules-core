@@ -163,12 +163,12 @@ sub make_nm_ip_route
 # - port in nmstate config file
 sub get_bonded_eth
 {
-    my ($self, $interfaces) = @_;
+    my ($self, $bond_name, $interfaces) = @_;
     my @data =  ();
     foreach my $name (sort keys %$interfaces) {
         my $iface = $interfaces->{$name};
         if ( $iface->{master} ){
-            push @data, $name;
+            push @data, $name if $iface->{master} eq $bond_name;
         }
     }
     return \@data;
@@ -279,7 +279,6 @@ sub generate_nmstate_config
 {
     my ($self, $name, $net, $ipv6, $routing_table, $default_gw) = @_;
 
-    my $bonded_eth = get_bonded_eth($self, $net->{interfaces});
     my $iface = $net->{interfaces}->{$name};
     my $device = $iface->{device} || $name;
     my $is_eth = $iface->{set_hwaddr};
@@ -314,6 +313,7 @@ sub generate_nmstate_config
         # if bond device
         $ifaceconfig->{type} = "bond";
         $ifaceconfig->{'link-aggregation'} = $iface->{link_aggregation};
+        my $bonded_eth = get_bonded_eth($self, $name, $net->{interfaces});
         if ($bonded_eth){
             $ifaceconfig->{'link-aggregation'}->{port} = $bonded_eth;
         }
