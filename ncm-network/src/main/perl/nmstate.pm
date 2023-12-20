@@ -294,6 +294,7 @@ sub generate_nmstate_config
 
     $ifaceconfig->{mtu} = $iface->{mtu} if $iface->{mtu};
     $ifaceconfig->{'mac-address'} = $iface->{hwaddr} if $iface->{hwaddr};
+    $ifaceconfig->{'profile-name'} = $name;
     if ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_bond_eth) {
@@ -334,6 +335,7 @@ sub generate_nmstate_config
 
                 # TODO: append alias ip to ip_list as array, providing ips as array of hashref.
                 $ifaceconfig->{ipv4}->{address} = [$ip_list];
+                $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
                 $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
             } else {
                 # TODO: configure IPV6 enteries

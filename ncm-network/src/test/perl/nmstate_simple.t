@@ -49,6 +49,7 @@ interfaces:
 - link-aggregation:
     port: []
   name: eth0
+  profile-name: eth0
   type: bond
 EOF
 
