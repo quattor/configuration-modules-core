@@ -277,7 +277,7 @@ sub generate_vip_config {
 # to add additional options, it should be constructed here.
 sub generate_nmstate_config
 {
-    my ($self, $name, $net, $ipv6, $routing_table) = @_;
+    my ($self, $name, $net, $ipv6, $routing_table, $default_gw) = @_;
 
     my $bonded_eth = get_bonded_eth($self, $net->{interfaces});
     my $iface = $net->{interfaces}->{$name};
@@ -356,12 +356,15 @@ sub generate_nmstate_config
 
     # create default route entry.
     my %default_rt;
-    if (defined($iface->{gateway})){
-        $default_rt{destination} = '0.0.0.0/0';
-        $default_rt{'next-hop-address'} = $iface->{gateway};
-        $default_rt{'next-hop-interface'} = $device;
+    if ($default_gw) {
+        # create only default gw entry if gw entry match interface gateway defined
+        # otherwise this interface is not the default gw interface.
+        if ((defined($iface->{gateway})) and ($iface->{gateway} eq $default_gw)) {
+            $default_rt{destination} = '0.0.0.0/0';
+            $default_rt{'next-hop-address'} = $default_gw;
+            $default_rt{'next-hop-interface'} = $device;
+        }
     }
-
     # combined default route with any policy routing/rule, if any
     # combination of default route, plus any additional policy routes.
     # read and set by tt module as
@@ -600,7 +603,10 @@ sub Configure
 
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
     my $manage_dns = $nwtree->{nm_manage_dns} || 0;
-
+    my $dgw = $nwtree->{default_gateway};
+    if (!$dgw) {
+        $self->warn ("No default gateway configured");
+    }
     # The original, assumed to be working resolv.conf
     # Using an FileEditor: it will read the current content, so we can do a close later to save it
     # in case something changed it behind our back. Only if NM is not set to manage dns.
@@ -610,10 +616,13 @@ sub Configure
         *$resolv_conf_fh->{original_content} = undef;
     }
 
+    # create routing tables if defined.
+    $self->routing_table($nwtree->{routing_table});
+
     my $ipv6 = $nwtree->{ipv6};
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
-        my $nmstate_cfg = generate_nmstate_config($self, $ifacename, $net, $ipv6, $nwtree->{routing_table});
+        my $nmstate_cfg = generate_nmstate_config($self, $ifacename, $net, $ipv6, $nwtree->{routing_table}, $dgw);
         my $file_name = $self->iface_filename($ifacename);
         $exifiles->{$file_name} = $self->nmstate_file_dump($file_name, $nmstate_cfg);
 
