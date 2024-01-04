@@ -107,6 +107,7 @@ sub make_nm_ip_rule
     my ($self, $device, $rules, $routing_table_hash) = @_;
 
     my @rule_entry;
+    my %rule_entry_absent;
     foreach my $rule (@$rules) {
         if ($rule->{command}){
             $self->warn("Rule command entry not supported with nmstate, ignoring '$rule->{command}'");
@@ -121,7 +122,14 @@ sub make_nm_ip_rule
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
         $thisrule{'ip-from'} = $rule->{from} if $rule->{from};
         push (@rule_entry, \%thisrule);
+        
+        # Add a default absent rule to match table defined. This will clear any existing rules for this table, instead of merging.
+        if ($rule->{table}) {
+           $rule_entry_absent{'state'} = "absent";
+           $rule_entry_absent{'route-table'} = $routing_table_hash->{$rule->{table}};
+        };
     }
+    push (@rule_entry, \%rule_entry_absent) if %rule_entry_absent;
     return \@rule_entry;
 }
 
