@@ -77,18 +77,28 @@ type structure_rule = {
     "table" ? network_valid_routing_table
     @{priority, The priority of the rule over the others. Required by Network Manager when setting routing rules.}
     "priority" ? long(0..0xffffffff)
+    @{nmstate-action used by nmstate module}
+    "nmstate-action" ? choice('blackhole', 'prohibit', 'unreachable')
+    @{nmstate-state used by nmstate module, Can only set to absent for deleting matching route rules}
+    "nmstate-state" ? choice('absent')
+    @{nmstate-iif used by nmstate module, Incoming interface name}
+    "nmstate-iff" ? string
+    @{nmstate-fwmark used by nmstate module. Select the fwmark value to match}
+    "nmstate-fwmark" ? string
+    @{nmstate-fwmask used by nmstate module. Select the fwmask value to match}
+    "nmstate-fwmask" ? string
     @{rule add options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
+    module = value('/software/components/network/ncm-module', '');
     if (exists(SELF['command'])) {
-        module = value('/software/components/network/ncm-module', '');
-        if (module == 'nmstate') error("Command routes are not supported by the nmstate backend");
+        if (module == 'nmstate') error("Command rule are not supported by the nmstate backend");
         if (length(SELF) != 1) error("Cannot use command and any of the other attributes as rule");
     } else {
         if (!exists(SELF['to']) && !exists(SELF['from'])) {
             error("Rule requires selector to or from (or use command)");
         };
-        if (!exists(SELF['table'])) {
+        if (!exists(SELF['table']) && (module != 'nmstate')) {
             error("Rule requires action table (or use command)");
         };
     };
