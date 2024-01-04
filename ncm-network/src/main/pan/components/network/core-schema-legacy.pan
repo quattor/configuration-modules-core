@@ -77,6 +77,16 @@ type structure_rule = {
     "priority" ? long(0..0xffffffff)
     @{rule add options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
+    @{nmstate-action used by nmstate module}
+     "nmstate-action" ? choice('blackhole', 'prohibit', 'unreachable')
+    @{nmstate-state used by nmstate module, Can only set to absent for deleting matching route rules}
+    "nmstate-state" ? choice('absent')
+    @{nmstate-iif used by nmstate module, Incoming interface name}
+    "nmstate-iif" ? string
+    @{nmstate-fwmark used by nmstate module. Select the fwmark value to match}
+    "nmstate-fwmark" ? string
+    @{nmstate-fwmask used by nmstate module. Select the fwmask value to match}
+    "nmstate-fwmask" ? string
 } with {
     module = value('/software/components/network/ncm-module', '');
     if (exists(SELF['command'])) {
@@ -86,7 +96,7 @@ type structure_rule = {
         if (!exists(SELF['to']) && !exists(SELF['from'])) {
             error("Rule requires selector to or from (or use command)");
         };
-        if (!exists(SELF['table'])) {
+        if (!exists(SELF['table']) && (module != 'nmstate')) {
             error("Rule requires action table (or use command)");
         };
     };
