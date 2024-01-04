@@ -121,6 +121,11 @@ sub make_nm_ip_rule
         $thisrule{'route-table'} = "$routing_table_hash->{$rule->{table}}" if $rule->{table};
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
         $thisrule{'ip-from'} = $rule->{from} if $rule->{from};
+        $thisrule{'action'} = $rule->{'nmstate-action'} if $rule->{'nmstate-action'};
+        $thisrule{'state'} = $rule->{'nmstate-state'} if $rule->{'nmstate-state'};
+        $thisrule{'iif'} = $rule->{'nmstate-iif'} if $rule->{'nmstate-iif'};
+        $thisrule{'fwmark'} = $rule->{'nmstate-fwmark'} if $rule->{'nmstate-fwmark'};
+        $thisrule{'fwmask'} = $rule->{'nmstate-fwmask'} if $rule->{'nmstate-fwmask'};
         push (@rule_entry, \%thisrule);
         
         # Add a default absent rule to match table defined. This will clear any existing rules for this table, instead of merging.
