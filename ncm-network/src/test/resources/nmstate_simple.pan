@@ -1,6 +1,7 @@
 object template nmstate_simple;
 
 include 'simple_base_profile';
+"/hardware/cards/nic/eth0/hwaddr" = "6e:a5:1b:55:77:0a";
 # the next include is mainly to the profile, it is not used in the tests
 #   (unless the component gets specific schema things)
 include 'components/network/config-nmstate';
