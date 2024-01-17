@@ -24,6 +24,14 @@ type resolver_component = {
     include structure_component
     'servers' : type_ip[..3]
     'search' ? type_fqdn[..6] with { length(replace('(^\[ )|,|( \])$', '', to_string(SELF))) <= 256 }
+    @{dnscache - configure dnscache client, based on djbdns}
     'dnscache' : boolean = false
+    @{localcache - use already configured local dns caching client}
+    'localcache' : boolean = false
     'options' ? resolver_component_options
+} with {
+    if((SELF['dnscache'] == true) && (SELF['localcache'] == true)) {
+        error('dnscache and localcache cannot be enabled together');
+    };
+    true;
 };
