@@ -26,7 +26,7 @@ sub enable_ceph_node
     my ($self, $host, $datastores) = @_;
 
     foreach my $ceph (sort keys %$datastores) {
-        if (($datastores->{$ceph}->{tm_mad} || "") eq 'ceph') {
+        if (($datastores->{$ceph}->{ds_mad} || "") eq 'ceph'){
             my $secret;
             if ($datastores->{$ceph}->{ceph_user_key}) {
                 $self->verbose("Found Ceph user key in $ceph datastore");
@@ -109,7 +109,7 @@ sub detect_ceph_datastores
     my @datastores = $one->get_datastores();
 
     foreach my $datastore (@datastores) {
-        if ($datastore->{data}->{TM_MAD}->[0] eq "ceph") {
+        if ($datastore->{data}->{DS_MAD}->[0] eq "ceph") {
             $self->verbose("Detected Ceph datastore: ", $datastore->name);
             return 1;
         }

@@ -31,28 +31,33 @@ check if a specific type of datastore has the right attributes
 }
 function is_consistent_datastore = {
     ds = ARGV[0];
-    if (ds['ds_mad'] == 'ceph') {
-        if (ds['tm_mad'] != 'ceph') {
-            error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
-        };
-        req = list('disk_type', 'bridge_list', 'ceph_host', 'ceph_secret', 'ceph_user', 'ceph_user_key', 'pool_name');
-        foreach(idx; attr; req) {
-            if(!exists(ds[attr])) {
-                error("Invalid ceph datastore! Expected '%s' ", attr);
+    if (exists(ds['ds_mad'])) {
+        if (ds['ds_mad'] == 'ceph') {
+            if (ds['tm_mad'] != 'ceph') {
+                error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
+            };
+            req = list(
+                'disk_type',
+                'bridge_list',
+                'ceph_host',
+                'ceph_secret',
+                'ceph_user',
+                'ceph_user_key',
+                'pool_name',
+                );
+            foreach(idx; attr; req) {
+                if(!exists(ds[attr])) {
+                    error("Invalid ceph image datastore! Expected '%s' ", attr);
+                };
             };
         };
-    };
-    if (ds['type'] == 'SYSTEM_DS') {
-        if (ds['tm_mad'] == 'ceph') {
-            error("system datastores do not support '%s' TM_MAD", ds['tm_mad']);
-        };
-    };
-    if (ds['ds_mad'] == 'dev') {
-        if (ds['tm_mad'] != 'dev') {
-            error("for a RDM datastore both ds_mad and tm_mad should have value 'dev'");
-        };
-        if(!exists(ds['disk_type'])) {
-            error("Invalid RDM datastore! Expected 'disk_type'");
+        if (ds['ds_mad'] == 'dev') {
+            if (ds['tm_mad'] != 'dev') {
+                error("for a RDM datastore both ds_mad and tm_mad should have value 'dev'");
+            };
+            if(!exists(ds['disk_type'])) {
+                error("Invalid RDM datastore! Expected 'disk_type'");
+            };
         };
     };
     # Checks for other types can be added here

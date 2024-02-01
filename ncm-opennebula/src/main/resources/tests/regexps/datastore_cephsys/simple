@@ -1,0 +1,15 @@
+OpenNebula ceph datastore test
+---
+multiline
+---
+^NAME\s?=\s?".+"\s*$
+^BRIDGE_LIST\s?=\s?".+"\s*$
+^CEPH_HOST\s?=\s?".+"\s*$
+^CEPH_SECRET\s?=\s?".+"\s*$
+^CEPH_USER\s?=\s?".+"\s*$
+^DISK_TYPE\s?=\s?".+"\s*$
+^LABELS\s?=\s?"quattor,quattor/ceph"$
+^POOL_NAME\s?=\s?".+"\s*$
+^TM_MAD\s?=\s?".+"\s*$
+^TYPE\s?=\s?".+"\s*$
+^QUATTOR\s?=\s?\d+\s*$

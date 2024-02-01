@@ -268,7 +268,7 @@ type opennebula_datastore = {
     "bridge_list" ? string[]  # mandatory for ceph ds, lvm ds, ..
     "datastore_capacity_check" : boolean = true
     "disk_type" ? choice('RBD', 'BLOCK', 'CDROM', 'FILE')
-    "ds_mad" : choice('fs', 'ceph', 'dev') = 'ceph'
+    "ds_mad" ? choice('fs', 'ceph', 'dev')
     @{set system Datastore TM_MAD value.
         shared: The storage area for the system datastore is a shared directory across the hosts.
         vmfs: A specialized version of the shared one to use the vmfs file system.
