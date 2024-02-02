@@ -60,6 +60,11 @@ function is_consistent_datastore = {
     };
 
     if (exists(ds['ds_mad'])) {
+        if (ds['ds_mad'] == 'fs') {
+            if (ds['tm_mad'] != 'shared') {
+                error("for a fs datastore only 'shared' tm_mad is supported for the moment");
+            };
+        };
         if (ds['ds_mad'] == 'dev') {
             if (ds['tm_mad'] != 'dev') {
                 error("for a RDM datastore both ds_mad and tm_mad should have value 'dev'");
