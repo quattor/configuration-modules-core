@@ -31,29 +31,35 @@ check if a specific type of datastore has the right attributes
 }
 function is_consistent_datastore = {
     ds = ARGV[0];
-    if (exists(ds['ds_mad'])) {
-        if (ds['ds_mad'] == 'ceph') {
-            if (ds['tm_mad'] != 'ceph') {
+    reqceph = list(
+        'disk_type',
+        'bridge_list',
+        'ceph_host',
+        'ceph_secret',
+        'ceph_user',
+        'pool_name',
+    );
+
+    if (ds['tm_mad'] == 'ceph') {
+        if (exists(ds['ds_mad'])) {
+            if ((ds['ds_mad'] != 'ceph')) {
                 error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
             };
             if (ds['type'] == 'SYSTEM_DS') {
                 error("SYSTEM datastores cannot have DS_MAD defined");
             };
-            req = list(
-                'disk_type',
-                'bridge_list',
-                'ceph_host',
-                'ceph_secret',
-                'ceph_user',
-                'ceph_user_key',
-                'pool_name',
-                );
-            foreach(idx; attr; req) {
-                if(!exists(ds[attr])) {
-                    error("Invalid ceph image datastore! Expected '%s' ", attr);
-                };
+            if(!exists(ds['ceph_user_key'])) {
+                error("Invalid ceph image datastore. Expected 'ceph_user_key' attribute");
             };
         };
+        foreach(idx; attr; reqceph) {
+            if(!exists(ds[attr])) {
+                error("Invalid ceph image or system datastore! Expected '%s' ", attr);
+            };
+        };
+    };
+
+    if (exists(ds['ds_mad'])) {
         if (ds['ds_mad'] == 'dev') {
             if (ds['tm_mad'] != 'dev') {
                 error("for a RDM datastore both ds_mad and tm_mad should have value 'dev'");
