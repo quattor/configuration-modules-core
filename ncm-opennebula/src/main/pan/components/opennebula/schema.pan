@@ -276,6 +276,7 @@ type opennebula_datastore = {
         ceph: Uses Ceph storage backend.
     }
     "tm_mad" : choice('shared', 'ceph', 'ssh', 'vmfs', 'dev') = 'ceph'
+    #HEREEE
     "type" : string = 'IMAGE_DS' with match (SELF, '^(IMAGE_DS|SYSTEM_DS)$')
     @{datastore labels is a list of strings to group the datastores under a given name and filter them
     in the admin and cloud views. It is also possible to include in the list

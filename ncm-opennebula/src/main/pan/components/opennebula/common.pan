@@ -36,6 +36,9 @@ function is_consistent_datastore = {
             if (ds['tm_mad'] != 'ceph') {
                 error("for a ceph datastore both ds_mad and tm_mad should have value 'ceph'");
             };
+            if (ds['type'] == 'SYSTEM_DS') {
+                error("SYSTEM datastores cannot have DS_MAD defined");
+            };
             req = list(
                 'disk_type',
                 'bridge_list',
