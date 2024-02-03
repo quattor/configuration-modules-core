@@ -282,7 +282,7 @@ sub generate_nmstate_config
     my $iface = $net->{interfaces}->{$name};
     my $device = $iface->{device} || $name;
     my $is_eth = $iface->{set_hwaddr};
-    my $eth_bootproto = $iface->{bootproto};
+    my $eth_bootproto = $iface->{bootproto} || 'static';
     my $is_ip = exists $iface->{ip} ? 1 : 0;
     my $is_vlan_eth = exists $iface->{vlan} ? 1 : 0;
     my $is_bond_eth = exists $iface->{master} ? 1 : 0;
