@@ -25,8 +25,10 @@ type haproxy_service_global_config = {
 
     'ssl-default-bind-ciphers' ? string_non_whitespace[]
     'ssl-default-bind-options' ? string[]
+    'ssl-default-bind-ciphersuites' ? string_non_whitespace[]
     'ssl-default-server-ciphers' ? string_non_whitespace[]
     'ssl-default-server-options' ? string[]
+    'ssl-default-server-ciphersuites' ? string_non_whitespace[]
     'ssl-dh-param-file' ? absolute_file_path
 };
 

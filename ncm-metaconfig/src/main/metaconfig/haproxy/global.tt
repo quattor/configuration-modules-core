@@ -2,7 +2,7 @@
 log [% CCM.unescape(pair.key) %] [% pair.value.join(' ') %]
 [% END %]
 [% FOREACH option IN global.config.pairs -%]
-[% IF ( option.key == 'ssl-default-bind-ciphers' || option.key == 'ssl-default-server-ciphers' ) -%]
+[% IF ( option.key == 'ssl-default-bind-ciphers' || option.key == 'ssl-default-server-ciphers' || option.key == 'ssl-default-bind-ciphersuites' || option.key == 'ssl-default-server-ciphersuites' ) -%]
 [%     option.key %] [% option.value.join(':') %]
 [% ELSIF ( option.key == 'ssl-default-bind-options' || option.key == 'ssl-default-server-options') -%]
 [%     option.key %] [% option.value.join(' ') %]
