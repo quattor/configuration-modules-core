@@ -170,6 +170,7 @@ prefix "/software/components/opennebula";
             "ceph_user_key", "AQCGZr1TeFUBMRBBHExosSnNXvlhuKexxcczpw==",
             "pool_name", "one",
             "type", "IMAGE_DS",
+            "ds_mad", "ceph",
             "labels", list("quattor", "quattor/ceph"),
         ),
         "nfs", dict(
@@ -198,6 +199,17 @@ prefix "/software/components/opennebula";
             "disk_type", "BLOCK",
             "datastore_capacity_check", false,
             "labels", list("quattor", "quattor/rdm"),
+        ),
+        "cephsys.altaria", dict(
+            "tm_mad", "ceph",
+            "type", "SYSTEM_DS",
+            "bridge_list", list("hyp004.cubone.os"),
+            "ceph_host", list("ceph001.cubone.os", "ceph002.cubone.os", "ceph003.cubone.os"),
+            "ceph_secret", "8371ae8a-386d-44d7-a228-c42de4259c6e",
+            "ceph_user", "libvirt",
+            "disk_type", "RBD",
+            "pool_name", "one",
+            "clusters", list("default", "red.cluster"),
         ),
 );
 

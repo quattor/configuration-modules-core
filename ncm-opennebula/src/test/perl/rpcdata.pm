@@ -537,6 +537,23 @@ $cmds{rpc_create_newdatastore3}{params} = [$data, -1];
 $cmds{rpc_create_newdatastore3}{method} = "one.datastore.allocate";
 $cmds{rpc_create_newdatastore3}{out} = 104;
 
+$data = <<'EOF';
+NAME = "cephsys.altaria"
+BRIDGE_LIST = "hyp004.cubone.os"
+CEPH_HOST = "ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os"
+CEPH_SECRET = "8371ae8a-386d-44d7-a228-c42de4259c6e"
+CEPH_USER = "libvirt"
+DATASTORE_CAPACITY_CHECK = "yes"
+DISK_TYPE = "RBD"
+POOL_NAME = "one"
+TM_MAD = "ceph"
+TYPE = "SYSTEM_DS"
+QUATTOR = 1
+EOF
+$cmds{rpc_create_newdatastore4}{params} = [$data, -1];
+$cmds{rpc_create_newdatastore4}{method} = "one.datastore.allocate";
+$cmds{rpc_create_newdatastore4}{out} = 105;
+
 $cmds{rpc_delete_datastore}{params} = [102];
 $cmds{rpc_delete_datastore}{method} = "one.datastore.delete";
 $cmds{rpc_delete_datastore}{out} = 102;
@@ -577,6 +594,12 @@ $cmds{rpc_list_datastore4}{params} = [104];
 $cmds{rpc_list_datastore4}{method} = "one.datastore.info";
 $cmds{rpc_list_datastore4}{out} = <<'EOF';
 <DATASTORE><ID>104</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>rdm</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[dev]]></DS_MAD><TM_MAD><![CDATA[dev]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/104]]></BASE_PATH><TYPE>0</TYPE><DISK_TYPE>2</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>-1</ID></CLUSTERS><TOTAL_MB>1</TOTAL_MB><FREE_MB>1</FREE_MB><USED_MB>0</USED_MB><IMAGES><ID>136</ID></IMAGES><TEMPLATE><ALLOW_ORPHANS><![CDATA[NO]]></ALLOW_ORPHANS><CLONE_TARGET><![CDATA[NONE]]></CLONE_TARGET><DISK_TYPE><![CDATA[BLOCK]]></DISK_TYPE><DS_MAD><![CDATA[dev]]></DS_MAD><LN_TARGET><![CDATA[NONE]]></LN_TARGET><RESTRICTED_DIRS><![CDATA[/]]></RESTRICTED_DIRS><SAFE_DIRS><![CDATA[/var/tmp]]></SAFE_DIRS><TM_MAD><![CDATA[dev]]></TM_MAD><TYPE><![CDATA[IMAGE_DS]]></TYPE></TEMPLATE></DATASTORE>
+EOF
+
+$cmds{rpc_list_datastore5}{params} = [105];
+$cmds{rpc_list_datastore5}{method} = "one.datastore.info";
+$cmds{rpc_list_datastore5}{out} = <<'EOF';
+<DATASTORE><ID>105</ID><UID>0</UID><GID>0</GID><UNAME>oneadmin</UNAME><GNAME>oneadmin</GNAME><NAME>cephsys.altaria</NAME><PERMISSIONS><OWNER_U>1</OWNER_U><OWNER_M>1</OWNER_M><OWNER_A>0</OWNER_A><GROUP_U>1</GROUP_U><GROUP_M>0</GROUP_M><GROUP_A>0</GROUP_A><OTHER_U>0</OTHER_U><OTHER_M>0</OTHER_M><OTHER_A>0</OTHER_A></PERMISSIONS><DS_MAD><![CDATA[-]]></DS_MAD><TM_MAD><![CDATA[ceph]]></TM_MAD><BASE_PATH><![CDATA[/var/lib/one//datastores/105]]></BASE_PATH><TYPE>1</TYPE><DISK_TYPE>3</DISK_TYPE><STATE>0</STATE><CLUSTERS><ID>0</ID></CLUSTERS><TOTAL_MB>45966232</TOTAL_MB><FREE_MB>45824176</FREE_MB><USED_MB>142054</USED_MB><IMAGES/><TEMPLATE><ALLOW_ORPHANS><![CDATA[mixed]]></ALLOW_ORPHANS><BRIDGE_LIST><![CDATA[one02.altaria.os]]></BRIDGE_LIST><CEPH_HOST><![CDATA[ceph001.cubone.os ceph002.cubone.os ceph003.cubone.os]]></CEPH_HOST><CEPH_SECRET><![CDATA[8371ae8a-386d-44d7-a228-c42de4259c6e]]></CEPH_SECRET><CEPH_USER><![CDATA[altaria]]></CEPH_USER><DISK_TYPE><![CDATA[RBD]]></DISK_TYPE><DS_MIGRATE><![CDATA[NO]]></DS_MIGRATE><POOL_NAME><![CDATA[altaria]]></POOL_NAME><RESTRICTED_DIRS><![CDATA[/]]></RESTRICTED_DIRS><SAFE_DIRS><![CDATA[/var/tmp]]></SAFE_DIRS><SHARED><![CDATA[YES]]></SHARED><TM_MAD><![CDATA[ceph]]></TM_MAD><TYPE><![CDATA[SYSTEM_DS]]></TYPE></TEMPLATE></DATASTORE>
 EOF
 
 $data = <<'EOF';
