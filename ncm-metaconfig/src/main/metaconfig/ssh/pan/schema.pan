@@ -279,7 +279,7 @@ type sshd_config_opts = {
     'PrintMotd' ? boolean
     'StrictModes' ? boolean
     'Subsystem' ? string{}
-    'SyslogFacility' ? string with match (SELF, "^(DAEMON|USER|AUTH|LOCAL[0-7])$")
+    'SyslogFacility' ? string with match (SELF, "^(DAEMON|USER|AUTH(PRIV)?|LOCAL[0-7])$")
     'TCPKeepAlive' ? boolean
     'UseDNS' ? boolean
     'UsePAM' ? boolean
