@@ -320,6 +320,13 @@ sub find_vlan_id {
     }
     return $vlanid;
 }
+# Check if given ip belongs to a network
+sub ip_in_network {
+    my ($self, $check_ip, $ip, $netmask) = @_;
+    # is the given ip in his ip/netmask.
+    my $subnet = NetAddr::IP->new("$ip", "$netmask");
+    return NetAddr::IP->new("$check_ip")->within($subnet);
+}
 
 # generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
@@ -414,12 +421,16 @@ sub generate_nmstate_config
     # create default route entry.
     my %default_rt;
     if ($default_gw) {
-        # create only default gw entry if gw entry match interface gateway defined
+        # create default gw entry on this interface only if it falls within the subnet boundary.
         # otherwise this interface is not the default gw interface.
-        if ((defined($iface->{gateway})) and ($iface->{gateway} eq $default_gw)) {
-            $default_rt{destination} = '0.0.0.0/0';
-            $default_rt{'next-hop-address'} = $default_gw;
-            $default_rt{'next-hop-interface'} = $device;
+        # next-hop-interface is mandatory in nmstate therefore we need interface to create default route entry.
+        if ((defined($iface->{ip})) and (defined($iface->{netmask}))) {
+            my $is_dgw_iface = $self->ip_in_network($default_gw, $iface->{ip}, $iface->{netmask});
+            if ($is_dgw_iface) {
+                $default_rt{destination} = '0.0.0.0/0';
+                $default_rt{'next-hop-address'} = $default_gw;
+                $default_rt{'next-hop-interface'} = $device;
+            }
         }
     }
     # combined default route with any policy routing/rule, if any

@@ -61,6 +61,9 @@ routes:
   config:
   - next-hop-interface: eth0
     state: absent
+  - destination: 0.0.0.0/0
+    next-hop-address: 4.3.2.254
+    next-hop-interface: eth0
 EOF
 
 Readonly my $NOTTOREMOVE => <<EOF;
