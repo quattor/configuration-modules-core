@@ -80,9 +80,9 @@ type structure_rule = {
     @{rule add options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
+    module = value('/software/components/network/ncm-module', '');
     if (exists(SELF['command'])) {
-        module = value('/software/components/network/ncm-module', '');
-        if (module == 'nmstate') error("Command routes are not supported by the nmstate backend");
+        if (module == 'nmstate') error("Command rule are not supported by the nmstate backend");
         if (length(SELF) != 1) error("Cannot use command and any of the other attributes as rule");
     } else {
         if (!exists(SELF['to']) && !exists(SELF['from'])) {
