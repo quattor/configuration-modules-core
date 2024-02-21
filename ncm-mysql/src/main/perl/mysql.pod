@@ -45,9 +45,11 @@ Value is a nlist with the following possible keys :
 
 =over
 
-=item password : user MySQL password. Must be a cleartext password.
+=item password : user MySQL password. Must be a cleartext password if encrypted_pwd is false (default value) or an encrypted password (using mysql command : select password('my_secret_password');).
 
 =item rights : list of MySQL privileges to grant to the user.
+
+=item encrypted_pwd : boolean (optional). If true, password will be used as an encrypted value.
 
 =back
 
