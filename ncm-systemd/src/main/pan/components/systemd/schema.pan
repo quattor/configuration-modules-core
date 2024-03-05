@@ -204,6 +204,7 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'Nice' ? long(-20..19)
     'OOMScoreAdjust' ? long(-1000..1000)
     'PrivateTmp' ? boolean
+    'PrivateNetwork' ? boolean
     'RootDirectory' ? ${project.artifactId}_relative_directory
     'RuntimeDirectoryMode' ? type_octal_mode
     'RuntimeDirectoryPreserve' ? choice('yes', 'no', 'restart')
