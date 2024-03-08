@@ -772,7 +772,7 @@ type opennebula_oned = {
         "DISK_COST",
         "PCI",
         "EMULATOR",
-        "RAW",
+        "RAW/DATA",
         "USER_PRIORITY",
         "USER_INPUTS/CPU",
         "USER_INPUTS/MEMORY",
