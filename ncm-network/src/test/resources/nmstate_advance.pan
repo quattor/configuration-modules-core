@@ -32,3 +32,10 @@ prefix "/system/network/interfaces/eth0";
 prefix "/system/network/interfaces/eth0.123";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
+
+# test vlan interface route on vlan for backward compatibily with network.pm
+"/system/network/interfaces/vlan0" = create("defaultinterface");
+prefix "/system/network/interfaces/vlan0";
+"device" = "eth0.123";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");

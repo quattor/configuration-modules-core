@@ -296,6 +296,31 @@ sub generate_vip_config {
     return $iface_cfg;
 }
 
+# private sub to extract vlan id from name
+# i.e given eth0.123 return 123
+sub _get_vlan_id {
+    my ($self, $name) = @_;
+    return $1 if ($name =~ m/\.(\d+)$/);
+}
+
+# find vlan id from either the name or device.
+# i.e eth0.123 will return 123. by checking iface name and device
+# returns vlan id.
+sub find_vlan_id {
+    my ($self, $iface, $device) = @_;
+    # a vlan interface can defined in two ways
+    # interface/name.vlanid/
+    # or interface/name/device=device.vlanid
+    # replace everything up-to and including . to get vlan id of the interface.
+    # favors ifacename.vlanid, then device.vlanid
+    my $vlanid = $self->_get_vlan_id($iface);
+    # if vlanid is empty here, lets check if device has vlan id.
+    if ((! $vlanid) && ($device)) {
+        $vlanid = $self->_get_vlan_id($device);
+    }
+    return $vlanid;
+}
+
 # generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
 # to add additional options, it should be constructed here.
@@ -330,10 +355,11 @@ sub generate_nmstate_config
             $ifaceconfig->{state} = "up";
         }
     } elsif ($is_vlan_eth) {
-        my $vlan_id = $name;
-        # replace everything up-to and including . to get vlan id of the interface.
-        # TODO: instead of this, should perhaps add valid-id in schema? but may not be backward compatible for existing host entreis, aqdb will need updating?
-        $vlan_id =~ s/^[^.]*.//;;
+        my $vlan_id = $self->find_vlan_id($name, $iface->{device});
+        # if vlan_id is empty, error
+        if (! $vlan_id) {
+            $self->error("Could not find vlan id for vlan device $name");
+        }
         $ifaceconfig->{type} = "vlan";
         $ifaceconfig->{vlan}->{'base-iface'} = $iface->{physdev};
         $ifaceconfig->{vlan}->{'id'} = $vlan_id;
