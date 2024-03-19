@@ -1004,6 +1004,7 @@ sub make_ifcfg
 
     &$makeline('device', def => $ifacename);
 
+    $iface->{type} = 'Ethernet' if ($iface->{type} || '') eq 'Infiniband';
     &$makeline('type', def => 'Ethernet');
 
     if ( ($iface->{type} || '') =~ m/^OVS/) {
