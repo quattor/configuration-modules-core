@@ -122,7 +122,7 @@ sub make_nm_ip_rule
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
         $thisrule{'ip-from'} = $rule->{from} if $rule->{from};
         push (@rule_entry, \%thisrule);
-        
+
         # Add a default absent rule to match table defined. This will clear any existing rules for this table, instead of merging.
         if ($rule->{table}) {
            $rule_entry_absent{'state'} = "absent";
@@ -320,6 +320,7 @@ sub find_vlan_id {
     }
     return $vlanid;
 }
+
 # Check if given ip belongs to a network
 sub ip_in_network {
     my ($self, $check_ip, $ip, $netmask) = @_;
@@ -370,7 +371,7 @@ sub generate_nmstate_config
         $ifaceconfig->{type} = "vlan";
         $ifaceconfig->{vlan}->{'base-iface'} = $iface->{physdev};
         $ifaceconfig->{vlan}->{'id'} = $vlan_id;
-    } elsif ($bonded_eth) {
+    } elsif (@$bonded_eth) {
         # if bond device
         $ifaceconfig->{type} = "bond";
         $ifaceconfig->{'link-aggregation'} = $iface->{link_aggregation};
@@ -579,7 +580,7 @@ sub nmstate_apply
 
     if (@ifaces) {
         $self->info("Applying changes using $NMSTATECTL ", join(', ', @ifaces));
-        my @cmds;     
+        my @cmds;
         foreach my $iface (@ifaces) {
             # apply config using nmstatectl
             my $ymlfile = $self->iface_filename($iface);
@@ -711,7 +712,7 @@ sub Configure
             $idx++;
         }
     };
-    
+
     my $dev2mac = $self->make_dev2mac();
 
     # We now have a map with files and values.
