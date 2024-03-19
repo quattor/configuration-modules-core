@@ -3,6 +3,7 @@ object template nmstate_advance;
 include 'simple_base_profile';
 include 'components/network/config-nmstate';
 
+"/system/network/default_gateway" = "4.3.2.254";
 # additional interface testing for nmstate.
 "/system/network/interfaces/eth1" = create("dhcpinterface");
 "/hardware/cards/nic/eth1/hwaddr" = "6e:a5:1b:55:77:0b";

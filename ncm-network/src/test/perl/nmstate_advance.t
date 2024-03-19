@@ -45,6 +45,9 @@ routes:
   config:
   - next-hop-interface: eth0
     state: absent
+  - destination: 0.0.0.0/0
+    next-hop-address: 4.3.2.254
+    next-hop-interface: eth0
   - destination: 1.2.3.4/32
     next-hop-interface: eth0
   - destination: 1.2.3.5/24
@@ -82,6 +85,9 @@ routes:
   config:
   - next-hop-interface: eth0.123
     state: absent
+  - destination: 0.0.0.0/0
+    next-hop-address: 4.3.2.254
+    next-hop-interface: eth0.123
   - destination: 1.2.3.4/32
     next-hop-interface: eth0.123
 EOF
@@ -107,6 +113,9 @@ routes:
   config:
   - next-hop-interface: vlan0
     state: absent
+  - destination: 0.0.0.0/0
+    next-hop-address: 4.3.2.254
+    next-hop-interface: eth0.123
   - destination: 1.2.3.4/32
     next-hop-interface: vlan0
 EOF
@@ -152,6 +161,9 @@ routes:
   config:
   - next-hop-interface: bond0
     state: absent
+  - destination: 0.0.0.0/0
+    next-hop-address: 4.3.2.254
+    next-hop-interface: bond0
 EOF
 
 
