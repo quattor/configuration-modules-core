@@ -7,7 +7,7 @@ type network_interface_ovs = {
     "ovs_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
     "ovs_patch_peer" ? string
     "ovs_tunnel_opts" ? string # See ovs-vswitchd.conf.db(5) for documentation
-    "ovs_tunnel_type" ? string with match(SELF, '^(gre|vxlan)$')
+    "ovs_tunnel_type" ? choice('gre', 'vxlan')
 };
 
 

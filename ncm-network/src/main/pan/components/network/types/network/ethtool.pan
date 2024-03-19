@@ -4,12 +4,12 @@ declaration template components/network/types/network/ethtool;
     interface ethtool offload
 }
 type network_ethtool_offload = {
-    "rx" ? string with match (SELF, '^(on|off)$')
-    "tx" ? string with match (SELF, '^(on|off)$')
+    "rx" ? choice('on', 'off')
+    "tx" ? choice('on', 'off')
     @{Set the TCP segment offload parameter to "off" or "on"}
-    "tso" ? string with match (SELF, '^(on|off)$')
-    "gro" ? string with match (SELF, '^(on|off)$')
-    "gso" ? string with match (SELF, '^(on|off)$')
+    "tso" ? choice('on', 'off')
+    "gro" ? choice('on', 'off')
+    "gso" ? choice('on', 'off')
 };
 
 @documentation{
@@ -55,8 +55,8 @@ type network_ethtool_wol = string with match (SELF, '^(p|u|m|b|a|g|s|d)+$');
 }
 type network_ethtool = {
     "wol" ? network_ethtool_wol
-    "autoneg" ? string with match (SELF, '^(on|off)$')
-    "duplex" ? string with match (SELF, '^(half|full)$')
+    "autoneg" ? choice('on', 'off')
+    "duplex" ? choice('half', 'full')
     "speed" ? long
     "channels" ? network_ethtool_channels
 };

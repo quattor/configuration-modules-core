@@ -40,7 +40,7 @@ type network_bonding_options = {
     "downdelay" ? long
     "primary" ? valid_interface
     "lacp_rate" ? long(0..1)
-    "xmit_hash_policy" ? string with match (SELF, '^(0|1|2|layer(2|2\+3|3\+4))$')
+    "xmit_hash_policy" ? choice('0', '1', '2', 'layer2', 'layer2+3', 'layer3+4')
 } with {
     if ( SELF['mode'] == 1 || SELF['mode'] == 5 || SELF['mode'] == 6 ) {
         if ( ! exists(SELF["primary"]) ) {
@@ -69,6 +69,12 @@ type network_bridging_options = {
     "root_block" ? long
 };
 
+
+type network_interface_type = choice(
+    'Ethernet', 'Bridge', 'Tap', 'xDSL', 'IPIP',
+    'OVSBridge', 'OVSPort', 'OVSIntPort', 'OVSBond, 'OVSTunnel', 'OVSPatchPort',
+    );
+
 @documentation{
     network interface
 }
@@ -78,9 +84,9 @@ type network_interface = {
     "netmask" ? type_ip
     "broadcast" ? type_ip
     "driver" ? string
-    "bootproto" ? string with match(SELF, '^(static|bootp|dhcp|none)$')
+    "bootproto" ? choice('static', 'bootp', 'dhcp', 'none')
     "onboot" ? boolean
-    "type" ? string with match(SELF, '^(Ethernet|Bridge|Tap|xDSL|IPIP|OVS(Bridge|Port|IntPort|Bond|Tunnel|PatchPort))$')
+    "type" ? network_interfce_type
     "device" ? string
     "mtu" ? long
     "master" ? string
@@ -128,7 +134,7 @@ type network_interface = {
     "ipv6_autoconf" ? boolean
     "ipv6_failure_fatal" ? boolean
     "ipv6_mtu" ? long(1280..65536)
-    "ipv6_privacy" ? string with match(SELF, '^rfc3041$')
+    "ipv6_privacy" ? choice('rfc3041')
     "ipv6_rtr" ? boolean
     @{Set IPV6_DEFROUTE, defaults to defroute value}
     "ipv6_defroute" ? boolean
