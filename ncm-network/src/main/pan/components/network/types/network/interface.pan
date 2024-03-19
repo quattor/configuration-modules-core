@@ -71,8 +71,8 @@ type network_bridging_options = {
 
 
 type network_interface_type = choice(
-    'Ethernet', 'Bridge', 'Tap', 'xDSL', 'IPIP',
-    'OVSBridge', 'OVSPort', 'OVSIntPort', 'OVSBond, 'OVSTunnel', 'OVSPatchPort',
+    'Ethernet', 'Bridge', 'Tap', 'xDSL', 'IPIP', 'Infiniband',
+    'OVSBridge', 'OVSPort', 'OVSIntPort', 'OVSBond', 'OVSTunnel', 'OVSPatchPort'
     );
 
 @documentation{
@@ -86,7 +86,7 @@ type network_interface = {
     "driver" ? string
     "bootproto" ? choice('static', 'bootp', 'dhcp', 'none')
     "onboot" ? boolean
-    "type" ? network_interfce_type
+    "type" ? network_interface_type
     "device" ? string
     "mtu" ? long
     "master" ? string
