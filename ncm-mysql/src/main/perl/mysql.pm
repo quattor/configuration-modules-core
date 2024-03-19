@@ -231,7 +231,7 @@ sub Configure
           my $user = unescape($user_e);
           $self->info("Granting user $user access to all databases on server $server_name...");
           my $user_params = $server->{users}->{$user_e};
-          if ( $self->mysqlAddUser(undef,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd},$server) ) {
+          if ( $self->mysqlAddUser(undef,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd},$user_params->{encrypted_pwd},$server) ) {
               $self->error("Error granting user $user access to all databases on server $server_name");
               next;
           }
@@ -302,7 +302,7 @@ sub Configure
           my $user = unescape($user_e);
           $self->info("Configuring user $user access to database $database...");
           my $user_params = $databases->{$database}->{users}->{$user_e};
-          if ( $self->mysqlAddUser($database,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd}) ) {
+          if ( $self->mysqlAddUser($database,$user,$user_params->{password},$user_params->{rights},$user_params->{shortPwd},$user_params->{encrypted_pwd}) ) {
               $self->error("Error granting user $user access to database $database");
               next;
           }
@@ -404,6 +404,7 @@ sub mysqlCheckAdminPwd
 
     # First check if administrator account is working without password for either the specified server host or localhost
     my $admin_pwd_saved = $server->{adminpwd};
+    my $admin_pwd_encrypted = $server->{encrypted_adminpwd};
     my $server_host_saved = $server->{host};
     $server->{adminpwd} = '';
     my @db_hosts = ($server->{host}, 'localhost');
@@ -445,7 +446,7 @@ sub mysqlCheckAdminPwd
     # If it fails, try to change it assuming a password has not yet been set (even if previous test failed)
     if ( $status ) {
         $self->debug(1,"$function_name : trying to set administrator password on $server->{host}");
-        $status = $self->mysqlAddUser(undef,$server->{adminuser},$admin_pwd_saved,'ALL',0,$server);
+        $status = $self->mysqlAddUser(undef,$server->{adminuser},$admin_pwd_saved,'ALL',0,$admin_pwd_encrypted,$server);
         if ( $status ) {
             if ( ($server->{host} ne $this_host_full) && ($server->{host} ne 'localhost') ) {
                 $self->warn("Error setting administrator password on server $server->{host} ",
@@ -461,6 +462,7 @@ sub mysqlCheckAdminPwd
     }
 
     $server->{adminpwd} = $admin_pwd_saved;
+    $server->{encrypted_adminpwd} = $admin_pwd_encrypted;
     $server->{adminhost} = undef;
 
     return $status;
@@ -481,7 +483,7 @@ sub mysqlCheckAdminPwd
 sub mysqlAddUser
 {
     my $function_name = "mysqlAddUser";
-    my ($self,$database,$db_user,$db_pwd,$db_rights,$short_pwd_hash,$server) = @_;
+    my ($self,$database,$db_user,$db_pwd,$db_rights,$short_pwd_hash,$encrypted_pwd,$server) = @_;
 
     if ( $database ) {
         if ( $server ) {
@@ -507,6 +509,10 @@ sub mysqlAddUser
     unless ( defined($db_pwd) ) {
         $self->error("$function_name : 'db_pwd' argument missing");
         return 0;
+    }
+
+    unless ( defined($encrypted_pwd) ) {
+        $encrypted_pwd = 0;
     }
 
     unless ( $db_rights ) {
@@ -556,6 +562,9 @@ sub mysqlAddUser
         $self->debug(1, "$function_name : Adding MySQL connection account for user $userid on $host ",
                      "(database=$database) using admin host $admin_server->{host}");
         my $cmd = "grant $db_rights on $database to \"$userid\"\@\"$host\" identified by \"$db_pwd\" with grant option";
+        if ( $encrypted_pwd ) {
+            $cmd = "grant $db_rights on $database to \"$userid\"\@\"$host\" identified by password \"$db_pwd\" with grant option";
+        }
         $status = $self->mysqlExecCmd($admin_server, $cmd, undef, {$db_pwd => 'USERPASSWORD'});
         if ( $status ) {
             # Error already signaled by caller

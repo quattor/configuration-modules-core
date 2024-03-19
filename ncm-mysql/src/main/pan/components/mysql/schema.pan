@@ -59,6 +59,7 @@ type component_mysql_db_user = {
     'password' : string with (length(SELF) == 0) || component_mysql_password_valid(SELF)
     'rights' : component_mysql_user_right[] = list('SELECT')
     'shortPwd' : boolean = false
+    'encrypted_pwd' : boolean = false
 };
 
 
@@ -84,6 +85,7 @@ type component_mysql_server_options = {
     'host' ? string
     'adminuser' : string
     'adminpwd' : string with component_mysql_password_valid(SELF)
+    'encrypted_adminpwd' : boolean = false
     'options' ? string{}
     'users' ? component_mysql_db_user{}
 };
