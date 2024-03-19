@@ -59,8 +59,8 @@ sub Configure {
 
     my @testservers = ();
     my $resolv = "";
-    if ($inf->{dnscache}) {
-        # If we are using dnscache the server we want to test is dnscache itself
+    if ($inf->{dnscache} or $inf->{localcache} ) {
+        # If we are using dnscache (or another local caching server) the server we want to test is locally configured caching server.
         push(@testservers, "127.0.0.1");
         $resolv .= "nameserver 127.0.0.1\n";
     } else {
