@@ -1,5 +1,7 @@
 object template nmstate_advance;
 
+variable QUATTOR_TYPES_NETWORK_LEGACY = false;
+
 include 'simple_base_profile';
 include 'components/network/config-nmstate';
 
@@ -40,3 +42,16 @@ prefix "/system/network/interfaces/vlan0";
 "device" = "eth0.123";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
+
+# test ib interface (default and with pkey)
+prefix "/system/network/interfaces/ib0";
+"ip" = "10.11.12.13";
+"netmask" = "255.255.255.0";
+"broadcast" = "10.11.12.255";
+"type" = "Infiniband";
+
+prefix "/system/network/interfaces/ib1.12345";
+"ip" = "10.11.15.13";
+"netmask" = "255.255.255.0";
+"broadcast" = "10.11.15.255";
+"type" = "Infiniband";

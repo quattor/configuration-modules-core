@@ -355,7 +355,22 @@ sub generate_nmstate_config
     # this will be empty if the interface isnt a bond interface.
     # we can use this to determine if this interface is bond interface.
     my $bonded_eth = get_bonded_eth($self, $name, $net->{interfaces});
-    if ($is_eth) {
+
+    my $vlan_id = $self->find_vlan_id($name, $iface->{device});
+
+    if (lc($iface->{type} || '') eq 'infiniband') {
+        $ifaceconfig->{type} = "infiniband";
+        my $ib = {};
+        my $pkey = $vlan_id || 65535;
+        if ($vlan_id) {
+            my $ibdev = $name;
+            $ibdev =~ s/\.\d+$//;
+            $ib->{'base-iface'} = $ibdev;
+        };
+        $ib->{pkey} = "0x" . sprintf("%04x", $pkey);
+        $ib->{mode} = 'datagram';  # TODO: add connected mode, but who still uses that
+        $ifaceconfig->{infiniband} = $ib;
+    } elsif ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_partof_bond) {
             # no ipv4 address for bonded eth, plus in nmstate bonded eth is controlled by controller. no config is required.
@@ -363,7 +378,6 @@ sub generate_nmstate_config
             $ifaceconfig->{state} = "up";
         }
     } elsif ($is_vlan_eth) {
-        my $vlan_id = $self->find_vlan_id($name, $iface->{device});
         # if vlan_id is empty, error
         if (! $vlan_id) {
             $self->error("Could not find vlan id for vlan device $name");
