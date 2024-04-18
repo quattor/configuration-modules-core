@@ -272,5 +272,7 @@ is($ibyml, $IB_YML, "Exact ib0 yml config");
 my $ibpkyml = get_file_contents("/etc/nmstate/ib1.12345.yml");
 is($ibpkyml, $IBPKEY_YML, "Exact ib1 pkey yml config");
 
+my $vlanyml3 = get_file_contents("/etc/nmstate/vlan.0.yml");
+is($vlanyml3, $VLAN0_YML, "Exact vlan.0  yml config");
 
 done_testing();
