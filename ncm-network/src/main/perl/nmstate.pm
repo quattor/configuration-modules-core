@@ -47,7 +47,9 @@ use constant BOND_MASTER_STARTS_SLAVES => 0;
 sub iface_filename
 {
     my ($self, $iface) = @_;
-    return $self->IFCFG_DIR . "/$iface.yml";
+    my $filename = $self->IFCFG_DIR . "/$iface.yml";
+    $self->verbose("Interface $iface configuration file: $filename");
+    return $filename;
 }
 
 # Determine if this is a valid interface for ncm-network to manage,
@@ -525,7 +527,7 @@ sub generate_nmstate_config
                 $self->debug(3, "Adding the default IPv4 gateway to interface '$name'");
                 $default_rt{destination} = '0.0.0.0/0';
                 $default_rt{'next-hop-address'} = $default_gw;
-                $default_rt{'next-hop-interface'} = $device;
+                $default_rt{'next-hop-interface'} = $name;
             }
         }
     }
