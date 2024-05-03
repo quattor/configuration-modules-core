@@ -122,7 +122,7 @@ sub make_nm_ip_rule
         $thisrule{'ip-to'} = $rule->{to} if $rule->{to};
         $thisrule{'ip-from'} = $rule->{from} if $rule->{from};
         push (@rule_entry, \%thisrule);
-        
+
         # Add a default absent rule to match table defined. This will clear any existing rules for this table, instead of merging.
         if ($rule->{table}) {
            $rule_entry_absent{'state'} = "absent";
@@ -320,6 +320,7 @@ sub find_vlan_id {
     }
     return $vlanid;
 }
+
 # Check if given ip belongs to a network
 sub ip_in_network {
     my ($self, $check_ip, $ip, $netmask) = @_;
@@ -354,7 +355,22 @@ sub generate_nmstate_config
     # this will be empty if the interface isnt a bond interface.
     # we can use this to determine if this interface is bond interface.
     my $bonded_eth = get_bonded_eth($self, $name, $net->{interfaces});
-    if ($is_eth) {
+
+    my $vlan_id = $self->find_vlan_id($name, $iface->{device});
+
+    if (lc($iface->{type} || '') eq 'infiniband') {
+        $ifaceconfig->{type} = "infiniband";
+        my $ib = {};
+        my $pkey = $vlan_id || 65535;
+        if ($vlan_id) {
+            my $ibdev = $name;
+            $ibdev =~ s/\.\d+$//;
+            $ib->{'base-iface'} = $ibdev;
+        };
+        $ib->{pkey} = "0x" . sprintf("%04x", $pkey);
+        $ib->{mode} = 'datagram';  # TODO: add connected mode, but who still uses that
+        $ifaceconfig->{infiniband} = $ib;
+    } elsif ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_partof_bond) {
             # no ipv4 address for bonded eth, plus in nmstate bonded eth is controlled by controller. no config is required.
@@ -362,7 +378,6 @@ sub generate_nmstate_config
             $ifaceconfig->{state} = "up";
         }
     } elsif ($is_vlan_eth) {
-        my $vlan_id = $self->find_vlan_id($name, $iface->{device});
         # if vlan_id is empty, error
         if (! $vlan_id) {
             $self->error("Could not find vlan id for vlan device $name");
@@ -370,7 +385,7 @@ sub generate_nmstate_config
         $ifaceconfig->{type} = "vlan";
         $ifaceconfig->{vlan}->{'base-iface'} = $iface->{physdev};
         $ifaceconfig->{vlan}->{'id'} = $vlan_id;
-    } elsif ($bonded_eth) {
+    } elsif (@$bonded_eth) {
         # if bond device
         $ifaceconfig->{type} = "bond";
         $ifaceconfig->{'link-aggregation'} = $iface->{link_aggregation};
@@ -579,7 +594,7 @@ sub nmstate_apply
 
     if (@ifaces) {
         $self->info("Applying changes using $NMSTATECTL ", join(', ', @ifaces));
-        my @cmds;     
+        my @cmds;
         foreach my $iface (@ifaces) {
             # apply config using nmstatectl
             my $ymlfile = $self->iface_filename($iface);
@@ -711,7 +726,7 @@ sub Configure
             $idx++;
         }
     };
-    
+
     my $dev2mac = $self->make_dev2mac();
 
     # We now have a map with files and values.
