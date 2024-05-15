@@ -309,7 +309,7 @@ sub Configure
             print $fh "baseurl=$urls\n";
         }
 
-        foreach my $attr (qw(enabled priority gpgcheck repo_gpgcheck gpgkey gpgcakey exclude includepkgs skip_if_unavailable)) {
+        foreach my $attr (qw(enabled priority gpgcheck repo_gpgcheck gpgkey gpgcakey exclude includepkgs skip_if_unavailable module_hotfixes)) {
             next unless defined $repo->{$attr};
             my $val = $repo->{$attr};
             if (ref($val) eq 'ARRAY') {
