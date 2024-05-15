@@ -62,8 +62,8 @@ sub is_valid_interface
             # Filename is either right at the beginning or following a slash
             (?: \A | / )
             # $1 will capture for example:
-            # eth0  bond1  eth0.101  bond0.102
-            ( \w+ \d+ (?: \. \d+ )? )
+            # eth0  bond1  eth0.101  bond0.102 or dummy_$key
+            ( \w+ \d+ (?: \. \d+ )? | dummy_.* )
             # Suffix (not captured)
             \. yml \z
         }x
@@ -717,13 +717,11 @@ sub Configure
     if ($net->{manage_vips} && defined($net->{vips})) {
         $self->verbose("Service address vips found, configuring dummy interfaces");
         my $vips = $net->{vips};
-        my $idx = 0;
         foreach my $name (sort keys %$vips) {
-            my $dummy_name = "dummy$idx";
+            my $dummy_name = "dummy_$name";
             my $nmstate_dummy_cfg = $self->generate_vip_config($dummy_name, $vips->{$name});
             my $dummy_filename = $self->iface_filename($dummy_name);
             $exifiles->{$dummy_filename} = $self->nmstate_file_dump($dummy_filename, $nmstate_dummy_cfg);
-            $idx++;
         }
     };
 

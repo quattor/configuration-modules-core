@@ -55,3 +55,10 @@ prefix "/system/network/interfaces/ib1.12345";
 "netmask" = "255.255.255.0";
 "broadcast" = "10.11.15.255";
 "type" = "Infiniband";
+
+# Test creating dummy interface. aka loopback interface needed for vip, such as zebra.
+"/system/network/manage_vips" = true;
+prefix "/system/network/vips/myvip";
+"fqdn" = "myvip.test.com";
+"ip" = "4.3.2.10";
+"interfaces/0" = "eth0";
