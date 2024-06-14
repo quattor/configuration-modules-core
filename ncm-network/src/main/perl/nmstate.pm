@@ -40,6 +40,30 @@ Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
 Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(1);
 Readonly my $YFALSE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(0);
 
+my $IPV6_ADDRESS = '^(?<ipv6addr>'.
+    '([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|'.
+    '([0-9a-fA-F]{1,4}:){1,7}:|'.
+    '([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'.
+    '([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|'.
+    '([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|'.
+    '([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|'.
+    '([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|'.
+    '[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|'.
+    ':((:[0-9a-fA-F]{1,4}){1,7}|:)|'.
+    'fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|'.
+    '::(ffff(:0{1,4}){0,1}:){0,1}'.
+    '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}'.
+    '(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|'.
+    '([0-9a-fA-F]{1,4}:){1,4}:'.
+    '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}'.
+    '(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'.
+    ')';
+
+my $IPV6_PREFIX = '(?<ipv6prefix>('.
+    '(0*[1-9][0-9]?)|'.
+    '(1[0-1][0-9])|)|'.
+    '(12[0-8]))$';
+
 use constant IFCFG_DIR => "/etc/nmstate";
 
 sub iface_filename
@@ -434,10 +458,18 @@ sub generate_nmstate_config
             $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
             $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
         } elsif ($iface->{ipv6addr}) {
-            $self->warn("ipv6 addr found but not supported");
+            $self->warn("ipv6 addr still under development");
             $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
-            # TODO create ipv6.address entries here. i.e
-            #$ifaceconfig->{ipv6}->{address} = [$ipv6_list];
+            my $ip_list = {};
+            if ($iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/ ) {
+                $ip_list->{ip} = $+{ipv6addr};
+                $ip_list->{'prefix-length'} = $+{ipv6prefix};
+
+                $ifaceconfig->{ipv6}->{address} = [$ip_list];
+                $ifaceconfig->{ipv6}->{enabled} = $YTRUE;
+            } else {
+                $self->error($iface->{ipv6addr}." invalid format")
+            }
         } else {
             $self->error("No ip address defined for static bootproto");
         }
@@ -470,6 +502,18 @@ sub generate_nmstate_config
             }
         }
     }
+
+    my %default_ipv6_rt;
+    if ($ipv6) {
+        if ((defined($iface->{ipv6addr})) and $iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/) {
+            my $is_ipv6gw_iface = $self->ip_in_network($ipv6->{default_gateway}, $+{ipv6addr}, $+{ipv6prefix});
+            if ($is_ipv6gw_iface) {
+                $default_ipv6_rt{destination} = '::/0';
+                $default_ipv6_rt{'next-hop-address'} = $ipv6->{default_gateway};
+                $default_ipv6_rt{'next-hop-interface'} = $name;
+            }
+        }
+    }
     # combined default route with any policy routing/rule, if any
     # combination of default route, plus any additional policy routes.
     # read and set by tt module as
@@ -482,6 +526,7 @@ sub generate_nmstate_config
     my $routes = [];
     push @$routes, @{$self->make_nm_route_absent($name)};
     push @$routes, \%default_rt if scalar %default_rt;
+    push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
     if (defined($iface->{route})) {
         $self->verbose("policy route found, nmstate will manage it");
         my $route = $iface->{route};
