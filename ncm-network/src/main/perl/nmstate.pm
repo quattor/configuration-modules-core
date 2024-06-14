@@ -506,9 +506,6 @@ sub generate_nmstate_config
     my %default_ipv6_rt;
     if ($ipv6) {
         if ((defined($iface->{ipv6addr})) and $iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/) {
-            $self->warn('ipv6 interface: '.$iface->{ipv6addr});
-	    $self->warn('  addr: '.$+{ipv6addr});
-            $self->warn('  prefix: '.$+{ipv6prefix});
             my $is_ipv6gw_iface = $self->ip_in_network($ipv6->{default_gateway}, $+{ipv6addr}, $+{ipv6prefix});
             if ($is_ipv6gw_iface) {
                 $default_ipv6_rt{destination} = '::/0';
