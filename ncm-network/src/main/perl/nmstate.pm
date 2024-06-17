@@ -437,38 +437,57 @@ sub generate_nmstate_config
 
     if ($eth_bootproto eq 'static') {
         $ifaceconfig->{state} = "up";
-        if ($is_ip) {
+        if ($is_ip || $iface->{ipv6addr}) {
+            # If primary IPv4 or primary IPv6 is defined. We allow configuration
+            # with IPv4 & IPv6 on same interface but also IPv6 only interface.
             # if device has manual ip assigned
             my $ip_list = {};
             my $all_ip = [];
-            if ($iface->{netmask}) {
-                my $ip = NetAddr::IP->new($iface->{ip}."/".$iface->{netmask});
-                $ip_list->{ip} = $ip->addr;
-                $ip_list->{'prefix-length'} = $ip->masklen;
-            } else {
-                $self->error("$name with (IPv4) ip and no netmask configured");
-            }
-            push @$all_ip, $ip_list if scalar $ip_list;
-            if ($iface->{aliases}) {
-                # if device has additional alias ipv4 addresses defined. add them to config
-                $self->verbose("alias ip (ipv4) addr defined for $name, configuring additional ips");
-                push @$all_ip, @{$self->generate_alias_ips($iface->{aliases})};
-            }
+            # IPv4 configuration
+            if ($is_ip) {
+                if ($iface->{netmask}) {
+                    my $ip = NetAddr::IP->new($iface->{ip} . "/" . $iface->{netmask});
+                    $ip_list->{ip} = $ip->addr;
+                    $ip_list->{'prefix-length'} = $ip->masklen;
+                } else {
+                    $self->error("$name with (IPv4) ip and no netmask configured");
+                }
+                push @$all_ip, $ip_list if scalar $ip_list;
+                if ($iface->{aliases}) {
+                    # if device has additional alias ipv4 addresses defined. add them to config
+                    $self->verbose("alias ip (ipv4) addr defined for $name, configuring additional ips");
+                    push @$all_ip, @{$self->generate_alias_ips($iface->{aliases})};
+                }
             $ifaceconfig->{ipv4}->{address} = $all_ip;
-            $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
-            $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
-        } elsif ($iface->{ipv6addr}) {
-            $self->warn("ipv6 addr still under development");
-            $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
-            my $ip_list = {};
-            if ($iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/ ) {
-                $ip_list->{ip} = $+{ipv6addr};
-                $ip_list->{'prefix-length'} = $+{ipv6prefix};
-
-                $ifaceconfig->{ipv6}->{address} = [$ip_list];
-                $ifaceconfig->{ipv6}->{enabled} = $YTRUE;
-            } else {
-                $self->error($iface->{ipv6addr}." invalid format")
+                $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
+                $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
+            }
+            # IPv6 configuration
+            if ($iface->{ipv6addr}) {
+                $self->warn("ipv6 addr still under development");
+                $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
+                my $ip_list = {};
+                if ($iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/ ) {
+                    my $ip = NetAddr::IP->new($iface->{ipv6addr});
+                    my $ips = [];
+                    $ip_list->{ip} = $ip->addr;
+                    $ip_list->{'prefix-length'} = $ip->masklen;
+                    push @$ips, $ip_list;
+                    foreach my $ipv6_sec ($iface->{ipv6addr_secondaries}) {
+                        # $ip = NetAddr::IP->new($ipv6_sec);
+                        print $ipv6_sec;
+                        # my $ip_tmp = {};
+                        # $ip_tmp->{ip} = $ip->addr;
+                        # $ip_tmp->{'prefix-length'} = $ip->masklen;
+                        # print $ip_tmp->{ip};
+                        # print $ip_list->{'prefix-length'};
+                        # push @$ips, $ip_tmp;
+                    }
+                    $ifaceconfig->{ipv6}->{address} = $ips;
+                    $ifaceconfig->{ipv6}->{enabled} = $YTRUE;
+                } else {
+                    $self->error($iface->{ipv6addr}." invalid format")
+                }
             }
         } else {
             $self->error("No ip address defined for static bootproto");
