@@ -473,15 +473,16 @@ sub generate_nmstate_config
                     $ip_list->{ip} = $ip->addr;
                     $ip_list->{'prefix-length'} = $ip->masklen;
                     push @$ips, $ip_list;
-                    foreach my $ipv6_sec ($iface->{ipv6addr_secondaries}) {
-                        # $ip = NetAddr::IP->new($ipv6_sec);
-                        print $ipv6_sec;
-                        # my $ip_tmp = {};
-                        # $ip_tmp->{ip} = $ip->addr;
-                        # $ip_tmp->{'prefix-length'} = $ip->masklen;
-                        # print $ip_tmp->{ip};
-                        # print $ip_list->{'prefix-length'};
-                        # push @$ips, $ip_tmp;
+
+                    my @ipv6_secondaries = $iface->{ipv6addr_secondaries};
+                    foreach my $ipv6_sec ( @ipv6_secondaries ) {
+                        # label ipv6
+                        my $ip = NetAddr::IP->new($ipv6_sec);
+                        my $ip_tmp = {};
+                        $ip_tmp->{ip} = $ip->{addr};
+                        $ip_tmp->{'prefix-length'} = $ipv6_sec;
+                        # push @ips, $ip_tmp;
+                        print $ip_tmp;
                     }
                     $ifaceconfig->{ipv6}->{address} = $ips;
                     $ifaceconfig->{ipv6}->{enabled} = $YTRUE;
