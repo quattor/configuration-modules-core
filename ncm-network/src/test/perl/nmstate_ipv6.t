@@ -9,6 +9,7 @@ use Test::More;
 use Test::Quattor qw(ipv6);
 use Test::MockModule;
 use Readonly;
+use Test::Output;
 
 use NCM::Component::nmstate;
 my $mock = Test::MockModule->new('NCM::Component::nmstate');
@@ -55,6 +56,8 @@ EOF
 Test the C<Configure> method of the component for ipv6 configuration.
 
 =cut
+
+$cmp->Configure($cfg);
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
