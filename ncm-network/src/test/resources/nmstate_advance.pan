@@ -62,3 +62,14 @@ prefix "/system/network/vips/myvip";
 "fqdn" = "myvip.test.com";
 "ip" = "4.3.2.10";
 "interfaces/0" = "eth0";
+
+# create aliases interfaces
+"/hardware/cards/nic/eth4/hwaddr" = "6e:a5:1b:55:77:0d";
+prefix "/system/network/interfaces/eth4";
+"ip" = "4.3.2.11";
+"netmask" = "255.255.255.0";
+"broadcast" = "4.3.2.255";
+"aliases/dba/broadcast" = "4.3.2.255";
+"aliases/dba/fqdn" = "host-alias1.quattor.com";
+"aliases/dba/ip" = "4.3.2.12";
+"aliases/dba/netmask" = "255.255.255.0";

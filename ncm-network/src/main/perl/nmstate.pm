@@ -329,6 +329,23 @@ sub ip_in_network {
     return NetAddr::IP->new("$check_ip")->within($subnet);
 }
 
+# construct alias ip structure.
+sub generate_alias_ips {
+    my ($self, $alias_list) = @_;
+    my $all_ip = [];
+    foreach my $alias_name (sort keys %$alias_list) {
+        my $ip_list = {};
+        my $netmask = $alias_list->{$alias_name}->{'netmask'};
+        my $ip = $alias_list->{$alias_name}->{'ip'};
+        $ip_list->{ip} = $ip;
+        $ip_list->{'prefix-length'} = $self->get_masklen("$ip/$netmask");
+        push (@$all_ip, \%$ip_list);
+    }
+    return \@$all_ip;
+}
+
+
+
 # generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
 # to add additional options, it should be constructed here.
@@ -399,6 +416,7 @@ sub generate_nmstate_config
         if ($is_ip) {
             # if device has manual ip assigned
             my $ip_list = {};
+            my $all_ip = [];
             if ($iface->{netmask}) {
                 my $ip = NetAddr::IP->new($iface->{ip}."/".$iface->{netmask});
                 $ip_list->{ip} = $ip->addr;
@@ -406,9 +424,13 @@ sub generate_nmstate_config
             } else {
                 $self->error("$name with (IPv4) ip and no netmask configured");
             }
-
-            # TODO: append alias ip to ip_list as array, providing ips as array of hashref.
-            $ifaceconfig->{ipv4}->{address} = [$ip_list];
+            push @$all_ip, $ip_list if scalar $ip_list;
+            if ($iface->{aliases}) {
+                # if device has additional alias ipv4 addresses defined. add them to config
+                $self->verbose("alias ip (ipv4) addr defined for $name, configuring additional ips");
+                push @$all_ip, @{$self->generate_alias_ips($iface->{aliases})};
+            }
+            $ifaceconfig->{ipv4}->{address} = $all_ip;
             $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
             $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
         } elsif ($iface->{ipv6addr}) {
