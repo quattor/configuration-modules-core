@@ -502,9 +502,11 @@ sub generate_nmstate_config
 
     my %default_ipv6_rt;
     if ($ipv6) {
-        if ((defined($iface->{ipv6addr})) and $iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/) {
-            my $is_ipv6gw_iface = $self->ip_in_network($ipv6->{default_gateway}, $+{ipv6addr}, $+{ipv6prefix});
+        if (defined($iface->{ipv6addr})) {
+            my $ip6 = NetAddr::IP->new($iface->{ipv6addr});
+            my $is_ipv6gw_iface = NetAddr::IP->new($ipv6->{default_gateway}."/128")->within($ip6);
             if ($is_ipv6gw_iface) {
+                $self->debug(3, "Adding the default IPv6 gateway to interface '$name'");
                 $default_ipv6_rt{destination} = '::/0';
                 $default_ipv6_rt{'next-hop-address'} = $ipv6->{default_gateway};
                 $default_ipv6_rt{'next-hop-interface'} = $name;
