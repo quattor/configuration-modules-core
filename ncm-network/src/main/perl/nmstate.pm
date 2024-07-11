@@ -324,7 +324,7 @@ sub find_vlan_id {
 # Check if given ip belongs to a network
 sub ip_in_network {
     my ($self, $check_ip, $ip, $netmask) = @_;
-    # is the given ip in his ip/netmask.
+    # is the given ip in this ip/netmask.
     my $subnet = NetAddr::IP->new("$ip", "$netmask");
     return NetAddr::IP->new("$check_ip")->within($subnet);
 }
