@@ -40,30 +40,6 @@ Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
 Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(1);
 Readonly my $YFALSE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(0);
 
-my $IPV6_ADDRESS = '^(?<ipv6addr>'.
-    '([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|'.
-    '([0-9a-fA-F]{1,4}:){1,7}:|'.
-    '([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'.
-    '([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|'.
-    '([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|'.
-    '([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|'.
-    '([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|'.
-    '[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|'.
-    ':((:[0-9a-fA-F]{1,4}){1,7}|:)|'.
-    'fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|'.
-    '::(ffff(:0{1,4}){0,1}:){0,1}'.
-    '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}'.
-    '(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|'.
-    '([0-9a-fA-F]{1,4}:){1,4}:'.
-    '((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}'.
-    '(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'.
-    ')';
-
-my $IPV6_PREFIX = '(?<ipv6prefix>('.
-    '(0*[1-9][0-9]?)|'.
-    '(1[0-1][0-9])|)|'.
-    '(12[0-8]))$';
-
 use constant IFCFG_DIR => "/etc/nmstate";
 
 sub iface_filename
@@ -467,8 +443,8 @@ sub generate_nmstate_config
                 $self->warn("ipv6 addr still under development");
                 $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
                 my $ip_list = {};
-                if ($iface->{ipv6addr} =~ m/$IPV6_ADDRESS\/$IPV6_PREFIX/ ) {
-                    my $ip = NetAddr::IP->new($iface->{ipv6addr});
+                my $ip = NetAddr::IP->new($iface->{ipv6addr});
+                if (defined($ip)) {
                     my $ips = [];
                     $ip_list->{ip} = $ip->addr;
                     $ip_list->{'prefix-length'} = $ip->masklen;
