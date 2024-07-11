@@ -492,6 +492,7 @@ sub generate_nmstate_config
         if ((defined($iface->{ip})) and (defined($iface->{netmask}))) {
             my $is_dgw_iface = $self->ip_in_network($default_gw, $iface->{ip}, $iface->{netmask});
             if ($is_dgw_iface) {
+                $self->debug(3, "Adding the default IPv4 gateway to interface '$name'");
                 $default_rt{destination} = '0.0.0.0/0';
                 $default_rt{'next-hop-address'} = $default_gw;
                 $default_rt{'next-hop-interface'} = $device;
