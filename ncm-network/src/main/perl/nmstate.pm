@@ -344,7 +344,20 @@ sub generate_alias_ips {
     return \@$all_ip;
 }
 
-
+sub generate_ipv6_secondaries {
+    my ($self, $secondaries) = @_;
+    my $ips = [];
+    foreach my $secondary (@$secondaries) {
+        my $ip = NetAddr::IP->new($secondary);
+        if (defined($ip)) {
+            my $ip_list = {};
+            $ip_list->{ip} = $ip->addr;
+            $ip_list->{'prefix-length'} = $ip->masklen;
+            push @$ips, $ip_list;
+        }
+    }
+    return \@$ips;
+}
 
 # generates the hashrefs for interface in yaml file format needed by nmstate.
 # bulk of the config settings needed by the nmstate yml is done here.
@@ -450,16 +463,12 @@ sub generate_nmstate_config
                     $ip_list->{'prefix-length'} = $ip->masklen;
                     push @$ips, $ip_list;
 
-                    my @ipv6_secondaries = $iface->{ipv6addr_secondaries};
-                    foreach my $ipv6_sec ( @ipv6_secondaries ) {
-                        # label ipv6
-                        my $ip = NetAddr::IP->new($ipv6_sec);
-                        my $ip_tmp = {};
-                        $ip_tmp->{ip} = $ip->{addr};
-                        $ip_tmp->{'prefix-length'} = $ipv6_sec;
-                        # push @ips, $ip_tmp;
-                        print $ip_tmp;
+                    if ($iface->{ipv6addr_secondaries}) {
+                        # If interface has additional ipv6 addresses defined, add them
+                        $self->verbose("additional ip (ipv6) addr defined for $name, configuring additional ips");
+                        push @$ips, @{$self->generate_ipv6_secondaries($iface->{ipv6addr_secondaries})};
                     }
+
                     $ifaceconfig->{ipv6}->{address} = $ips;
                     $ifaceconfig->{ipv6}->{enabled} = $YTRUE;
                 } else {

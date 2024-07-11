@@ -32,6 +32,10 @@ interfaces:
     address:
     - ip: 2001:678:123:E012:0:0:0:45
       prefix-length: 64
+    - ip: 2001:678:123:E012:0:0:0:46
+      prefix-length: 64
+    - ip: 2001:678:123:E012:0:0:0:47
+      prefix-length: 64
     enabled: true
   name: eth0
   profile-name: eth0
