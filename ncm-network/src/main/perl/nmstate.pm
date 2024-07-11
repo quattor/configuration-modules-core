@@ -148,7 +148,8 @@ sub make_nm_ip_route
         };
         my %rt;
         if ($route->{address} eq 'default') {
-                $rt{destination} = '0.0.0.0/0';
+            $self->debug(3, "Route destination is 'default', rewriting to '0.0.0.0/0'");
+            $rt{destination} = '0.0.0.0/0';
         } else {
              if ($route->{netmask}){
                  my $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
