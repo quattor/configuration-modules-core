@@ -183,13 +183,31 @@ sub make_nm_ip_route
             $self->debug(3, "Route destination is 'default', rewriting to '0.0.0.0/0'");
             $rt{destination} = '0.0.0.0/0';
         } else {
-             if ($route->{netmask}){
-                 my $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
-                 $rt{destination} = $dest_addr->cidr;
-             } else {
-                # if no netmask defined for a route, assume its single ip
-                $rt{destination} = $route->{address}."/32";
-             }
+            my $rt_address = NetAddr::IP->new($route->{address});
+            $self->debug(5, "Route destination is '$rt_address'");
+            my $rt_version = $rt_address->version();
+            my $dest_addr;
+            if ($rt_version == 4) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv4 address");
+                if ($route->{netmask}) {
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume it is a single ip
+                    $rt{destination} = $route->{address}."/32";
+                }
+            } elsif ($rt_version == 6) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv6 address");
+                if ($route->{prefix}){
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{prefix});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume it is a single ip
+                    $rt{destination} = $route->{address}."/128";
+                }
+            } else {
+                $self->error("Unable to determine family of destination address '".$route->{address}."' in route");
+            }
         }
 
         $rt{'table-id'} = "$routing_table_hash->{$route->{table}}" if $route->{table};
@@ -597,10 +615,18 @@ sub generate_nmstate_config
     push @$routes, \%default_rt if scalar %default_rt;
     push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
     if (defined($iface->{route})) {
-        $self->verbose("policy route found, nmstate will manage it");
-        my $route = $iface->{route};
-        my $policyroutes = $self->make_nm_ip_route($name, $route, $routing_table);
-        push @$routes, @{$policyroutes};
+        $self->verbose("IPv4 policy route found, nmstate will manage it");
+        my $route4 = $iface->{route};
+        my $policyroutes4 = $self->make_nm_ip_route($name, $route4, $routing_table);
+        push @$routes, @{$policyroutes4};
+    }
+
+    if (defined($iface->{route6})) {
+        $self->verbose("IPv6 policy route found, nmstate will manage it");
+        my $route6 = $iface->{route6};
+        # make_nm_ip_route() can handle IPv4 and IPv6 routes
+        my $policyroutes6 = $self->make_nm_ip_route($name, $route6, $routing_table);
+        push @$routes, @{$policyroutes6};
     }
 
     my $policy_rule = [];

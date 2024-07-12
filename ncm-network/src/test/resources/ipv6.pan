@@ -14,6 +14,16 @@ prefix "/system/network";
 "interfaces/eth0/ipv6addr" = "2001:678:123:e012::45/64";
 "interfaces/eth0/ipv6addr_secondaries" = list("2001:678:123:e012::46/64", "2001:678:123:e012::47/64");
 "interfaces/eth0/ipv6_autoconf" = false; # boolean
+"interfaces/eth0/route" = list(
+    dict(
+        "address", "2001:db8:10::",
+        "prefix", 48,
+    ),
+    dict(
+        "address", "2001:db8:20::",
+        "prefix", 48,
+    ),
+);
 "ipv6/default_gateway" = "2001:678:123:e012::2";
 "ipv6/gatewaydev" = "eth0";
 "ipv6/enabled" = true;

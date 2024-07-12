@@ -50,6 +50,10 @@ routes:
   - destination: ::/0
     next-hop-address: 2001:678:123:e012::2
     next-hop-interface: eth0
+  - destination: 2001:db8:10:0:0:0:0:0/48
+    next-hop-interface: eth0
+  - destination: 2001:db8:20:0:0:0:0:0/48
+    next-hop-interface: eth0
 EOF
 
 =pod
