@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-# -*- mode: cperl -*-
 use strict;
 use warnings;
 
