@@ -41,6 +41,8 @@ Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}-
 Readonly my $YFALSE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(0);
 
 use constant IFCFG_DIR => "/etc/nmstate";
+use constant BOND_MASTER_STARTS_SLAVES => 0;
+
 
 sub iface_filename
 {

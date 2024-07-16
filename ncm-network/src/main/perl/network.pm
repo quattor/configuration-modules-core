@@ -204,6 +204,8 @@ our @EXPORT = qw($FAILED_SUFFIX
 
 # list of constants to allow inheritance via $self->CONSTANTNAME
 use constant IFCFG_DIR => "/etc/sysconfig/network-scripts";
+use constant BOND_MASTER_STARTS_SLAVES => 1;
+
 
 sub backup_dir
 {
@@ -1445,7 +1447,7 @@ sub make_ifup
             $exifiles->{"$cfg_filename"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
         } else {
-            if ($ifaces->{$iface}->{master}) {
+            if ($self->BOND_MASTER_STARTS_SLAVES && $ifaces->{$iface}->{master}) {
                 # bonding devices: don't bring the slaves up, only the master
                 $self->verbose("Found SLAVE interface $iface in ifdown map, ",
                                "not starting it with ifup; is left for master $ifaces->{$iface}->{master}.");
