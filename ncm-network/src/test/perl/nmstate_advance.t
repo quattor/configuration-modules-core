@@ -326,6 +326,8 @@ ok(command_history_ok([
   '/usr/bin/nmstatectl apply /etc/nmstate/eth0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/eth0.123.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/eth1.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth2.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth3.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/eth4.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/ib0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/ib1.12345.yml',

@@ -893,6 +893,19 @@ sub process_network
             }
             $iface->{my_inner_ipaddr} .= "/$iface->{my_inner_prefix}";
         }
+
+        # insert master->slaves data
+        if ($iface->{master}) {
+            my $bond = $iface->{master};
+            my $bondiface = $nwtree->{interfaces}->{$bond};
+            if ($bondiface) {
+                $bondiface->{slaves} = [] if !exists($bondiface->{slaves});
+                push(@{$bondiface->{slaves}}, $ifname);
+            } else {
+                $self->warn("Interface $ifname has master $bond configured, but corresponding iface entry not found");
+            }
+        }
+
     }
 
     return $nwtree;
@@ -1447,6 +1460,16 @@ sub make_ifup
             $exifiles->{"$cfg_filename"} == $REMOVE) {
             $self->verbose("Not starting $iface scheduled for removal");
         } else {
+            if (!$self->BOND_MASTER_STARTS_SLAVES && $ifaces->{$iface}->{slaves}) {
+                my @slaves = @{$ifaces->{$iface}->{slaves}};
+                # master won't bring up slaves, so add them here
+                $self->verbose("Found MASTER interface $iface in ifdown map, ",
+                               "adding slaves @slaves to ifup.");
+                foreach my $slname (@slaves) {
+                    $ifup{$slname} = 1;
+                }
+            }
+
             if ($self->BOND_MASTER_STARTS_SLAVES && $ifaces->{$iface}->{master}) {
                 # bonding devices: don't bring the slaves up, only the master
                 $self->verbose("Found SLAVE interface $iface in ifdown map, ",
