@@ -318,4 +318,20 @@ is($dummy_yml, $DUMMY_YML, "Exact dummy interface yml config");
 my $alias_yml = get_file_contents("/etc/nmstate/eth4.yml");
 is($alias_yml, $ALIAS_YML, "Exact alias interface yml config");
 
+diag "all history commands ", explain \@Test::Quattor::command_history;
+
+# apply commands are sorted alphabetically, bond last
+ok(command_history_ok([
+  '/usr/bin/nmstatectl apply /etc/nmstate/dummy_myvip.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth0.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth0.123.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth1.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/eth4.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/ib0.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/ib1.12345.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/vlan0.yml',
+  '/usr/bin/nmstatectl apply /etc/nmstate/bond0.yml',
+], []));
+
+
 done_testing();
