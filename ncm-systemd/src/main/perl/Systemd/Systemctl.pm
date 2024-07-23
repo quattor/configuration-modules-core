@@ -148,8 +148,19 @@ sub systemctl_show
     while($output =~ m/^([^=\s]+)\s*=(.*)?$/mg) {
         my ($k,$v) = ($1,"$2");
         if (grep {$_ eq $k} @PROPERTIES_ARRAY) {
-            my @values = split(/\s+/, $v);
-            $res->{$k} = \@values;
+            my $values = [];
+            foreach my $value (split(/\s+/, $v)) {
+                if ($value =~ m/^"(.*)"$/) {
+                    $value = $1;
+                    if ($value =~ m/\\{2}/) {
+                        $value =~ s/\\{2}/\\/g;
+                    } else {
+                        $logger->error("Found double quoted value '$value' but no expected quoting pattern from '$k = $v'")
+                    }
+                }
+                push(@$values, $value);
+            };
+            $res->{$k} = $values;
         } else {
             $res->{$k} = $v;
         }
