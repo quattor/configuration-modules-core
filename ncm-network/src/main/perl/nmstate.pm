@@ -170,6 +170,8 @@ sub make_nm_ip_rule
 sub make_nm_ip_route
 {
     my ($self, $device, $routes, $routing_table_hash) = @_;
+    use Data::Dumper;
+    print Dumper($device, $routes);
     my @rt_entry;
     foreach my $route (@$routes) {
         if ($route->{command}){
