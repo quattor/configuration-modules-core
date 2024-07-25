@@ -97,7 +97,7 @@ type ssh_daemon_options_type = {
     "AcceptEnv" ? string[]
     "AllowAgentForwarding" ? legacy_binary_affirmation_string
     "AllowGroups" ? string
-    "AllowTcpForwarding" ? legacy_binary_affirmation_string
+    "AllowTcpForwarding" ? choice('yes', 'no', 'all', 'local', 'remote')
     "AllowUsers" ? string
     "AuthorizedKeysFile" ? string
     "Banner" ? string
