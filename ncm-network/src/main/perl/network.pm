@@ -94,7 +94,7 @@ use CAF::FileReader;
 use CAF::FileEditor;
 use CAF::FileWriter;
 use CAF::Path 17.7.0;
-use NetAddr::IP;
+use NetAddr::IP qw(:lower);
 
 use POSIX qw(WIFEXITED WEXITSTATUS);
 use Readonly;
