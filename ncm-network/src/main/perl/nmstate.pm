@@ -185,13 +185,31 @@ sub make_nm_ip_route
             $self->debug(3, "Route destination is 'default', rewriting to '0.0.0.0/0'");
             $rt{destination} = '0.0.0.0/0';
         } else {
-             if ($route->{netmask}){
-                 my $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
-                 $rt{destination} = $dest_addr->cidr;
-             } else {
-                # if no netmask defined for a route, assume its single ip
-                $rt{destination} = $route->{address}."/32";
-             }
+            my $rt_address = NetAddr::IP->new($route->{address});
+            $self->debug(5, "Route destination is '$rt_address'");
+            my $rt_version = $rt_address->version();
+            my $dest_addr;
+            if ($rt_version eq 4) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv4 address");
+                if ($route->{netmask}) {
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume its single ip
+                    $rt{destination} = $route->{address}."/32";
+                }
+            } elsif ($rt_version eq 6) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv6 address");
+                if ($route->{prefix}){
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{prefix});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume its single ip
+                    $rt{destination} = $route->{address}."/128";
+                }
+            } else {
+                $self->error("Unable to determine family of destination address '".$route->{address}."' in route");
+            }
         }
 
         $rt{'table-id'} = "$routing_table_hash->{$route->{table}}" if $route->{table};
