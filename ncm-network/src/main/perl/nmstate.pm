@@ -41,6 +41,8 @@ Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}-
 Readonly my $YFALSE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(0);
 
 use constant IFCFG_DIR => "/etc/nmstate";
+use constant BOND_MASTER_STARTS_SLAVES => 0;
+
 
 sub iface_filename
 {
@@ -610,8 +612,15 @@ sub nmstate_apply
 {
     my ($self, $exifiles, $ifup, $ifdown, $nwsrv) = @_;
 
+
     my @ifaces = sort keys %$ifup;
     my @ifaces_down = sort keys %$ifdown;
+
+    # primitive re-ordering to make sure eg bond are apply'ed last, and removed first
+    my $order_pattern = '^bond';
+    @ifaces = ((grep {$_ !~ m/$order_pattern/} @ifaces), (grep {$_ =~ m/$order_pattern/} @ifaces));
+    @ifaces_down = ((grep {$_ =~ m/$order_pattern/} @ifaces_down), (grep {$_ !~ m/$order_pattern/} @ifaces_down));
+
     my $action;
 
     if (@ifaces) {
@@ -622,7 +631,7 @@ sub nmstate_apply
             my $ymlfile = $self->iface_filename($iface);
             if ($self->any_exists($ymlfile)){
                 push(@cmds, [$NMSTATECTL, "apply", $ymlfile]);
-                push(@cmds, [qw(sleep 10)]) if ($iface =~ m/bond/);
+                push(@cmds, [qw(/usr/bin/sleep 10)]) if ($iface =~ m/^bond/);
             } else {
                 # TODO: perhaps try down the interface? it's done later anyway
                 $self->verbose("$ymlfile does not exist for $iface, not applying");
