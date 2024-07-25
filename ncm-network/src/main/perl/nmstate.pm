@@ -509,7 +509,7 @@ sub generate_nmstate_config
                     $self->verbose("alias ip (ipv4) addr defined for $name, configuring additional ips");
                     push @$all_ip, @{$self->generate_alias_ips($iface->{aliases})};
                 }
-            $ifaceconfig->{ipv4}->{address} = $all_ip;
+                $ifaceconfig->{ipv4}->{address} = $all_ip;
                 $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
                 $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
             }
