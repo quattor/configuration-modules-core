@@ -61,9 +61,14 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 
 "SlurmctldParameters" = dict(
     "power_save_interval", 20,
-    "{cloud_reg_addrs}", false,
     "{user_resv_delete}", false,
     "{max_dbd_msg_action}", "discard",
+    "enable_configless", true,
+    "rl_enable", true,
+    "rl_bucket_size", 120,
+    "no_quick_restart", true,
+    "max_powered_nodes", 10,
+    "enable_stepmgr", true,
 );
 "SlurmctldPidFile" = "/var/run/slurmctld.pid";
 "SlurmctldPort" = list(6817);
@@ -75,7 +80,6 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 #SrunEpilog=
 #SrunProlog=
 "StateSaveLocation" = "/var/spool/slurm";
-"SwitchType" = "none";
 #TaskEpilog=
 "TaskPlugin" = list("affinity" , "cgroup");
 #TaskProlog=
@@ -126,7 +130,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
     "{partition_job_depth}", 5,
     );
 "DependencyParameters" = dict('{max_depend_depth}', 5);
-"SelectType" = "cons_res";
+"SelectType" = "cons_tres";
 "SelectTypeParameters" = dict("CR_Core_Memory", true);
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/priority";
