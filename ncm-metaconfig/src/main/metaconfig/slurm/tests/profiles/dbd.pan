@@ -14,7 +14,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurmdbd.conf}/cont
 'ArchiveSuspend' = false;
 'ArchiveTXN' = false;
 'ArchiveUsage' = false;
-'AuthInfo' = '/var/run/munge/munge.socket.2';
+'AuthInfo' = dict('socket', '/var/run/munge/munge.socket.2');
 'AuthType' = 'munge';
 'DbdHost' = 'master23';
 'DebugLevel' = 'debug4';

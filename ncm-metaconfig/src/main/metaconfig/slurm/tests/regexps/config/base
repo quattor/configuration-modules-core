@@ -84,14 +84,13 @@ PriorityWeightJobSize=2500
 # process
 
 SlurmUser=slurm
-SlurmctldParameters=max_dbd_msg_action=discard,power_save_interval=20
+SlurmctldParameters=enable_configless,enable_stepmgr,max_dbd_msg_action=discard,max_powered_nodes=10,no_quick_restart,power_save_interval=20,rl_bucket_size=120,rl_enable
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort=6817
 SlurmdPidFile=/var/run/slurmd.pid
 SlurmdPort=6818
 SlurmdSpoolDir=/var/spool/slurm/slurmd
 StateSaveLocation=/var/spool/slurm
-SwitchType=switch/none
 TaskPlugin=task/affinity,task/cgroup
 
 # scheduling
@@ -103,7 +102,7 @@ FastSchedule=1
 MaxMemPerNode=345
 SchedulerParameters=batch_sched_delay=5,bf_continue,bf_max_job_test=1024,bf_window=4320,default_queue_depth=128,partition_job_depth=5
 SchedulerType=sched/backfill
-SelectType=select/cons_res
+SelectType=select/cons_tres
 SelectTypeParameters=CR_Core_Memory
 
 # timers

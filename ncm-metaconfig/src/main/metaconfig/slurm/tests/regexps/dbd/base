@@ -11,7 +11,7 @@ ArchiveSteps=no
 ArchiveSuspend=no
 ArchiveTXN=no
 ArchiveUsage=no
-AuthInfo=/var/run/munge/munge.socket.2
+AuthInfo=socket=/var/run/munge/munge.socket.2
 AuthType=auth/munge
 DbdHost=master23
 DebugLevel=debug4
