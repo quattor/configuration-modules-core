@@ -29,7 +29,7 @@ jobs:
           perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
           perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
           perl-Set-Scalar perl-Text-Glob cpanminus gcc wget \
-          perl-Git-Repository perl-Data-Structure-Util \
+          perl-Git-Repository perl-Data-Structure-Util procps-ng \
           http://yum.quattor.org/devel/perl-Test-Quattor-18.3.0-SNAPSHOT20180406083650.noarch.rpm \
           http://yum.quattor.org/devel/aii-ks-21.12.1-SNAPSHOT20230627130118.noarch.rpm
     - name: set up template library core from git master
