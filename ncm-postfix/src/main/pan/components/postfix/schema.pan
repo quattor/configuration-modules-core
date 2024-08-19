@@ -507,6 +507,7 @@ type postfix_main = {
     "smtpd_recipient_restrictions" ? string[]
     "smtpd_reject_udicted_recipient" ? boolean
     "smtpd_reject_udicted_sender" ? boolean
+    "smtpd_relay_restrictions" ? string[]
     "smtpd_restriction_classes" ? string
     "smtpd_sasl_auth_enable" ? boolean
     "smtpd_sasl_authenticated_header" ? boolean
