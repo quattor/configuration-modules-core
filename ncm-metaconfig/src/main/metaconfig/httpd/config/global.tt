@@ -3,7 +3,10 @@
                 "hostnamelookups", 
                 ]
 -%]
-[%- lists = ["directoryindex", "indexoptions", "indexignore"] -%]
+[%- lists = ["directoryindex", "indexoptions", "indexignore",
+             "remoteiptrustedproxy", "remoteipproxyprotocolexceptions"
+            ]
+-%]
 [%- quotes = ["serverroot"] -%] 
 [%- FOREACH pair IN desc.pairs -%]
 [%-     SWITCH pair.key -%]

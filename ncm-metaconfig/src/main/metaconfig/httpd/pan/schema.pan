@@ -680,6 +680,10 @@ type httpd_global_system = {
 
     "limitrequestfieldsize" ? long
     "traceenable" ? string with match(SELF, '^(on|off|extended)$')
+
+    "remoteipproxyprotocol" ? choice('on', 'off')
+    "remoteipproxyprotocolexceptions" ? type_network_name[]
+    "remoteiptrustedproxy" ? type_network_name[]
 };
 
 type httpd_ifmodule_parameters = {
