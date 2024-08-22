@@ -6,6 +6,13 @@ declaration template components/spma/dnf/schema;
 
 include 'components/spma/schema';
 
+@documentation{
+    Main configuration options for yum.conf.
+}
+type spma_dnf_main_options = {
+    "best" ? long(0..1)
+};
+
 type component_spma_dnf = {
     include structure_component
     include component_spma_common
@@ -20,6 +27,7 @@ type component_spma_dnf = {
     "proxyrandom"        ? boolean  # randomize proxyhost
     "proxytype"          ? string with match (SELF, '^(forward|reverse)$') # select proxy type, forward or reverse
     "run"                ? boolean  # Run the transaction after configuring DNF
+    "main_options"       ? spma_dnf_main_options
 };
 
 @{DNF module structure. To be used as dict, with name as key.
