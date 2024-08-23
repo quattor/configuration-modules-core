@@ -128,6 +128,14 @@ type beats_logging = {
     'level' ? string with match(SELF, '^(critical|error|warning|info|debug)$')
 };
 
+@documentation{
+    Secomp settings for RHEL with Linux >3.16
+    (see https://www.elastic.co/guide/en/beats/filebeat/6.8/linux-seccomp.html)
+}
+type beats_seccomp = {
+    'default_action' : choice('errno', 'trace', 'trap', 'kill_thread', 'kill_process', 'log', 'allow');
+};
+
 @documenation{
     Shared components for each beats service
 }
@@ -140,6 +148,7 @@ type beats_service = {
     'refresh_topology_freq' ? long(0..)
     'topology_expire' ? long(0..)
     'geoip' ? beats_shipper_geoip
+    'seccomp' ? beats_seccomp
 };
 
 @documentation{
