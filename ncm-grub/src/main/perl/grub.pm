@@ -21,6 +21,7 @@ Readonly my $GRUB2_USER_CFG      => "$GRUB2_DIR/user.cfg";
 Readonly my $GRUBBY              => '/sbin/grubby';
 Readonly my $PREFIX              => '/boot';
 Readonly my $EFIBOOTMGR          => '/sbin/efibootmgr';
+Readonly my $SYS_FIRMWARE_EFI    => '/sys/firmware/efi';
 Readonly::Hash my %SERIAL_CONSOLE_DEFAULTS => {
     unit => 0,
     speed => 9600,
@@ -891,6 +892,11 @@ sub pxeboot
 
     if (!$self->file_exists($EFIBOOTMGR)) {
         $self->info("pxeboot: no $EFIBOOTMGR found. Not doing anything");
+        return SUCCESS;
+    }
+
+    if (!$self->directory_exists($SYS_FIRMWARE_EFI)) {
+        $self->info("pxeboot: no $SYS_FIRMWARE_EFI found. Not doing anything");
         return SUCCESS;
     }
 
