@@ -5,40 +5,14 @@ on: [push, pull_request]
 jobs:
   runtests:
     runs-on: ubuntu-latest
-    container: rockylinux:8
+    container:
+      image: ghcr.io/quattor/quattor-test-container:latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Determine hash for caching key
       id: cachekeystep
       run: echo "pomcachekey=${{ hashFiles('**/pom.xml') }}" >> $GITHUB_ENV
-    - name: set up dependencies
-      run: |
-        dnf -y install dnf-plugins-core
-        dnf config-manager --set-enabled appstream
-        dnf config-manager --set-enabled powertools
-        dnf -y install epel-release \
-          http://yum.quattor.org/devel/quattor-yum-repo-2-1.noarch.rpm
-        # The available version of perl-Test-Quattor is too old for mvnprove.pl to
-        # work, but this is a quick way of pulling in a lot of required dependencies.
-        # Surprisingly `which` is not installed by default and panc depends on it.
-        # libselinux-utils is required for /usr/sbin/selinuxenabled
-        dnf install -y maven which rpm-build panc ncm-lib-blockdevices \
-          ncm-ncd git libselinux-utils sudo perl-Crypt-OpenSSL-X509 \
-          perl-Data-Compare perl-Date-Manip perl-File-Touch perl-JSON-Any \
-          perl-Net-DNS perl-Net-FreeIPA perl-Net-OpenNebula \
-          perl-Net-OpenStack-Client perl-NetAddr-IP perl-REST-Client \
-          perl-Set-Scalar perl-Text-Glob cpanminus gcc wget \
-          perl-Git-Repository perl-Data-Structure-Util procps-ng \
-          http://yum.quattor.org/devel/perl-Test-Quattor-18.3.0-SNAPSHOT20180406083650.noarch.rpm \
-          http://yum.quattor.org/devel/aii-ks-21.12.1-SNAPSHOT20230627130118.noarch.rpm
-    - name: set up template library core from git master
-      run: |
-        cd /tmp
-        # install library core in /tmp, tests need it
-        wget -O template-library-core-master.tar.gz https://codeload.github.com/quattor/template-library-core/tar.gz/master
-        tar -xvzf template-library-core-master.tar.gz
-        cd -
     - name: Cache Maven packages
       uses: actions/cache@v4
       with:
@@ -49,10 +23,9 @@ jobs:
       run: |
         # make sure it exists before chown
         mkdir -p /tmp/m2
-        chown -R nobody:nobody . /tmp/m2
+        chown -R quattortest:quattortest . /tmp/m2
         # we have to run as a non-root user to pass the spma tests
         # secondly, we first download all maven dependencies and then run the tests because it fails with hanging downloads otherwise.
-        runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve-plugins dependency:go-offline $MVN_ARGS\" && mvn_test" nobody
+        runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve-plugins dependency:go-offline $MVN_ARGS\" && mvn_test" quattortest
       env:
-        QUATTOR_TEST_TEMPLATE_LIBRARY_CORE: /tmp/template-library-core-master
         MVN_ARGS: -Dmaven.repo.local=/tmp/m2
