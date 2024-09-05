@@ -405,20 +405,25 @@ ok(command_history_ok([
 =cut
 
 my $ebm = '/sbin/efibootmgr';
+my $sfe = '/sys/firmware/efi';
 command_history_reset();
 ok (!$cmp->file_exists($ebm), "efibootmgr does not exist");
 ok($cmp->pxeboot(), "pxeboot returns success when efibootmgr is missing");
 ok(command_history_ok(undef, ['']), "No commands were run when efibootmgr is missing");
+ok (!$cmp->directory_exists($sfe), "/sys/firmware/efi does not exist");
+ok($cmp->pxeboot(), "pxeboot returns success when /sys/firmware/efi is missing");
+ok(command_history_ok(undef, ['']), "No commands were run when /sys/firmware/efi is missing");
 
+$mock->mock('directory_exists', 1);
 set_file_contents($ebm, '');
 set_desired_output("$ebm -v", "$EFIBOOTMGROUT");
 ok ($cmp->file_exists($ebm), "efibootmgr does exist");
 ok($cmp->pxeboot(), "pxeboot returns success");
+$mock->unmock('directory_exists');
 ok(command_history_ok([
    "$ebm -v",
    "$ebm -o 4,3,2",
 ]), "efibootmgr called, correct bootorder set");
-
 
 =head1 sanitize_arguments
 
