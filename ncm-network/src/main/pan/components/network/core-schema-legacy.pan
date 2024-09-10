@@ -411,6 +411,13 @@ type structure_ipv6 = {
 };
 
 @documentation{
+    NetworkManager device configuration for drop in config file.
+}
+type structure_nm_device_config = {
+    "keep-configuration" ? choice("yes", "no")
+};
+
+@documentation{
     Host network configuration
 
     These values are used to generate /etc/sysconfig/network
@@ -448,6 +455,7 @@ type structure_network = {
     "ipv6" ? structure_ipv6
     "manage_vips" : boolean = false
     "vips" ? structure_vip{}
+    "nm_device_config" ? structure_nm_device_config
     @{Manage custom routing table entries; key is the name; value is the id}
     "routing_table" ? long(1..252){} with {
         if (exists(SELF['main']) || exists(SELF['local']) || exists(SELF['default']) || exists(SELF['unspec'])) {
