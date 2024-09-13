@@ -24,6 +24,15 @@ type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$"
 type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group-exchange-sha256|" +
     "ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
 type ssh_MACs = string with is_valid_ssh_MAC(SELF);
+type ssh_gssapikexalgorithms = choice(
+    'gss-gex-sha1-',
+    'gss-group1-sha1-',
+    'gss-group14-sha1-',
+    'gss-group14-sha256-',
+    'gss-group16-sha512-',
+    'gss-nistp256-sha256-',
+    'gss-curve25519-sha256-'
+);
 
 function is_valid_ssh_MAC = {
     match(ARGV[0], "^(hmac-(sha2-256|sha2-512|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha2-256-etm" +
@@ -73,6 +82,7 @@ type ssh_core_options_type = {
     "Compression" ? string with match (SELF, '^(yes|delayed|no)$')
     "GSSAPIAuthentication" ? legacy_binary_affirmation_string
     "GSSAPICleanupCredentials" ? legacy_binary_affirmation_string
+    "GSSAPIKexAlgorithms" ? ssh_gssapikexalgorithms[1..]
     "GSSAPIKeyExchange" ? legacy_binary_affirmation_string
     "GatewayPorts" ? legacy_binary_affirmation_string
     "HostbasedAuthentication" ? legacy_binary_affirmation_string
