@@ -279,7 +279,7 @@ sub aii_post_reboot
     my $tree = $config->getElement($path)->getTree();
 
     print <<EOF;
-yum -c /tmp/aii/yum/yum.conf -y install acpid
+yum -c /var/tmp/aii/yum/yum.conf -y install acpid
 service acpid start
 EOF
 }

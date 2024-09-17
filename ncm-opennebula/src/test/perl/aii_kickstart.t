@@ -35,7 +35,7 @@ my $path;
 $path = "/system/aii/hooks/install/0";
 $aii->aii_post_reboot($cfg, $path);
 
-like($fh, qr{^yum\s-c\s/tmp/aii/yum/yum.conf\s-y\sinstall\sacpid}m, 'yum install acpid present');
+like($fh, qr{^yum\s-c\s/var/tmp/aii/yum/yum.conf\s-y\sinstall\sacpid}m, 'yum install acpid present');
 like($fh, qr{^service\sacpid\sstart}m, 'service acpid restart present');
 
 # close the selected FH and reset STDOUT

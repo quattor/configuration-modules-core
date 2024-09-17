@@ -586,7 +586,7 @@ sub _manual_initialisation
     my @yum;
     if (@cli_packages) {
         push(@yum, qw(yum -y install), @cli_packages);
-        push(@yum, qw(-c /tmp/aii/yum/yum.conf)) if $opts{aii};
+        push(@yum, qw(-c /var/tmp/aii/yum/yum.conf)) if $opts{aii};
 
     }
 
