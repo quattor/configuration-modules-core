@@ -792,7 +792,7 @@ sub process_network
                 $iface->{$attr} = [map {"$_=$opts->{$_}"} sort keys %$opts];
                 $self->debug(1, "Replaced $attr with ", join(' ', @{$iface->{$attr}}), " for interface $ifname");
 
-                # for bonding_opts, we need linkagregation settings for nmstate.
+                # for bonding_opts, we need link aggregation settings for nmstate.
                 # this should not impact existing configs as it adds interface/$name/link_aggregation
                 if ($attr eq "bonding_opts"){
                     foreach my $opt (sort keys %$opts){
@@ -903,6 +903,18 @@ sub process_network
                 push(@{$bondiface->{slaves}}, $ifname);
             } else {
                 $self->warn("Interface $ifname has master $bond configured, but corresponding iface entry not found");
+            }
+        }
+
+        # insert ovs bridge->ports data
+        if ($iface->{ovs_bridge}) {
+            my $bridge = $iface->{ovs_bridge};
+            my $bridgeiface = $nwtree->{interfaces}->{$bridge};
+            if ($bridgeiface) {
+                $bridgeiface->{ports} = [] if !exists($bridgeiface->{ports});
+                push(@{$bridgeiface->{ports}}, $ifname);
+            } else {
+                $self->warn("Interface $ifname has OVS bridge $bridge configured, but corresponding iface entry not found");
             }
         }
 
