@@ -41,6 +41,7 @@ type network_ipv6 = {
     when using ncm-network (unless specified otherwise).
 }
 type structure_network = {
+    include structure_network_backend_specific
     "domainname" : type_fqdn
     "hostname" : type_shorthostname
     "realhostname" ? string with is_shorthostname(SELF) || is_fqdn(SELF)
@@ -63,10 +64,6 @@ type structure_network = {
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
-    @{let NetworkManager manage the dns (only for nmstate)}
-    "nm_manage_dns" : boolean = false
-    @{let ncm-network cleanup inactive connections (only for nmstate)}
-    "nm_clean_inactive_conn" : boolean = true
     "primary_ip" ? string
     "routers" ? network_router{}
     "ipv6" ? network_ipv6
