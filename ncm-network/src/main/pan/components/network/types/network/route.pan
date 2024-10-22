@@ -2,37 +2,23 @@ declaration template components/network/types/network/route;
 
 type network_valid_routing_table = string with exists("/system/network/routing_table/" + SELF);
 
-function network_valid_route = {
-    if (exists(SELF['command'])) {
-        network_exclude_backend('nmstate', 'command routes');
-        if (length(SELF) != 1) error("Cannot use command and any of the other attributes as route");
+function network_valid_prefix = {
+    pref = ARGV[0]['prefix'];
+    ipv6 = false;
+    foreach (k; v; ARGV[0]) {
+        if (match(to_string(v), ':')) {
+            ipv6 = true;
+        };
+    };
+    if (ipv6) {
+        if (!is_ipv6_prefix_length(pref)) {
+            error("Prefix %s is not a valid IPv6 prefix", pref);
+        };
     } else {
-        if (!exists(SELF['address']))
-            error("Address is mandatory for route (in absence of command)");
-        if (exists(SELF['prefix']) && exists(SELF['netmask']))
-            error("Use either prefix or netmask as route");
-    };
-
-    if (exists(SELF['prefix'])) {
-        pref = SELF['prefix'];
-        ipv6 = false;
-        foreach (k; v; SELF) {
-            if (match(to_string(v), ':')) {
-                ipv6 = true;
-            };
-        };
-        if (ipv6) {
-            if (!is_ipv6_prefix_length(pref)) {
-                error("Prefix %s is not a valid IPv6 prefix", pref);
-            };
-        } else {
-            if (!is_ipv4_prefix_length(pref)) {
-                error("Prefix %s is not a valid IPv4 prefix", pref);
-            };
+        if (!is_ipv4_prefix_length(pref)) {
+            error("Prefix %s is not a valid IPv4 prefix", pref);
         };
     };
-
-    true;
 };
 
 @documentation{
