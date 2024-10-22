@@ -118,6 +118,7 @@ ok(command_history_ok([
   '/usr/bin/nmcli connection',
   'service NetworkManager reload',
   'systemctl disable nmstate',
+  'systemctl stop nmstate',
   '/usr/bin/nmstatectl apply /etc/nmstate/eth0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/resolv.yml',
   'service NetworkManager reload',
