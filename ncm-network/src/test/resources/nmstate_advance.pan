@@ -1,7 +1,5 @@
 object template nmstate_advance;
 
-variable QUATTOR_TYPES_NETWORK_LEGACY = false;
-
 include 'simple_base_profile';
 include 'components/network/config-nmstate';
 
