@@ -73,7 +73,6 @@ use constant BOOLEAN_OPTS => qw(
     mail_no_host
     mail_no_perms
     tty_tickets
-    lecture
     authenticate
     root_sudo
     log_host
@@ -124,6 +123,8 @@ use constant STRING_OPTS => qw(
     verifypw
     listpw
     secure_path
+    lecture
+    lecture_file
 );
 
 # generate_aliases method
