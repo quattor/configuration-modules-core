@@ -133,7 +133,7 @@ type beats_logging = {
     (see https://www.elastic.co/guide/en/beats/filebeat/6.8/linux-seccomp.html)
 }
 type beats_seccomp = {
-    'default_action' : choice('errno', 'trace', 'trap', 'kill_thread', 'kill_process', 'log', 'allow');
+    'default_action' : choice('errno', 'trace', 'trap', 'kill_thread', 'kill_process', 'log', 'allow')
 };
 
 @documenation{
