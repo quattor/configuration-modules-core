@@ -376,14 +376,17 @@ sub generate_nmstate_config
     my $is_ip = exists $iface->{ip} ? 1 : 0;
     my $is_vlan_eth = exists $iface->{vlan} ? 1 : 0;
     my $is_partof_bond = exists $iface->{master} ? 1 : 0;
+    my $can_ignore_bootproto = $is_partof_bond;
     my $iface_changed = 0;
 
     # create hash of interface entries that will be used by nmstate config.
-    my $ifaceconfig->{name} = $name;
+    my $ifaceconfig = {
+        name => $name,
+        'profile-name' => $name,
+    };
 
     $ifaceconfig->{mtu} = $iface->{mtu} if $iface->{mtu};
     $ifaceconfig->{'mac-address'} = $iface->{hwaddr} if $iface->{hwaddr};
-    $ifaceconfig->{'profile-name'} = $name;
 
     # this will be empty if the interface isnt a bond interface.
     # we can use this to determine if this interface is bond interface.
@@ -391,7 +394,9 @@ sub generate_nmstate_config
 
     my $vlan_id = $self->find_vlan_id($name, $iface->{device});
 
-    if (lc($iface->{type} || '') eq 'infiniband') {
+    my $lctype = lc($iface->{type} || '');
+
+    if ($lctype eq 'infiniband') {
         $ifaceconfig->{type} = "infiniband";
         my $ib = {};
         my $pkey = $vlan_id || 65535;
@@ -403,11 +408,22 @@ sub generate_nmstate_config
         $ib->{pkey} = "0x" . sprintf("%04x", $pkey);
         $ib->{mode} = 'datagram';  # TODO: add connected mode, but who still uses that
         $ifaceconfig->{infiniband} = $ib;
+    } elsif ($lctype eq 'ovsbridge') {
+        $can_ignore_bootproto ||= 1;
+        $ifaceconfig->{type} = "ovs-bridge";
+        $ifaceconfig->{state} = "up";
+        $ifaceconfig->{bridge}->{port} = [ map { {name => $_} } (@{$iface->{ports}}, $name) ];
+    } elsif ($lctype eq 'ovsintport') {
+        $can_ignore_bootproto ||= 1;
+        # TODO: when extending this to ovsport, deal with eg type=ovsport driver=bonding
+        #    (which is a bond interface and should not be handled here)
+        $ifaceconfig->{type} = "ovs-interface";
+        $ifaceconfig->{state} = "up";
     } elsif ($is_eth) {
         $ifaceconfig->{type} = "ethernet";
         if ($is_partof_bond) {
             # no ipv4 address for bonded eth, plus in nmstate bonded eth is controlled by controller. no config is required.
-            $ifaceconfig->{ipv4}->{enabled} = "false";
+            $ifaceconfig->{ipv4}->{enabled} = $YFALSE;
             $ifaceconfig->{state} = "up";
         }
     } elsif ($is_vlan_eth) {
@@ -420,7 +436,9 @@ sub generate_nmstate_config
         $ifaceconfig->{vlan}->{'id'} = $vlan_id;
     } elsif (@$bonded_eth) {
         # if bond device
+        $can_ignore_bootproto ||= 1;
         $ifaceconfig->{type} = "bond";
+        $ifaceconfig->{state} = "up";
         $ifaceconfig->{'link-aggregation'} = $iface->{link_aggregation};
         if ($bonded_eth){
             $ifaceconfig->{'link-aggregation'}->{port} = $bonded_eth;
@@ -481,15 +499,15 @@ sub generate_nmstate_config
         } else {
             $self->error("No ip address defined for static bootproto");
         }
-    } elsif (($eth_bootproto eq "dhcp") && (!$is_partof_bond)) {
+    } elsif (($eth_bootproto eq "dhcp") && (!$can_ignore_bootproto)) {
         # dhcp configuration
         $ifaceconfig->{state} = "up";
         $ifaceconfig->{ipv4}->{dhcp} = $YTRUE;
         $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
-    } elsif (($eth_bootproto eq "none") && (!$is_partof_bond)) {
+    } elsif (($eth_bootproto eq "none") && (!$can_ignore_bootproto)) {
         # no ip on interface and is not a part of a bonded interface, assume not managed so disable eth.
-        $ifaceconfig->{ipv4}->{enabled} = "false";
-        $ifaceconfig->{ipv6}->{enabled} = "false";
+        $ifaceconfig->{ipv4}->{enabled} = $YFALSE;
+        $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
         $ifaceconfig->{state} = "down";
     } elsif ($eth_bootproto eq "bootp"){
         $self->error("bootp bootproto not supported by nmstate");
@@ -553,6 +571,23 @@ sub generate_nmstate_config
     }
     # return hash construct that will match what nmstate yml needs.
     my $interface->{interfaces} = [$ifaceconfig];
+
+    # insert 2nd interface: an ovs-interface with same name (a so-called admin interafce)
+    if (($ifaceconfig->{type} || '') eq 'ovs-bridge') {
+        push(@{$interface->{interfaces}}, {
+            type => "ovs-interface",
+            state => "up",
+            name => $name,
+            'profile-name' => $name,
+            ipv4 => {
+                enabled => $YFALSE,
+            },
+            ipv6 => {
+                enabled => $YFALSE,
+            },
+        });
+    };
+
     if (scalar @$routes) {
         $interface->{routes}->{config} = $routes;
     }
@@ -567,7 +602,7 @@ sub generate_nmstate_config
     # TODO: bridge_options
     # TODO: veth, anymore?
 
-    return $interface;
+    return $interface, $ifaceconfig;
 };
 
 # Generate hash of dns-resolver config for nmstate.
@@ -662,18 +697,51 @@ sub clear_inactive_nm_connections
     }
 }
 
+# return ordered list of interface keys
+#    if_updwon is a hasref in if_up / if_down format
+sub nmstate_order
+{
+    my ($self, $if_updown, $full_ifaces) = @_;
+
+    # do no use the value 0 in the score; it will break the || $default logic when the value is 0
+    my $default = 10;  # lowest / first
+    # these are nmstate types
+    my $score = {
+        bond => 20,  # slaves need to be alive
+        "ovs-interface" => 30,  # can only be ports of a bridge, this could probably be 0 as well
+        "ovs-bridge" => 40,  # needs ports alive; these can be anything with lower score
+    };
+
+    my $get_score = sub {
+        my $ifname = shift;
+
+        # devices to remove most likely have no data
+        my $guesstype = 'unknown';
+        $guesstype = 'bond' if $ifname =~ m/^bond/;
+
+        my $ifdata = $full_ifaces->{$ifname} || {};
+        return $score->{$ifdata->{type} || $guesstype} || $default;
+    };
+
+    # sort on score, and with equal score alphabetic
+    my @sorted_ifnames = sort {
+        &$get_score($a) <=> &$get_score($b) || $a cmp $b
+    } keys %$if_updown;
+
+    # re-apply the ovs-interfaces, an all-in-one config yaml would solve this
+    my @reapply = grep { &$get_score($_) == 30 } @sorted_ifnames;
+
+    return @sorted_ifnames, @reapply;
+}
+
+
 sub nmstate_apply
 {
-    my ($self, $exifiles, $ifup, $ifdown, $nwsrv) = @_;
+    my ($self, $exifiles, $ifup, $ifdown, $nwsrv, $ifaces) = @_;
 
 
-    my @ifaces = sort keys %$ifup;
-    my @ifaces_down = sort keys %$ifdown;
-
-    # primitive re-ordering to make sure eg bond are apply'ed last, and removed first
-    my $order_pattern = '^bond';
-    @ifaces = ((grep {$_ !~ m/$order_pattern/} @ifaces), (grep {$_ =~ m/$order_pattern/} @ifaces));
-    @ifaces_down = ((grep {$_ =~ m/$order_pattern/} @ifaces_down), (grep {$_ !~ m/$order_pattern/} @ifaces_down));
+    my @ifaces = $self->nmstate_order($ifup, $ifaces);
+    my @ifaces_down = reverse $self->nmstate_order($ifdown, $ifaces);
 
     my $action;
 
@@ -788,11 +856,13 @@ sub Configure
     $self->routing_table($nwtree->{routing_table});
 
     my $ipv6 = $nwtree->{ipv6};
+    my $nmifaces = {};
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
-        my $nmstate_cfg = generate_nmstate_config($self, $ifacename, $net, $ipv6, $nwtree->{routing_table}, $dgw);
+        my ($nm_cfg, $nm_iface) = generate_nmstate_config($self, $ifacename, $net, $ipv6, $nwtree->{routing_table}, $dgw);
+        $nmifaces->{$ifacename} = $nm_iface;
         my $file_name = $self->iface_filename($ifacename);
-        $exifiles->{$file_name} = $self->nmstate_file_dump($file_name, $nmstate_cfg);
+        $exifiles->{$file_name} = $self->nmstate_file_dump($file_name, $nm_cfg);
 
         $self->ethtool_opts_keeps_state($file_name, $ifacename, $iface, $exifiles);
     }
@@ -888,7 +958,7 @@ sub Configure
     # nmstatectl manages rollback too when options are misconfigured in yml config
     # This is still used to mark interfaces to apply any changes via nmstatectl
     # This will also down/delete any interface connection for which config was removed.
-    my $stopstart += $self->nmstate_apply($exifiles, $ifup, $ifdown, $nwsrv);
+    my $stopstart += $self->nmstate_apply($exifiles, $ifup, $ifdown, $nwsrv, $nmifaces);
     $init_config .= "\nPOST APPLY\n";
     $init_config .= $self->get_current_config();
 
