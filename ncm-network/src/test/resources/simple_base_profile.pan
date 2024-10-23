@@ -1,9 +1,5 @@
 template simple_base_profile;
 
-# uncomment to test any schema changes
-#variable QUATTOR_TYPES_NETWORK_LEGACY = false;
-#variable QUATTOR_TYPES_NETWORK_BACKEND = 'nmstate';
-
 function pkg_repl = { null; };
 include 'components/network/config';
 '/software/components/network/dependencies' = null;

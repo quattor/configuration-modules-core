@@ -2,6 +2,25 @@ declaration template components/network/types/network/route;
 
 type network_valid_routing_table = string with exists("/system/network/routing_table/" + SELF);
 
+function network_valid_prefix = {
+    pref = ARGV[0]['prefix'];
+    ipv6 = false;
+    foreach (k; v; ARGV[0]) {
+        if (match(to_string(v), ':')) {
+            ipv6 = true;
+        };
+    };
+    if (ipv6) {
+        if (!is_ipv6_prefix_length(pref)) {
+            error("Prefix %s is not a valid IPv6 prefix", pref);
+        };
+    } else {
+        if (!is_ipv4_prefix_length(pref)) {
+            error("Prefix %s is not a valid IPv4 prefix", pref);
+        };
+    };
+};
+
 @documentation{
     Add route (IPv4 of IPv6)
     Presence of ':' in any of the values indicates this is IPv6 related.
@@ -21,35 +40,4 @@ type network_route = {
     "onlink" ? boolean
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
-} with {
-    if (exists(SELF['command'])) {
-        network_exclude_backend('nmstate', 'command routes');
-        if (length(SELF) != 1) error("Cannot use command and any of the other attributes as route");
-    } else {
-        if (!exists(SELF['address']))
-            error("Address is mandatory for route (in absence of command)");
-        if (exists(SELF['prefix']) && exists(SELF['netmask']))
-            error("Use either prefix or netmask as route");
-    };
-
-    if (exists(SELF['prefix'])) {
-        pref = SELF['prefix'];
-        ipv6 = false;
-        foreach (k; v; SELF) {
-            if (match(to_string(v), ':')) {
-                ipv6 = true;
-            };
-        };
-        if (ipv6) {
-            if (!is_ipv6_prefix_length(pref)) {
-                error("Prefix %s is not a valid IPv6 prefix", pref);
-            };
-        } else {
-            if (!is_ipv4_prefix_length(pref)) {
-                error("Prefix %s is not a valid IPv4 prefix", pref);
-            };
-        };
-    };
-
-    true;
-};
+} with network_valid_route(SELF);
