@@ -306,6 +306,9 @@ is($vlanyml, $VLAN_YML, "Exact eth0.123 vlan yml config");
 my $vlanyml2 = get_file_contents("/etc/nmstate/vlan0.yml");
 is($vlanyml2, $VLAN0_YML, "Exact vlan0  yml config");
 
+my $vlanyml3 = get_file_contents("/etc/nmstate/vlan.0.yml");
+is($vlanyml3, $VLAN0_YML, "Exact vlan.0  yml config");
+
 my $ibyml = get_file_contents("/etc/nmstate/ib0.yml");
 is($ibyml, $IB_YML, "Exact ib0 yml config");
 
@@ -334,6 +337,5 @@ ok(command_history_ok([
   '/usr/bin/nmstatectl apply /etc/nmstate/vlan0.yml',
   '/usr/bin/nmstatectl apply /etc/nmstate/bond0.yml',
 ], []));
-
 
 done_testing();

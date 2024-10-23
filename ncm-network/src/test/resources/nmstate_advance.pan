@@ -36,7 +36,7 @@ prefix "/system/network/interfaces/eth0.123";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
 
-# test vlan interface route on vlan for backward compatibily with network.pm
+# test vlan interface route on vlan0 for backward compatibily with network.pm
 "/system/network/interfaces/vlan0" = create("defaultinterface");
 prefix "/system/network/interfaces/vlan0";
 "device" = "eth0.123";
@@ -73,3 +73,11 @@ prefix "/system/network/interfaces/eth4";
 "aliases/dba/fqdn" = "host-alias1.quattor.com";
 "aliases/dba/ip" = "4.3.2.12";
 "aliases/dba/netmask" = "255.255.255.0";
+"route/0" = dict("address", "1.2.3.4");
+
+# test vlan interface route on vlan.0 for backward compatibily with network.pm
+"/system/network/interfaces/vlan.0" = create("defaultinterface");
+prefix "/system/network/interfaces/vlan.0";
+"device" = "eth0.123";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");

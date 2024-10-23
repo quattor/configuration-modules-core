@@ -47,7 +47,9 @@ use constant BOND_MASTER_STARTS_SLAVES => 0;
 sub iface_filename
 {
     my ($self, $iface) = @_;
-    return $self->IFCFG_DIR . "/$iface.yml";
+    my $filename = $self->IFCFG_DIR . "/$iface.yml";
+    $self->verbose("Interface $iface configuration file: $filename");
+    return $filename;
 }
 
 # Determine if this is a valid interface for ncm-network to manage,
@@ -411,6 +413,7 @@ sub generate_nmstate_config
             $ifaceconfig->{state} = "up";
         }
     } elsif ($is_vlan_eth) {
+        my $vlan_id = $self->find_vlan_id($name, $device);
         # if vlan_id is empty, error
         if (! $vlan_id) {
             $self->error("Could not find vlan id for vlan device $name");
