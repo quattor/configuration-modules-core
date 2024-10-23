@@ -908,7 +908,6 @@ OS = [
 RAW = [
     DATA = "<vcpu>4</vcpu><cpu mode='host-passthrough'>
     <topology sockets='2' cores='2' threads='1'/></cpu>
-    <devices><video><model type='qxl'/></video></devices>
     <memoryBacking>
     <nosharepages/>
     <hugepages/>
