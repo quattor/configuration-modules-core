@@ -27,16 +27,10 @@ type structure_route = {
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with {
-    if (exists(SELF['command'])) {
-        module = value('/software/components/network/ncm-module', '');
-        if (module == 'nmstate') error("Command routes are not supported by the nmstate backend");
-        if (length(SELF) != 1) error("Cannot use command and any of the other attributes as route");
-    } else {
-        if (!exists(SELF['address']))
-            error("Address is mandatory for route (in absence of command)");
-        if (exists(SELF['prefix']) && exists(SELF['netmask']))
-            error("Use either prefix or netmask as route");
-    };
+    if (!exists(SELF['address']))
+        error("Address is mandatory for route (in absence of command)");
+    if (exists(SELF['prefix']) && exists(SELF['netmask']))
+        error("Use either prefix or netmask as route");
 
     if (exists(SELF['prefix'])) {
         pref = SELF['prefix'];
@@ -439,10 +433,6 @@ type structure_network = {
     "set_hwaddr" ? boolean
     "nmcontrolled" ? boolean
     "allow_nm" ? boolean
-    @{let NetworkManager manage the dns (only for nmstate)}
-    "nm_manage_dns" : boolean = false
-    @{let ncm-network cleanup inactive connections (only for nmstate)}
-    "nm_clean_inactive_conn" : boolean = true
     "primary_ip" ? string
     "routers" ? structure_router{}
     "ipv6" ? structure_ipv6
