@@ -49,6 +49,12 @@ prefix "/system/network/interfaces/vlan1.123";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
 
+# test vlan interface vlan.456 (no partition number, VLAN ID in interface name)
+"/system/network/interfaces/vlan.456" = create("vlaninterface");
+prefix "/system/network/interfaces/vlan.456";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");
+
 # test ib interface (default and with pkey)
 prefix "/system/network/interfaces/ib0";
 "ip" = "10.11.12.13";
