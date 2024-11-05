@@ -50,3 +50,4 @@ prefix "/software/components/metaconfig/services/{/etc/kafka/server.properties}/
 "inter.broker.listener.name" = "INTERNAL";
 "zookeeper.connect" = KAFKA_ZOOKEEPER_SERVERS;
 "log.dirs" = KAFKA_DATA_DIR;
+"sasl.enabled.mechanisms" = list('MECH1', 'MECH2');

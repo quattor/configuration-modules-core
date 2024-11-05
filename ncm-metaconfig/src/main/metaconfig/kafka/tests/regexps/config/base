@@ -8,4 +8,5 @@ Base test for config
 ^listener.security.protocol.map=EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL_LOG:PLAINTEXT$
 ^listeners=INTERNAL://kafka.cluster.log:9092,EXTERNAL://kafka.cluster.os:9093,EXTERNAL_LOG://kafka.cluster.log:9094$
 ^log.dirs=/var/lib/kafka$
+^sasl.enabled.mechanisms=MECH1,MECH2$
 ^zookeeper.connect=zk1.cluster.log,zk2.cluster.log$
