@@ -64,7 +64,7 @@ prefix "/system/network/vips/myvip";
 "interfaces/0" = "eth0";
 
 # create aliases interfaces
-"/hardware/cards/nic/eth4/hwaddr" = "6e:a5:1b:55:77:0d";
+"/hardware/cards/nic/eth4/hwaddr" = "6e:a5:1b:55:77:0e";
 prefix "/system/network/interfaces/eth4";
 "ip" = "4.3.2.11";
 "netmask" = "255.255.255.0";
@@ -73,3 +73,29 @@ prefix "/system/network/interfaces/eth4";
 "aliases/dba/fqdn" = "host-alias1.quattor.com";
 "aliases/dba/ip" = "4.3.2.12";
 "aliases/dba/netmask" = "255.255.255.0";
+
+# ovs construction
+"/system/network/interfaces/bond1" = dict(
+    "driver", "bonding",
+    "type", "OVSPort",
+    "ovs_bridge", "br100",
+    );
+
+"/hardware/cards/nic/eth10/hwaddr" = "6e:a5:1b:55:77:10";
+"/system/network/interfaces/eth10/master" = "bond1";
+
+"/hardware/cards/nic/eth11/hwaddr" = "6e:a5:1b:55:77:11";
+"/system/network/interfaces/eth11/master" = "bond1";
+
+"/system/network/interfaces/br100" = dict(
+    "type", "OVSBridge",
+    "bootproto", "static",
+);
+
+"/system/network/interfaces/eth1000" = dict(
+    "broadcast", '4.3.2.255',
+    "ip", '4.3.2.1',
+    "netmask", '255.255.255.0',
+    "type", "OVSIntPort",
+    "ovs_bridge", "br100",
+);
