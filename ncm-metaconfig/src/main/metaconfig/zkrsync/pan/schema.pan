@@ -35,6 +35,7 @@ type zkrsync_config = {
     'hardlinks' ? boolean = false
     'inplace' ? boolean = false
     'timeout' ? long(0..)
+    'arbitopts' ? string_trimmed
     # client opts
     'verifypath' ? boolean = true
     'domain' ? string
