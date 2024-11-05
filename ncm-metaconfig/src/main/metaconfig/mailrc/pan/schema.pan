@@ -6,6 +6,7 @@ type mailrc_element = {
     'smtp' ? string
     'from' ? type_email
     'smtp-use-starttls' ? boolean
+    'smtp-auth' ? string_trimmed
     'smtp-auth-user' ? string
     'smtp-auth-password' ? string
     'nss-config-dir' ? string
