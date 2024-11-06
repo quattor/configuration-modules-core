@@ -36,10 +36,22 @@ prefix "/system/network/interfaces/eth0.123";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
 
-# test vlan interface route on vlan for backward compatibily with network.pm
-"/system/network/interfaces/vlan0" = create("defaultinterface");
+# test vlan interface vlan0 (interface ID=0/false, no VLAN ID in interface name)
+"/system/network/interfaces/vlan0" = create("vlaninterface");
 prefix "/system/network/interfaces/vlan0";
 "device" = "eth0.123";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");
+
+# test vlan interface vlan1.123 (interface ID=1/true, VLAN ID in interface name)
+"/system/network/interfaces/vlan1.123" = create("vlaninterface");
+prefix "/system/network/interfaces/vlan1.123";
+"physdev" = "eth0";
+"route/0" = dict("address", "1.2.3.4");
+
+# test vlan interface vlan.456 (no partition number, VLAN ID in interface name)
+"/system/network/interfaces/vlan.456" = create("vlaninterface");
+prefix "/system/network/interfaces/vlan.456";
 "physdev" = "eth0";
 "route/0" = dict("address", "1.2.3.4");
 

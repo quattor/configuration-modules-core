@@ -47,7 +47,9 @@ use constant BOND_MASTER_STARTS_SLAVES => 0;
 sub iface_filename
 {
     my ($self, $iface) = @_;
-    return $self->IFCFG_DIR . "/$iface.yml";
+    my $filename = $self->IFCFG_DIR . "/$iface.yml";
+    $self->verbose("Interface $iface configuration file: $filename");
+    return $filename;
 }
 
 # Determine if this is a valid interface for ncm-network to manage,
@@ -64,8 +66,8 @@ sub is_valid_interface
             # Filename is either right at the beginning or following a slash
             (?: \A | / )
             # $1 will capture for example:
-            # eth0  bond1  eth0.101  bond0.102 or dummy_$key
-            ( \w+ \d+ (?: \. \d+ )? | dummy_.* )
+            # eth0  bond1  eth0.101  bond0.102 vlan.456 or dummy_$key
+            ( \w+ \d+ (?: \. \d+ )? | \w+ \. \d+ | dummy_.* )
             # Suffix (not captured)
             \. yml \z
         }x
@@ -525,7 +527,7 @@ sub generate_nmstate_config
                 $self->debug(3, "Adding the default IPv4 gateway to interface '$name'");
                 $default_rt{destination} = '0.0.0.0/0';
                 $default_rt{'next-hop-address'} = $default_gw;
-                $default_rt{'next-hop-interface'} = $device;
+                $default_rt{'next-hop-interface'} = $name;
             }
         }
     }
