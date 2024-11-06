@@ -32,7 +32,7 @@ use Readonly;
 
 Readonly my $NMSTATECTL => '/usr/bin/nmstatectl';
 Readonly my $NMCLI_CMD => '/usr/bin/nmcli';
-# pick a config name for nmstate yml to configure dns-resolver: settings. if nm_manage_dns=true
+# pick a config name for nmstate yml to configure dns-resolver: settings. if manage_dns=true
 Readonly my $NM_RESOLV_YML => "/etc/nmstate/resolv.yml";
 Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
 
@@ -84,7 +84,7 @@ sub is_valid_interface
 
 # By default, NetworkManager on Red Hat Enterprise Linux (RHEL) 8+ dynamically updates the /etc/resolv.conf
 # file with the DNS settings from active NetworkManager connection profiles. we manage this using ncm-resolver.
-# so disable this unless nm_manage_dns = true. resolver details can be set using nmstate but not doing this now.
+# so disable this unless manage_dns = true. resolver details can be set using nmstate but not doing this now.
 sub disable_nm_manage_dns
 {
     my ($self, $manage_dns, $nwsrv) = @_;
@@ -608,7 +608,7 @@ sub generate_nmstate_config
 };
 
 # Generate hash of dns-resolver config for nmstate.
-# only used if nm_manage_dns = true.
+# only used if manage_dns = true.
 sub generate_nm_resolver_config
 {
     my ($self, $net, $manage) = @_;
@@ -769,7 +769,7 @@ sub nmstate_apply
         $action = 0;
     }
     # apply resolver config if exists.
-    # this will exist at this stage if nm_manage_dns is set to true.
+    # this will exist at this stage if manage_dns is set to true.
     my $resolv_state = $exifiles->{$NM_RESOLV_YML} || 0;
     if ($self->file_exists($NM_RESOLV_YML))
     {
@@ -840,7 +840,7 @@ sub Configure
     my $nwtree = $config->getTree($NETWORK_PATH);
 
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
-    my $manage_dns = $nwtree->{nm_manage_dns} || 0;
+    my $manage_dns = $nwtree->{manage_dns} || 0;
     my $dgw = $nwtree->{default_gateway};
     if (!$dgw) {
         $self->warn ("No default gateway configured");
@@ -983,7 +983,7 @@ sub Configure
 
     # cleanup dangling inactive connections after ncm network changes are applied.
     # defaults to cleanup
-    my $clean_inactive_conn = $net->{nm_clean_inactive_conn};
+    my $clean_inactive_conn = $net->{clean_inactive_conn};
     if ($clean_inactive_conn and $stopstart) {
         # look to cleanup connections only when something is changed.
         $self->clear_inactive_nm_connections;
