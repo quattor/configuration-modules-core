@@ -628,7 +628,7 @@ type slurm_conf_partition = {
     'MaxTime' ? long(0..)
     'MinNodes' ? long(0..)
     'Nodes' ? string[]
-    'OverSubscribe' ? choice('EXCLUSIVE', 'FORCE', 'YES', 'NO')
+    'OverSubscribe' ? string with match(SELF, '^(EXCLUSIVE|FORCE(:\d+)?|YES|NO)$')
     'PartitionName' ? string
     'PreemptMode' ? choice('OFF', 'CANCEL', 'CHECKPOINT', 'GANG', 'REQUEUE', 'SUSPEND')
     'PriorityJobFactor' ? long(0..65533)

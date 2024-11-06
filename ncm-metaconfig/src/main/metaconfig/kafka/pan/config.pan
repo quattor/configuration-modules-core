@@ -10,3 +10,4 @@ prefix "/software/components/metaconfig/services/{/etc/kafka/server.properties}"
 "group" = "root";
 "daemons/kafka" = "restart";
 "module" = "properties";
+"convert/joincomma" = true;
