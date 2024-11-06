@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>fmonagent</artifactId>
   <packaging>pom</packaging>
-  <version>24.10.0-rc3</version>
+  <version>24.10.0-rc4-SNAPSHOT</version>
   <name>ncm-fmonagent</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
