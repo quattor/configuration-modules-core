@@ -35,6 +35,7 @@ Readonly my $NMCLI_CMD => '/usr/bin/nmcli';
 # pick a config name for nmstate yml to configure dns-resolver: settings. if manage_dns=true
 Readonly my $NM_RESOLV_YML => "/etc/nmstate/resolv.yml";
 Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
+Readonly my $NM_DEVICE_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/89-device-quattor.conf";
 
 # generate the correct fake yaml boolean value so TextRender can convert it in a yaml boolean
 Readonly my $YTRUE => $EDG::WP4::CCM::TextRender::ELEMENT_CONVERT{yaml_boolean}->(1);
@@ -101,6 +102,26 @@ sub disable_nm_manage_dns
     print $fh join("\n", @data, '');
     if ($fh->close()) {
         $self->info("File $NM_DROPIN_CFG_FILE changed, reload network");
+        $nwsrv->reload();
+    };
+}
+
+sub nm_create_device_config_dropin
+{
+    my ($self, $nm_device_config, $nwsrv) = @_;
+    my @data = ('[device]');
+
+    if ( $nm_device_config ) {
+        foreach my $key (sort keys %$nm_device_config){
+            push @data, $key."=".$nm_device_config->{$key};
+        };
+
+        $self->verbose("setting device configuration dropin");
+    }
+    my $fh = CAF::FileWriter->new($NM_DEVICE_DROPIN_CFG_FILE, mode => oct(444), log => $self);
+    print $fh join("\n", @data, '');
+    if ($fh->close()) {
+        $self->info("File $NM_DEVICE_DROPIN_CFG_FILE changed, reload network");
         $nwsrv->reload();
     };
 }
@@ -923,6 +944,14 @@ sub Configure
     #   2. replace updated/new config; remove REMOVE
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['NetworkManager'], log => $self);
+
+    # NetworkManager device configuration, if defined.
+    my $nm_device_cfg = $nwtree->{device_config};
+    if ($nm_device_cfg){
+        $self->nm_create_device_config_dropin($nm_device_cfg, $nwsrv);
+    } else {
+        $self->cleanup($NM_DEVICE_DROPIN_CFG_FILE);
+    }
 
     # NetworkManager manages dns by default, but we manage dns with e.g. ncm-resolver, new option to enable/disable it.
     $self->disable_nm_manage_dns($manage_dns, $nwsrv);
