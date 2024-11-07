@@ -1,5 +1,7 @@
 object template nmstate_advance;
 
+variable QUATTOR_TYPES_NETWORK_BACKEND = 'nmstate';
+
 include 'simple_base_profile';
 include 'components/network/config-nmstate';
 
