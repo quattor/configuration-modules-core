@@ -553,7 +553,7 @@ sub Configure
         my $rpm_version = (split(':', $rpm))[-1];
 
         # Do not remove core packages for currently running kernel.
-        if ( ($rpm =~ /^(kernel|kernel-core|kernel-modules)-(\d+):/) &&
+        if ( ($rpm =~ /^(kernel(-[\w-]+)?)-(\d+):/) &&
             (index($rpm_version, $kvers) == 0 || match_glob($kvers, $rpm_version))) {
             $self->info("Skip removal of core package(s) for running kernel: $rpm");
             $will_remove->delete($rpm);
