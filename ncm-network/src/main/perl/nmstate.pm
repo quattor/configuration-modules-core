@@ -502,7 +502,6 @@ sub generate_nmstate_config
             }
             # IPv6 configuration
             if ($iface->{ipv6addr}) {
-                $self->warn("ipv6 addr still under development");
                 $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
                 my $ip_list = {};
                 my $ip = NetAddr::IP->new($iface->{ipv6addr});
