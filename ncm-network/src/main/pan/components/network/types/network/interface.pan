@@ -105,7 +105,7 @@ type network_bridging_options = {
 type network_interface_type = choice(
     'Ethernet', 'Bridge', 'Tap', 'xDSL', 'IPIP', 'Infiniband',
     'OVSBridge', 'OVSPort', 'OVSIntPort', 'OVSBond', 'OVSTunnel', 'OVSPatchPort'
-    );
+);
 
 @documentation{
     network interface
@@ -191,11 +191,11 @@ type network_interface = {
     if (exists(SELF['ip']) && exists(SELF['netmask'])) {
         if (exists(SELF['gateway']) && ! ip_in_network(SELF['gateway'], SELF['ip'], SELF['netmask'])) {
             error('networkinterface has gateway %s not reachable from ip %s with netmask %s',
-                            SELF['gateway'], SELF['ip'], SELF['netmask']);
+            SELF['gateway'], SELF['ip'], SELF['netmask']);
         };
         if (exists(SELF['broadcast']) && ! ip_in_network(SELF['broadcast'], SELF['ip'], SELF['netmask'])) {
             error('networkinterface has broadcast %s not reachable from ip %s with netmask %s',
-                            SELF['broadcast'], SELF['ip'], SELF['netmask']);
+            SELF['broadcast'], SELF['ip'], SELF['netmask']);
         };
     };
 
