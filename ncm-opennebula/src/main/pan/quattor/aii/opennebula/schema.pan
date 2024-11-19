@@ -347,4 +347,8 @@ type opennebula_vmtemplate = {
     @{Use Virtual Machine Timer Management:
     https://libvirt.org/formatdomain.html#time-keeping}
     "hypervclock" ? boolean
+    @{Define VM CPU overcommit ratio, by default it is disabled and set to 1, 1 CPU per VCPU:
+    https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/overcommitment.html
+    }
+    "cpuratio" : double(0..1) = 1.0
 } = dict();

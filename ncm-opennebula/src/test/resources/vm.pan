@@ -182,3 +182,4 @@ prefix "/system/opennebula";
     "hugepages",
 );
 
+"cpuratio" = 1.0;

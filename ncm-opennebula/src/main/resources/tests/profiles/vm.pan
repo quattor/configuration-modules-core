@@ -217,3 +217,6 @@ prefix "/system/opennebula";
     "vmgroup_name", "ha_group",
     "role", "backup"
 ));
+
+"cpuratio" = 1.0;
+
