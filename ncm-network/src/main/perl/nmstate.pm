@@ -35,7 +35,7 @@ Readonly my $NMSTATECTL => '/usr/bin/nmstatectl';
 Readonly my $NMCLI_CMD => '/usr/bin/nmcli';
 # pick a config name for nmstate yml to configure dns-resolver: settings. if manage_dns=true
 Readonly my $NM_RESOLV_YML => "/etc/nmstate/resolv.yml";
-Readonly my $NM_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
+Readonly my $NM_MAIN_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/90-quattor.conf";
 Readonly my $NM_DEVICE_DROPIN_CFG_FILE => "/etc/NetworkManager/conf.d/89-device-quattor.conf";
 
 # generate the correct fake yaml boolean value so TextRender can convert it in a yaml boolean
@@ -84,29 +84,7 @@ sub is_valid_interface
     };
 }
 
-# By default, NetworkManager on Red Hat Enterprise Linux (RHEL) 8+ dynamically updates the /etc/resolv.conf
-# file with the DNS settings from active NetworkManager connection profiles. we manage this using ncm-resolver.
-# so disable this unless manage_dns = true. resolver details can be set using nmstate but not doing this now.
-sub disable_nm_manage_dns
-{
-    my ($self, $manage_dns, $nwsrv) = @_;
-    my @data = ('[main]');
-
-    if ( $manage_dns ) {
-        # set nothing, will use default.
-        $self->verbose("Networkmanager defaults will be used");
-    } else {
-        push @data, 'dns=none';
-        $self->verbose("Configuring networkmanager not to manage dns");
-    }
-    my $fh = CAF::FileWriter->new($NM_DROPIN_CFG_FILE, mode => oct(444), log => $self, keeps_state => 1);
-    print $fh join("\n", @data, '');
-    if ($fh->close()) {
-        $self->info("File $NM_DROPIN_CFG_FILE changed, reload network");
-        $nwsrv->reload();
-    };
-}
-
+# manage NetworkManager [device] settings
 sub nm_create_device_config_dropin
 {
     my ($self, $nm_device_config, $nwsrv) = @_;
@@ -118,12 +96,35 @@ sub nm_create_device_config_dropin
         };
 
         $self->verbose("setting device configuration dropin");
+    
+        my $fh = CAF::FileWriter->new($NM_DEVICE_DROPIN_CFG_FILE, mode => oct(444), log => $self);
+        print $fh join("\n", @data, '');
+        if ($fh->close()) {
+            $self->info("File $NM_DEVICE_DROPIN_CFG_FILE changed, reload network");
+            $nwsrv->reload();
+        };
     }
-    my $fh = CAF::FileWriter->new($NM_DEVICE_DROPIN_CFG_FILE, mode => oct(444), log => $self);
-    print $fh join("\n", @data, '');
-    if ($fh->close()) {
-        $self->info("File $NM_DEVICE_DROPIN_CFG_FILE changed, reload network");
-        $nwsrv->reload();
+}
+
+# manage NetworkManager [main] settings
+sub nm_create_main_config_dropin
+{
+    my ($self, $nm_main_config, $nwsrv) = @_;
+    my @data = ('[main]');
+
+    if ( scalar keys %$nm_main_config gt 0 ) {
+        foreach my $key (sort keys %$nm_main_config){
+            push @data, $key."=".$nm_main_config->{$key};
+        };
+
+        $self->verbose("setting NetworkManager main configuration dropin");
+    
+        my $fh = CAF::FileWriter->new($NM_MAIN_DROPIN_CFG_FILE, mode => oct(444), log => $self);
+        print $fh join("\n", @data, '');
+        if ($fh->close()) {
+            $self->info("File $NM_MAIN_DROPIN_CFG_FILE changed, reload network");
+            $nwsrv->reload();
+        };
     };
 }
 
@@ -877,7 +878,11 @@ sub Configure
     my $nwtree = $config->getTree($NETWORK_PATH);
 
     my $hostname = $nwtree->{realhostname} || "$nwtree->{hostname}.$nwtree->{domainname}";
-    my $manage_dns = $nwtree->{manage_dns} || 0;
+    # NetworkManager main configuration
+    my $nm_main_cfg = $nwtree->{main_config};
+    # set to none if main_config/dns is not defined.
+    my $main_cfg_dns = $nm_main_cfg->{dns} || 'none';
+    my $manage_dns = ($main_cfg_dns eq 'none') ? 0 : 1;
     my $dgw = $nwtree->{default_gateway};
     if (!$dgw) {
         $self->warn ("No default gateway configured");
@@ -961,17 +966,19 @@ sub Configure
     #   3. (re)start things
     my $nwsrv = CAF::Service->new(['NetworkManager'], log => $self);
 
+    if ( scalar keys %$nm_main_cfg gt 0 ) {
+        $self->nm_create_main_config_dropin($nm_main_cfg, $nwsrv);
+    } else {
+        $self->cleanup($NM_MAIN_DROPIN_CFG_FILE);
+    }
     # NetworkManager device configuration, if defined.
     my $nm_device_cfg = $nwtree->{device_config};
-    if ($nm_device_cfg){
+    if (scalar keys %$nm_device_cfg gt 0){
         $self->nm_create_device_config_dropin($nm_device_cfg, $nwsrv);
     } else {
         $self->cleanup($NM_DEVICE_DROPIN_CFG_FILE);
     }
-
-    # NetworkManager manages dns by default, but we manage dns with e.g. ncm-resolver, new option to enable/disable it.
-    $self->disable_nm_manage_dns($manage_dns, $nwsrv);
-
+    
     my $dnsconfig = $self->generate_nm_resolver_config($nwtree, $manage_dns);
     $exifiles->{$NM_RESOLV_YML} = $self->nmstate_file_dump($NM_RESOLV_YML, $dnsconfig);
     # nmstate files are applied uinsg nmstate apply via this component. We don't want nmstate svc to manage it.

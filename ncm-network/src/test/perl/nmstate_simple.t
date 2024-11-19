@@ -37,7 +37,7 @@ Readonly my $RESOLV => <<EOF;
 managed by something else
 EOF
 
-Readonly my $NODNS => <<EOF;
+Readonly my $MAIN_CONFIG => <<EOF;
 [main]
 dns=none
 EOF
@@ -88,13 +88,12 @@ command_history_reset();
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");
 
 my $fh;
-
 # resolv.conf is unchanged
 is(get_file_contents("/etc/resolv.conf"), $RESOLV, "Exact network config");
 
 # set nm config to disable dns mgmt
-is(get_file_contents("/etc/NetworkManager/conf.d/90-quattor.conf"), $NODNS, "disable NM dns mgmt");
-is(get_file_contents("/etc/NetworkManager/conf.d/89-device-quattor.conf"), $DEVICE_CONFIG, "networkmanager config for device");
+is(get_file_contents("/etc/NetworkManager/conf.d/90-quattor.conf"), $MAIN_CONFIG, "NetworkManager config for main");
+is(get_file_contents("/etc/NetworkManager/conf.d/89-device-quattor.conf"), $DEVICE_CONFIG, "NetworkManager config for device");
 
 # unconfigure nmstate yml is removed
 ok(!$cmp->file_exists("/etc/nmstate/toremove0.yml"), "unconfigured yml nmstate is removed");
