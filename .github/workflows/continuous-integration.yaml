@@ -29,3 +29,38 @@ jobs:
         runuser --shell /bin/bash --preserve-environment --command "source /usr/bin/mvn_test.sh && mvn_run \"dependency:resolve-plugins dependency:go-offline $MVN_ARGS\" && mvn_test" quattortest
       env:
         MVN_ARGS: -Dmaven.repo.local=/tmp/m2
+
+  panlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # we need the full repo or HEAD^ does not work
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3
+      - name: Install dependencies
+        run: pip install colorama prettytable six
+      - name: run panlint
+        run: .ci-scripts/panlint
+
+  indentation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # we need the full repo or HEAD^ does not work
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3
+      - name: Install dependencies
+        run: pip install colorama
+      - name: run indent checker
+        run: .ci-scripts/indent
+
