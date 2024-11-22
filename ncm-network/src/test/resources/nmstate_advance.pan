@@ -91,7 +91,7 @@ prefix "/system/network/interfaces/eth4";
     "driver", "bonding",
     "type", "OVSPort",
     "ovs_bridge", "br100",
-    );
+);
 
 "/hardware/cards/nic/eth10/hwaddr" = "6e:a5:1b:55:77:10";
 "/system/network/interfaces/eth10/master" = "bond1";
