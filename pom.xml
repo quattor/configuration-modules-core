@@ -4,7 +4,7 @@
   <groupId>org.quattor</groupId>
   <artifactId>configuration-modules-core</artifactId>
   <packaging>pom</packaging>
-  <version>24.10.0</version>
+  <version>24.10.1-SNAPSHOT</version>
   <name>Node Configuration Manager - components</name>
   <description>Modules configuring different services or portions of
   a Linux system</description>
