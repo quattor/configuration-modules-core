@@ -4,7 +4,7 @@
   <groupId>org.quattor.cfg.module</groupId>
   <artifactId>openldap</artifactId>
   <packaging>pom</packaging>
-  <version>24.10.0-rc6-SNAPSHOT</version>
+  <version>24.10.0</version>
   <name>ncm-openldap</name>
   <parent>
     <groupId>org.quattor.maven</groupId>
