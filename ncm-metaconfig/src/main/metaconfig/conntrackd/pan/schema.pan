@@ -43,7 +43,7 @@ type conntrackd_service_sync = {
 
 @documentation{
     Unix socket configuration.
-    This socket is used by conntrackd to listen to external commands like `conntrackd -k' or `conntrackd -n'.
+    This socket is used by conntrackd to listen to external commands like `conntrackd -k` or `conntrackd -n`.
 }
 type conntrackd_service_general_unix = {
     'Path' : string = '/var/run/conntrackd.ctl'
