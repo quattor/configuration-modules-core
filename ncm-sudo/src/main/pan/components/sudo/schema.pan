@@ -69,6 +69,7 @@ type sudo_default_options = {
     "stay_setuid" ? boolean
     "env_reset" ? boolean
     "use_loginclass" ? boolean
+    "use_pty" ? boolean
     "visiblepw" ? boolean
     "passwd_tries" ? long
     "loglinelen" ? long
