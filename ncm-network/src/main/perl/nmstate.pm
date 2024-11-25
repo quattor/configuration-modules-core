@@ -21,6 +21,7 @@ is fully restarted (routing may need some time to come up completely).
 Because of this, configuration changes may cause the ncm-ncd run to take longer than usual.
 
 Be aware that configuration changes can also lead to a brief network interruption.
+
 =cut
 
 use parent qw(NCM::Component::network);
