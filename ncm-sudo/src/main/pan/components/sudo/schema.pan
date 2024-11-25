@@ -28,8 +28,10 @@ type sudo_privilege_line = {
     @{The host from where the user can invoke sudo. Can be a host or a host_alias.}
     "host" : string
     @{Specific options for this command}
-    "options" ? string with match (SELF,
-        "^((NOPASSWD|PASSWD|NOEXEC|EXEC|SETENV|NOSETENV|LOG_INPUT|NOLOG_INPUT|LOG_OUTPUT|NOLOG_OUTPUT):?)+$")
+    "options" ? string with match(
+        SELF,
+        "^((NOPASSWD|PASSWD|NOEXEC|EXEC|SETENV|NOSETENV|LOG_INPUT|NOLOG_INPUT|LOG_OUTPUT|NOLOG_OUTPUT):?)+$"
+    )
     @{The command being run}
     "cmd" : string
 };
@@ -67,6 +69,7 @@ type sudo_default_options = {
     "stay_setuid" ? boolean
     "env_reset" ? boolean
     "use_loginclass" ? boolean
+    "use_pty" ? boolean
     "visiblepw" ? boolean
     "passwd_tries" ? long
     "loglinelen" ? long
