@@ -139,7 +139,7 @@ type sudo_component = {
     @{dicts of lists of strings containing the alias information. The
       name of each named list must start with a letter, and contain only
       letters, numbers and underscores. All the letters must be
-      capitals. i.e. the name must match ^[A-Z][A-Z0-9_]*$.
+      capitals. i.e. the name must match `^[A-Z][A-Z0-9_]*$`.
 
       They can be preceeded by an '!', indicating the alias must *not*
       match that name. The contents may be preceeded by an '!', indicating
