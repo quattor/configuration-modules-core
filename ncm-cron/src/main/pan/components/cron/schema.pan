@@ -7,10 +7,12 @@ include 'quattor/types/component';
 }
 function structure_cron_log_valid = {
     if (is_defined(SELF['disabled']) && SELF['disabled']) {
-        if (is_defined(SELF['name']) ||
+        if (
+            is_defined(SELF['name']) ||
             is_defined(SELF['owner']) ||
-            is_defined(SELF['mode']) ) {
-                error('cron log file properties are present despite log file creation has been disabled.');
+            is_defined(SELF['mode'])
+        ) {
+            error('cron log file properties are present despite log file creation has been disabled.');
         };
     };
     true;
