@@ -1,7 +1,7 @@
 object template basic_cluster;
 
 
-variable OSDS = dict(
+variable CEPH_OSDS = dict(
     'ceph001', dict(
         'fqdn', 'ceph001.cubone.os',
         'osds', dict(
@@ -21,7 +21,7 @@ variable OSDS = dict(
     )
 );
 
-variable MDSS = dict(
+variable CEPH_MDSS = dict(
     'ceph002', dict(
         'fqdn', 'ceph002.cubone.os',
         'up', true
@@ -49,8 +49,8 @@ prefix '/software/components/ceph/clusters';
 
 'ceph' = dict(
     'config', CONFIG,
-    'osdhosts', OSDS,
-    'mdss', MDSS,
+    'osdhosts', CEPH_OSDS,
+    'mdss', CEPH_MDSS,
     'monitors', dict(
         'ceph001', MONITOR1,
         'ceph002', MONITOR2,

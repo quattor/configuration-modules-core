@@ -10,7 +10,7 @@ variable CEPH_OSD_DISKS = list('sdc', 'sdd', 'sde', 'sdf', 'sdg', 'sdh', 'sdi', 
 variable CEPH_JOURNAL_DISKS = list('sda4', 'sdb');
 variable CEPH_DEFAULT_OSD_WEIGHT = 1.0;
 
-variable MDSS = dict (
+variable CEPH_MDSS = dict (
     'ceph001.cubone.os', dict(
         'fqdn', 'ceph001.cubone.os',
     ),
@@ -60,7 +60,7 @@ variable BASE_STEPS = list(
     ),
 );
 
-prefix "/software/components/ceph/clusters/ceph/crushmap/";
+prefix "/software/components/ceph/clusters/ceph/crushmap";
 
 'types' = list('osd', 'host', 'root');
 
@@ -104,13 +104,13 @@ prefix "/software/components/ceph/clusters/ceph/crushmap/";
 prefix '/software/components/ceph/clusters/ceph';
 'config' = CONFIG;
 'osdhosts' = {
-    t=dict();
-    foreach(idx;host;CEPH_HOSTS) {
+    t = dict();
+    foreach(idx; host; CEPH_HOSTS) {
         d = dict();
-        foreach(odx;disk;CEPH_OSD_DISKS) {
-            jdx= odx % length(CEPH_JOURNAL_DISKS); ## RR over journal disks
+        foreach(odx; disk; CEPH_OSD_DISKS) {
+            jdx = odx % length(CEPH_JOURNAL_DISKS); ## RR over journal disks
             if (host == 'ceph003') {
-                jdx=0; # Empty bucket tst-1 on ceph003
+                jdx = 0; # Empty bucket tst-1 on ceph003
             };
             d[disk] = dict(
                 'journal_path', format('/var/lib/ceph/log/%s/osd-%s/journal', CEPH_JOURNAL_DISKS[jdx], disk),
@@ -126,7 +126,7 @@ prefix '/software/components/ceph/clusters/ceph';
     t;
 };
 
-'mdss' = MDSS;
+'mdss' = CEPH_MDSS;
 'monitors' = dict (
     'ceph001', MONITOR1,
     'ceph002', MONITOR2,
