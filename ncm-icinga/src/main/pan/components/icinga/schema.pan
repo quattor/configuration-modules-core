@@ -10,36 +10,29 @@ include 'pan/types';
 
 # Please note that the "use" directive is not supported in order to make
 # validation code easier. If you want hosts to inherit settings then use
-# Pan statements like create ("...") or value ("...")
+# Pan statements like create("...") or value("...")
 
-type icinga_hoststring =  string with exists ("/software/components/icinga/hosts/" + SELF) ||
-    SELF == "*" || SELF == 'dummy';
+type icinga_hoststring = string with exists("/software/components/icinga/hosts/" + SELF) || SELF == "*" || SELF == 'dummy';
 
-type icinga_hostgroupstring = string with exists ("/software/components/icinga/hostgroups/" + escape(SELF)) ||
-    SELF == "*";
+type icinga_hostgroupstring = string with exists("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF == "*";
 
-type icinga_commandstrings = string [] with exists ("/software/components/icinga/commands/" + SELF[0]);
+type icinga_commandstrings = string [] with exists("/software/components/icinga/commands/" + SELF[0]);
 
-type icinga_timeperiodstring = string with exists ("/software/components/icinga/timeperiods/" + SELF) ||
-    SELF == "*";
+type icinga_timeperiodstring = string with exists("/software/components/icinga/timeperiods/" + SELF) || SELF == "*";
 
-type icinga_contactgroupstring = string with exists ("/software/components/icinga/contactgroups/" + SELF) ||
-    SELF == "*";
+type icinga_contactgroupstring = string with exists("/software/components/icinga/contactgroups/" + SELF) || SELF == "*";
 
-type icinga_contactstring = string with exists ("/software/components/icinga/contacts/" + SELF) ||
-    SELF == "*";
+type icinga_contactstring = string with exists("/software/components/icinga/contacts/" + SELF) || SELF == "*";
 
-type icinga_servicegroupstring = string with exists ("/software/components/icinga/servicegroups/" + SELF) ||
-    SELF == "*";
+type icinga_servicegroupstring = string with exists("/software/components/icinga/servicegroups/" + SELF) || SELF == "*";
 
-type icinga_servicestring = string with exists ("/software/components/icinga/services/" + SELF) ||
-    SELF == "*";
+type icinga_servicestring = string with exists("/software/components/icinga/services/" + SELF) || SELF == "*";
 
-type icinga_service_notification_string = string with match (SELF, "^(w|u|c|r|f|n)$");
-type icinga_host_notification_string = string with match (SELF, "^(d|u|r|f|n)$");
-type icinga_stalking_string = string with match (SELF, "^(o|w|u|c)$");
-type icinga_execution_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
-type icinga_notification_failure_string = string with match (SELF, "^(o|w|u|c|p|n)$");
+type icinga_service_notification_string = string with match(SELF, "^(w|u|c|r|f|n)$");
+type icinga_host_notification_string = string with match(SELF, "^(d|u|r|f|n)$");
+type icinga_stalking_string = string with match(SELF, "^(o|w|u|c)$");
+type icinga_execution_failure_string = string with match(SELF, "^(o|w|u|c|p|n)$");
+type icinga_notification_failure_string = string with match(SELF, "^(o|w|u|c|p|n)$");
 
 type structure_icinga_host_generic = {
     "name" ? string # Used instead of alias when it s a template declaration
@@ -65,7 +58,7 @@ type structure_icinga_host_generic = {
     "notification_period" : icinga_timeperiodstring
     "notification_options" : icinga_host_notification_string []
     "notifications_enabled" ? boolean
-    "stalking_options" ? string with match (SELF, "^(o|d|u)$")
+    "stalking_options" ? string with match(SELF, "^(o|d|u)$")
     "register" : boolean = true
 } = dict();
 
@@ -100,7 +93,7 @@ type structure_icinga_host = {
     "notification_period" : icinga_timeperiodstring
     "notification_options" : icinga_host_notification_string []
     "notifications_enabled" ? boolean
-    "stalking_options" ? string with match (SELF, "^(o|d|u)$")
+    "stalking_options" ? string with match(SELF, "^(o|d|u)$")
     "register" : boolean = true
     "action_url" ? string
     "notes" ? string[]
@@ -163,7 +156,7 @@ type structure_icinga_service = {
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
-} with icinga_has_host_or_hostgroup (SELF);
+} with icinga_has_host_or_hostgroup(SELF);
 
 # Servicegroup definition:
 type structure_icinga_servicegroup = {
@@ -187,7 +180,7 @@ type structure_icinga_servicedependency = {
     "execution_failure_criteria" ? icinga_execution_failure_string []
     "notification_failure_criteria" ? icinga_notification_failure_string []
     "dependency_period" ? icinga_timeperiodstring
-} with icinga_has_host_or_hostgroup (SELF);
+} with icinga_has_host_or_hostgroup(SELF);
 
 # Contact definition
 type structure_icinga_contact = {
@@ -210,8 +203,7 @@ type structure_icinga_contactgroup = {
 } = dict();
 
 # Time range definition
-type icinga_timerange = string with
-    match (SELF, "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$");
+type icinga_timerange = string with match(SELF, "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$");
 
 # Time period definition
 type structure_icinga_timeperiod = {
@@ -235,7 +227,7 @@ type structure_icinga_serviceextinfo = {
     "action_url" ? type_absoluteURI
     "icon_image" ? string
     "icon_image_alt" ? string
-} with icinga_has_host_or_hostgroup (SELF);
+} with icinga_has_host_or_hostgroup(SELF);
 
 # CGI configuration
 type structure_icinga_cgi_cfg = {
@@ -322,7 +314,9 @@ type structure_icinga_icinga_cfg = {
     "log_external_commands" : boolean = true
     "log_passive_checks" : boolean = true
     "log_external_commands_user" ? boolean = false with {
-                deprecated(0, 'removed in recent versions of icinga 1.X'); true; }
+        deprecated(0, 'removed in recent versions of icinga 1.X');
+        true;
+    }
     "log_long_plugin_output" : boolean = false
     "global_host_event_handler" ? string
     "service_inter_check_delay_method" : string = "s"
@@ -422,11 +416,13 @@ type structure_icinga_icinga_cfg = {
     "ochp_command" ? string
     "use_timezone" ? string
     "broker_module" ? string[] with {
-            deprecated(0, 'deprecated recent versions of icinga 1.X, use module instead'); true; }
+        deprecated(0, 'deprecated recent versions of icinga 1.X, use module instead');
+        true;
+    }
     "module" ? string[]
     "debug_file" ? string
     "debug_level" ? long
-    "debug_verbosity" ? long (0..2)
+    "debug_verbosity" ? long(0..2)
     "max_debug_file_size" ? long
     "ocsp_command" ? string
     "check_result_path" : string = "/var/icinga/checkresults"
