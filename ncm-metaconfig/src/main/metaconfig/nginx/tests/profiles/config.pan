@@ -16,16 +16,19 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     s["location"][0]["name"] = '^/\d+/.*repodata';
     s["location"][0]["operator"] = "~";
     s["location"][0]["proxy"] = create("pkg-cache",
-        "pass", "https://restricted-packages");
+        "pass", "https://restricted-packages",
+    );
 
     s["location"][1]["name"] = "repodata";
     s["location"][1]["operator"] = "~";
     s["location"][1]["proxy"] = create("pkg-cache",
         "pass", "https://restricted-packages",
-        "cache", null);
+        "cache", null,
+    );
     s["location"][2]["name"] = "/";
     s["location"][2]["proxy"] = create("pkg-cache",
-        "pass", "https://restricted-packages");
+        "pass", "https://restricted-packages",
+    );
 
 
     s["listen"][0]["ssl"] = true;
@@ -59,7 +62,7 @@ prefix "/software/components/metaconfig/services/{/etc/nginx/nginx.conf}/content
     "name", "/",
     "operator", "=",
     "return", dict("code", 301, "url", "https://$host/default"),
-    ));
+));
 
 "upstream/secure/host/0" = format("%s:446", SERVER);
 
