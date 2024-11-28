@@ -9,10 +9,10 @@ variable CEPH_OSD_DISKS = list('sdc', 'sdd', 'sde', 'sdf', 'sdg', 'sdh', 'sdi', 
 variable CEPH_JOURNAL_DISKS = list('sda4', 'sdb');
 variable CEPH_DEFAULT_OSD_WEIGHT = 1.0;
 
-variable MDSS = dict (
+variable MDSS = dict(
     'ceph001.cubone.os', dict(
         'fqdn', 'ceph001.cubone.os',
-        ),
+    ),
     'ceph002.cubone.os', dict(
         'fqdn', 'ceph002.cubone.os',
     )
@@ -30,7 +30,7 @@ variable MONITOR3 =  dict(
     'fqdn', 'ceph003.cubone.os',
 );
 
-variable CONFIG = dict (
+variable CONFIG = dict(
     'fsid' , '82766e04-585b-49a6-a0ac-c13d9ffd0a7d',
     'mon_initial_members', list ('ceph001', 'ceph002', 'ceph003'),
     'public_network', '10.141.8.0/20',
@@ -50,10 +50,10 @@ variable BASE_STEPS = list(
     dict(
         'take', 'default',
         'choices', list(
-        dict(
-            'chtype', 'chooseleaf firstn',
-            'bktype', 'host',
-            'number', 0,
+            dict(
+                'chtype', 'chooseleaf firstn',
+                'bktype', 'host',
+                'number', 0,
             ),
         ),
     ),
@@ -122,11 +122,11 @@ prefix '/software/components/ceph/clusters/ceph';
 };
 
 'mdss' = MDSS;
-'monitors' = dict (
+'monitors' = dict(
     'ceph001', MONITOR1,
     'ceph002', MONITOR2,
     'ceph003', MONITOR3
 );
-'deployhosts' = dict (
+'deployhosts' = dict(
     'ceph001', 'ceph001.cubone.os',
 );

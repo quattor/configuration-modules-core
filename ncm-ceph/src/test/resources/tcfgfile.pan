@@ -18,4 +18,5 @@ prefix '/software/components/ceph/config';
 'rgw/client.rgw.test' = dict(
     'host', 'host3',
     'keyring', 'keyfile',
-    'rgw_dns_name', 'host3.aaa.be');
+    'rgw_dns_name', 'host3.aaa.be',
+);

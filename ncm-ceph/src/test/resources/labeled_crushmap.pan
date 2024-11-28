@@ -13,7 +13,7 @@ variable CEPH_DEFAULT_OSD_WEIGHT = 1.0;
 variable MDSS = dict (
     'ceph001.cubone.os', dict(
         'fqdn', 'ceph001.cubone.os',
-        ),
+    ),
     'ceph002.cubone.os', dict(
         'fqdn', 'ceph002.cubone.os',
     )
@@ -51,10 +51,10 @@ variable BASE_STEPS = list(
     dict(
         'take', 'default',
         'choices', list(
-        dict(
-            'chtype', 'chooseleaf firstn',
-            'bktype', 'host',
-            'number', 0,
+            dict(
+                'chtype', 'chooseleaf firstn',
+                'bktype', 'host',
+                'number', 0,
             ),
         ),
     ),

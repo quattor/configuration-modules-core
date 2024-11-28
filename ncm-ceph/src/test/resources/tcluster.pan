@@ -1,6 +1,6 @@
 template tcluster;
 
-variable MDS_NODES = dict (
+variable MDS_NODES = dict(
     'ceph002', dict(
         'fqdn', 'ceph002.cubone.os',
     ),
@@ -27,12 +27,12 @@ bind '/software/components/ceph' = ceph_component;
 prefix '/software/components/ceph/cluster';
 
 'mdss' = MDS_NODES;
-'monitors' = dict (
+'monitors' = dict(
     'ceph001', MONITOR1,
     'ceph002', MONITOR2,
     'ceph003', MONITOR3
 );
-'deployhosts' = dict (
+'deployhosts' = dict(
     'ceph002', 'ceph002.cubone.os'
 );
 'ssh_multiplex' = true;
@@ -57,7 +57,10 @@ prefix 'configdb';
 '/system/network/hostname' = 'ceph002';
 '/system/network/domainname' = 'cubone.os';
 
-'/software/components/accounts/users/ceph' =
-    dict('homeDir', '/tmp', 'gid', '167' );
-'/software/components/accounts/groups/ceph' = dict('gid', '167');
-
+'/software/components/accounts/users/ceph' = dict(
+    'homeDir', '/tmp',
+    'gid', '167',
+);
+'/software/components/accounts/groups/ceph' = dict(
+    'gid', '167',
+);

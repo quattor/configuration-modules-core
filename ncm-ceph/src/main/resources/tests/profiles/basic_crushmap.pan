@@ -5,10 +5,10 @@ variable BASE_STEPS = list(
         'take', 'default',
         'set_chooseleaf_tries', 5,
         'choices', list(
-        dict(
-            'chtype', 'chooseleaf firstn',
-            'number', 0,
-            'bktype', 'host',
+            dict(
+                'chtype', 'chooseleaf firstn',
+                'number', 0,
+                'bktype', 'host',
             ),
         ),
     ),
