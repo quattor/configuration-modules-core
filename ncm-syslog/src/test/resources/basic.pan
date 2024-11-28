@@ -15,19 +15,23 @@ prefix "/software/components/syslog";
 "config" = append(dict(
     "selector", list(dict(
         "facility", '*',
-        "priority", '*')),
+        "priority", '*',
+    )),
     "action", 'super*powers',
     "comment", 'a comment',
-    "template", "ignored"));
+    "template", "ignored",
+));
 
 "config" = append(dict("action", "mooore"));
 
 "config" = append(dict(
     "selector", list(
         dict("facility", 'user', "priority", 'crit'),
-        dict("facility", 'mail', "priority", 'debug')),
+        dict("facility", 'mail', "priority", 'debug'),
+    ),
     "action", 'awesome',
-    "comment", "\n# already wrapped\n"));
+    "comment", "\n# already wrapped\n",
+));
 
 "config" = append(dict(
     'selector', list(
