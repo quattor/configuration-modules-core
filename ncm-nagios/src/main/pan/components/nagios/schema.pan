@@ -11,27 +11,21 @@ include 'pan/types';
 # validation code easier. If you want hosts to inherit settings then use
 # Pan statements like create ("...") or value ("...")
 
-type nagios_hoststring =  string with exists ("/software/components/nagios/hosts/" + SELF) ||
-    SELF=="*";
+type nagios_hoststring =  string with exists ("/software/components/nagios/hosts/" + SELF) || SELF=="*";
 
 type nagios_hostgroupstring = string with exists ("/software/components/nagios/hostgroups/" + SELF) || SELF=="*";
 
 type nagios_commandstrings = string [] with exists ("/software/components/nagios/commands/" + SELF[0]);
 
-type nagios_timeperiodstring = string with exists ("/software/components/nagios/timeperiods/" + SELF) ||
-    SELF=="*";
+type nagios_timeperiodstring = string with exists ("/software/components/nagios/timeperiods/" + SELF) || SELF=="*";
 
-type nagios_contactgroupstring = string with exists ("/software/components/nagios/contactgroups/" + SELF) ||
-    SELF=="*";
+type nagios_contactgroupstring = string with exists ("/software/components/nagios/contactgroups/" + SELF) || SELF=="*";
 
-type nagios_contactstring = string with exists ("/software/components/nagios/contacts/" + SELF) ||
-    SELF=="*";
+type nagios_contactstring = string with exists ("/software/components/nagios/contacts/" + SELF) || SELF=="*";
 
-type nagios_servicegroupstring = string with exists ("/software/components/nagios/servicegroups/" + SELF) ||
-    SELF=="*";
+type nagios_servicegroupstring = string with exists ("/software/components/nagios/servicegroups/" + SELF) || SELF=="*";
 
-type nagios_servicestring = string with exists ("/software/components/nagios/services/" + SELF) ||
-    SELF=="*";
+type nagios_servicestring = string with exists ("/software/components/nagios/services/" + SELF) || SELF=="*";
 
 type nagios_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
 type nagios_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
@@ -197,8 +191,9 @@ type structure_nagios_contactgroup = {
 };
 
 # Time range definition
-type nagios_timerange = string with
-    match (SELF, "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$");
+type nagios_timerange = string with match (SELF,
+    "^(([0-9]+:[0-9]+)-([0-9]+:[0-9]+),)*([0-9]+:[0-9]+)-([0-9]+:[0-9]+)$"
+);
 
 # Time period definition
 type structure_nagios_timeperiod = {
