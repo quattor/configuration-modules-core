@@ -3,15 +3,24 @@ declaration template metaconfig/devicemapper/schema;
 @{
     devicemapper multipath
 }
-type multipath_defaults_path_selector = list with match(SELF[0], "^(round-robin|queue-length|service-time)$") &&
-    is_long(SELF[1]) && SELF[1] == 0;
+type multipath_defaults_path_selector = list with {
+    match(SELF[0], "^(round-robin|queue-length|service-time)$") &&
+    is_long(SELF[1]) &&
+    SELF[1] == 0;
+};
 
-type multipath_defaults_features = list with length(SELF) == 2 && is_long(SELF[0]) && is_list(SELF[1]) &&
-    SELF[0] == length(SELF[1]) && match(SELF[1][0], '^(queue_if_no_path|no_partitions)$');
+type multipath_defaults_features = list with {
+    length(SELF) == 2 &&
+    is_long(SELF[0]) &&
+    is_list(SELF[1]) &&
+    SELF[0] == length(SELF[1]) &&
+    match(SELF[1][0], '^(queue_if_no_path|no_partitions)$');
+};
 
 type multipath_types_shared = {
     'path_grouping_policy' ? string with match(SELF,
-        '^(failover|multibus|group_by_serial|group_by_prio|group_by_node_name)$')
+        '^(failover|multibus|group_by_serial|group_by_prio|group_by_node_name)$',
+    )
     @{ The default path selector algorithm }
     'path_selector' ? multipath_defaults_path_selector
     @{ how to get default path prio, default const }
