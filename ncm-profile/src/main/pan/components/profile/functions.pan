@@ -89,7 +89,7 @@ function component_profile_add_env = {
 function component_profile_add_path = {
     function_name = 'component_profile_add_path';
     if ( (ARGC < 3) || (ARGC > 4) ) {
-            error(function_name+': invalid number of arguments. Must be 3 or 4.');
+        error(function_name+': invalid number of arguments. Must be 3 or 4.');
     };
     if ( ARGC == 4 ) {
         value_type = ARGV[3];
