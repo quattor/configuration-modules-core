@@ -8,12 +8,12 @@ prefix "/software/components/freeipa/server/dns";
 "subnet2.subdomain" = dict(
     "subnet", "10.11.13.0/24",
     "autoreverse", false,
-    );
+);
 
 "subnet3.subdomain" = dict(
     "subnet", "10.11.14.0/24",
     "reverse", "15.11.10",
-    );
+);
 
 prefix "/software/components/freeipa/server/hosts";
 "host1.subnet1.subdomain" = dict();
@@ -21,7 +21,7 @@ prefix "/software/components/freeipa/server/hosts";
 "host3.subnet3.subdomain" = dict(
     "ip_address", "10.11.13.1",
     "macaddress", list("aa:bb:cc:dd:ee:ff"),
-    );
+);
 
 prefix "/software/components/freeipa/server/services";
 "HTTP/hosts" = list("serv1", "serv2");
