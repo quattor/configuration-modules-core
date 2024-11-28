@@ -20,4 +20,5 @@ structure template struct/default_vhost;
 "log/transfer" = format("logs/%s_%s_access_log", value("servername"), value("port"));
 "log/custom"=append(dict(
     "location", format("logs/%s_%s_request_log", value("servername"), value("port")),
-    "name", "ssl_combined"));
+    "name", "ssl_combined",
+));

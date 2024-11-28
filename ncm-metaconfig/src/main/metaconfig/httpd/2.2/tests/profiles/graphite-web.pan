@@ -46,12 +46,12 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
     append(dict(
         "url", "/media/",
         "destination", "/usr/lib/python2.6/site-packages/django/contrib/admin/media/",
-        ));
+    ));
     append(dict(
         "url", "/",
         "destination", "/usr/share/graphite/graphite-web.wsgi",
         "type", "wsgiscript",
-        ));
+    ));
 };
 
 
@@ -60,29 +60,29 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
         "name", "/content/",
         "handler", dict(
             "set", "None",
-            ),
-        ));
+        ),
+    ));
     append(dict(
         "name", "/media/",
         "handler", dict(
             "set", "None",
-            ),
-        ));
+        ),
+    ));
     append(dict(
         "name", "/",
         "access", dict( # by default, block all
             "deny", list("all"),
             "satisfy", "Any",
             "order", list("allow", "deny"),
-            ),
+        ),
         "limit", dict( # do not allow PUT and DELETE of ES data via kibana interface
             "name", list("PUT", "DELETE"),
             "access", dict(
                 "order", list("allow", "deny"),
                 "deny", list("all"),
-                ),
             ),
-        ));
+        ),
+    ));
 };
 
 "wsgi/importscript" = dict(

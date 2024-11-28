@@ -34,8 +34,8 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/davrods.conf
 "servername" = FULL_HOSTNAME;
 
 "locations/0" = dict(
-        "name", "/",
-        "directoryindex", list('disabled'),
+    "name", "/",
+    "directoryindex", list('disabled'),
 );
 prefix "locations/0/auth";
 "name" = 'DAV';

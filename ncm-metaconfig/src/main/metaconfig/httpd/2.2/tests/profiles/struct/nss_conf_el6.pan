@@ -2,20 +2,22 @@ structure template struct/nss_conf_el6;
 
 "modules" = append(dict(
     "name", "nss_module",
-    "path", "modules/libmodnss.so"));
+    "path", "modules/libmodnss.so",
+));
 
 "listen" = append(dict(
-    "port", 8443));
+    "port", 8443,
+));
 
 "type/add" = list(
     dict(
         "name", "application/x-x509-ca-cert",
         "target", list(".crt"),
-        ),
+    ),
     dict(
         "name", "application/x-pkcs7-crl",
         "target", list(".crl"),
-        ),
+    ),
 );
 
 "nss" = dict(
@@ -33,7 +35,8 @@ structure template struct/nss_conf_el6;
 
 "vhosts/base" = create("struct/default_vhost",
     "documentroot", "/var/www/cgi-bin",
-    "port", 8443);
+    "port", 8443,
+);
 
 
 "vhosts/base/log/error" = "logs/nss_error_log";
@@ -44,7 +47,25 @@ structure template struct/nss_conf_el6;
 "vhosts/base/nss/engine" = true;
 # SSLv3,TLSv1.0,TLSv1.1
 "vhosts/base/nss/protocol" =  list("TLSv1.0");
-"vhosts/base/nss/ciphersuite" = list('+rsa_3des_sha', '-rsa_des_56_sha', '+rsa_des_sha', '-rsa_null_md5', '-rsa_null_sha', '-rsa_rc2_40_md5', '+rsa_rc4_128_md5', '-rsa_rc4_128_sha', '-rsa_rc4_40_md5', '-rsa_rc4_56_sha', '-fortezza', '-fortezza_rc4_128_sha', '-fortezza_null', '-fips_des_sha', '+fips_3des_sha', '-rsa_aes_128_sha', '-rsa_aes_256_sha');
+"vhosts/base/nss/ciphersuite" = list(
+    '+rsa_3des_sha',
+    '-rsa_des_56_sha',
+    '+rsa_des_sha',
+    '-rsa_null_md5',
+    '-rsa_null_sha',
+    '-rsa_rc2_40_md5',
+    '+rsa_rc4_128_md5',
+    '-rsa_rc4_128_sha',
+    '-rsa_rc4_40_md5',
+    '-rsa_rc4_56_sha',
+    '-fortezza',
+    '-fortezza_rc4_128_sha',
+    '-fortezza_null',
+    '-fips_des_sha',
+    '+fips_3des_sha',
+    '-rsa_aes_128_sha',
+    '-rsa_aes_256_sha',
+);
 "vhosts/base/nss/certificatedatabase" = "/etc/httpd/alias";
 
 
@@ -61,4 +82,3 @@ structure template struct/nss_conf_el6;
         "options", list("+StdEnvVars"),
     ),
 ));
-
