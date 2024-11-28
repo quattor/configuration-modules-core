@@ -21,7 +21,7 @@ function icinga_check_service_name = {
     v = ARGV[0];
     foreach(key; val; v) {
         if (! match (unescape(key), '^[\w. -]+$')) {
-            error(format('Icinga service name "%s" contains invalid characters.', unescape(key)));
+            error('Icinga service name "%s" contains invalid characters.', unescape(key));
         };
     };
     true;
