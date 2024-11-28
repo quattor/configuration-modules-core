@@ -34,6 +34,11 @@ TOKEN = "YES"
 ]
 CPU = "[% vcpus * system.opennebula.cpuratio %]"
 VCPU = "[% vcpus %]"
+CPU_MODEL = [
+[%     FILTER indent -%]
+MODEL = "[%- system.opennebula.cpu_model %]"
+[%-    END %]
+]
 DESCRIPTION = "[% hardware.model %] [% fqdn %]"
 [%-    FOR pair IN hardware.harddisks.pairs %]
 DISK = [

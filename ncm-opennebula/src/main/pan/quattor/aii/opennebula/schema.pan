@@ -352,4 +352,8 @@ type opennebula_vmtemplate = {
     https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/overcommitment.html
     }
     "cpuratio" : double(0..1) = 1.0
+    @{The CPU model exposed to the guest. host-passthrough is the same model as the host.
+    Available modes are stored in the host information and obtained through monitor (onehost show <id>).
+    }
+    "cpu_model" : string = "host-passthrough"
 } = dict();
