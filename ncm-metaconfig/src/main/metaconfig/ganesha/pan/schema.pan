@@ -86,7 +86,7 @@ type ganesha_filesystem = {
 } = dict();
 
 type ganesha_GPFS = {
-  # no GPFS specific options
+    # no GPFS specific options
 } = dict();
 
 type ganesha_cacheinode_hash = {

@@ -7,13 +7,13 @@ declaration template metaconfig/ganesha/schema_v2;
 include 'pan/types';
 
 final variable GANESHA_V2_LOG_COMPONENTS = list(
-'ALL', 'LOG', 'LOG_EMERG', 'MEMLEAKS', 'FSAL', 'NFSPROTO',
-'NFS_V4', 'EXPORT', 'FILEHANDLE', 'DISPATCH', 'CACHE_INODE',
-'CACHE_INODE_LRU', 'HASHTABLE', 'HASHTABLE_CACHE', 'DUPREQ',
-'INIT', 'MAIN', 'IDMAPPER', 'NFS_READDIR', 'NFS_V4_LOCK',
-'CONFIG', 'CLIENTID', 'SESSIONS', 'PNFS', 'RW_LOCK', 'NLM',
-'RPC', 'NFS_CB', 'THREAD', 'NFS_V4_ACL', 'STATE', '9P',
-'9P_DISPATCH', 'FSAL_UP', 'DBUS'
+    'ALL', 'LOG', 'LOG_EMERG', 'MEMLEAKS', 'FSAL', 'NFSPROTO',
+    'NFS_V4', 'EXPORT', 'FILEHANDLE', 'DISPATCH', 'CACHE_INODE',
+    'CACHE_INODE_LRU', 'HASHTABLE', 'HASHTABLE_CACHE', 'DUPREQ',
+    'INIT', 'MAIN', 'IDMAPPER', 'NFS_READDIR', 'NFS_V4_LOCK',
+    'CONFIG', 'CLIENTID', 'SESSIONS', 'PNFS', 'RW_LOCK', 'NLM',
+    'RPC', 'NFS_CB', 'THREAD', 'NFS_V4_ACL', 'STATE', '9P',
+    '9P_DISPATCH', 'FSAL_UP', 'DBUS',
 );
 
 @{ Ganesha 9p protocol section @}
@@ -89,7 +89,8 @@ type ganesha_v2_export_permissions = {
     "Protocols" ? ganesha_v2_protocol[] = list('3', '4', '9P')
     "SecType" ? ganesha_v2_SecType[] = list('none', 'sys')
     "Squash" ? string = "root_squash" with match(SELF,
-        '^((root|all)(_?squash)?|no_root_squash|none|noidsquash)$')
+        '^((root|all)(_?squash)?|no_root_squash|none|noidsquash)$'
+    )
     "Transports" ? ganesha_v2_Transports[] = list('UDP', 'TCP')
     "Trust_Readdir_Negative_Cache" ? boolean = false
 };
@@ -130,7 +131,8 @@ type ganesha_v2_exports = {
 };
 
 type ganesha_v2_log_level = string with match(SELF,
-    '^(NULL|FATAL|MAJ|CRIT|WARN|EVENT|INFO|DEBUG|MID_DEBUG|M_DBG|FULL_DEBUG|F_DBG)$');
+    '^(NULL|FATAL|MAJ|CRIT|WARN|EVENT|INFO|DEBUG|MID_DEBUG|M_DBG|FULL_DEBUG|F_DBG)$'
+);
 
 @{ Check for valid Ganesha Log Component names @}
 function is_ganesha_v2_log_Components = {
@@ -145,7 +147,8 @@ function is_ganesha_v2_log_Components = {
 type ganesha_v2_log_Components = ganesha_v2_log_level{} with is_ganesha_v2_log_Components(SELF);
 
 type ganesha_v2_log_time_format = string with match(SELF,
-    '^(ganesha|true|local|8601|ISO-8601|ISO 8601|ISO|syslog|syslog_usec|false|none|user_defined)$');
+    '^(ganesha|true|local|8601|ISO-8601|ISO 8601|ISO|syslog|syslog_usec|false|none|user_defined)$'
+);
 
 @{ Ganesha Log Format subsection @}
 type ganesha_v2_log_Format = {
