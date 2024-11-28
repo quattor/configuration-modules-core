@@ -17,10 +17,10 @@ type graylog2 = {
     'mongodb_replica_set' ? string
     "mongodb_database" : string = 'graylog2'
     "mongodb_port" : long = 27017
-# interval (in seconds) the message batch is sent. Example: If you leave the standard values (mq_batch_size = 4000, mq_poll_freq = 1), Graylog2 will index 4000 messages
+    # interval (in seconds) the message batch is sent. Example: If you leave the standard values (mq_batch_size = 4000, mq_poll_freq = 1), Graylog2 will index 4000 messages
     "mq_batch_size" : long = 4000
     "mq_poll_freq" : long = 1
-# 0 = unlimited queue size (default)
+    # 0 = unlimited queue size (default)
     "mq_max_size" : long = 0
     "mongodb_max_connections" : long = 100
     "mongodb_threads_allowed_to_block_multiplier" : long = 5
