@@ -32,7 +32,8 @@ HOSTNAME = "[%- fqdn %]",
 TOKEN = "YES"
 [%-    END %]
 ]
-CPU = "[% vcpus %]"
+CPU = "[% vcpus * system.opennebula.cpuratio %]"
+VCPU = "[% vcpus %]"
 DESCRIPTION = "[% hardware.model %] [% fqdn %]"
 [%-    FOR pair IN hardware.harddisks.pairs %]
 DISK = [
