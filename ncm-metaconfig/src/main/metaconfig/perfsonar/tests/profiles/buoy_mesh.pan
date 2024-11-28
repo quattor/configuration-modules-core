@@ -14,7 +14,7 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
         "test_addr", dict(
             "MYSITE", "1.2.3.5",
             "OS", "1.2.3.4",
-            ),
+        ),
     )
 );
 
@@ -32,11 +32,11 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
     l = dict(
         "description", "Group for nodes",
         "type", "MESH"
-        );
+    );
     l["nodes"] = list();
     foreach (name; desc; value("/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents/nodes")) {
         if (match(name, '\.domain$')) {
-            l["nodes"]=append(l["nodes"], name);
+            l["nodes"] = append(l["nodes"], name);
         }
     };
     l["senders"] = l["nodes"];
@@ -53,13 +53,14 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
         "start_alpha", 30,
         "duration", 25,
         "report_interval", 2
-        ));
+    ),
+);
 
 "testspecs/LAT_1MIN" = dict(
     "description", "One-way latency",
     "tool", "powstream",
     "owamp", dict()
-    );
+);
 
 "measurementsets/test_bwtcp4" = dict(
     "description", "Mesh testing - 4-hour TCP throughput (iperf)",

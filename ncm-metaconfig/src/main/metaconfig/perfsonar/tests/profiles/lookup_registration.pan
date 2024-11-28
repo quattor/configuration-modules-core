@@ -10,5 +10,6 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registrat
     "site_project", list("MYSITE"),
     "service", list(
         dict("type", "bwctl"),
-        dict("type", "owamp")
-    ));
+        dict("type", "owamp"),
+    ),
+);
