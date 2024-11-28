@@ -7,4 +7,4 @@ bind "/software/components/metaconfig/services/{/a/b/c}/contents" = metaconfig_g
 
 "/software/components/metaconfig/services/{/a/b/c}" = create('metaconfig/generic/multiline',
     "contents", list("first", "second", "third"),
-    );
+);
