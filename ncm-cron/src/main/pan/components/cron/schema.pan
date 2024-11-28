@@ -51,7 +51,7 @@ type structure_cron_log = {
 }
 function valid_cron_timing = {
     if (ARGC != 4) {
-        error(format('%s: expected 4 parameters, received %d', FUNCTION, ARGC));
+        error('%s: expected 4 parameters, received %d', FUNCTION, ARGC);
     };
 
     timing_value = to_lowercase(ARGV[0]);
@@ -60,18 +60,18 @@ function valid_cron_timing = {
     text_regex = ARGV[3];
 
     # Check that the field contains only valid characters
-    if (!match(timing_value, '^(?:[a-z0-9/*\-,]+)$')) error(format('"%s" contains invalid characters', timing_value));
+    if (!match(timing_value, '^(?:[a-z0-9/*\-,]+)$')) error('"%s" contains invalid characters', timing_value);
 
     # Find runs of digits and validate them against provided bounds
     foreach(k; v; matches(timing_value, '([0-9]+)')) {
         i = to_long(v);
-        if (i < lower_bound) error(format('Value %d is below lower bound of %d', i, lower_bound));
-        if (i > upper_bound) error(format('Value %d is above upper bound of %d', i, upper_bound));
+        if (i < lower_bound) error('Value %d is below lower bound of %d', i, lower_bound);
+        if (i > upper_bound) error('Value %d is above upper bound of %d', i, upper_bound);
     };
 
     # Find runs of letters and validate them against provided regex
     foreach(k; v; matches(timing_value, '([a-z]+)')) {
-        if (!match(v, text_regex)) error(format('"%s" is not a valid value for this field item', v));
+        if (!match(v, text_regex)) error('"%s" is not a valid value for this field item', v);
     };
 
     # Ignore all other characters
@@ -121,7 +121,7 @@ type structure_cron_timing = {
 }
 function valid_cron_frequency = {
     if (ARGC != 1) {
-        error(format('%s: expected 1 parameter, received %d', FUNCTION, ARGC));
+        error('%s: expected 1 parameter, received %d', FUNCTION, ARGC);
     };
 
     frequency = ARGV[0];
@@ -133,7 +133,7 @@ function valid_cron_frequency = {
     fields = split(' ', frequency);
 
     if (length(fields) != 5) {
-        error(format('cron frequency "%s" should have 5 fields, it only has %d', frequency, length(fields)));
+        error('cron frequency "%s" should have 5 fields, it only has %d', frequency, length(fields));
     };
 
     match(fields[0], '^AUTO$') || valid_cron_minute(fields[0]);
@@ -196,7 +196,7 @@ type structure_cron = {
 
 function no_duplicate_cron_entries = {
     if (ARGC != 1) {
-        error(format('%s: expected 1 parameter, received %d', FUNCTION, ARGC));
+        error('%s: expected 1 parameter, received %d', FUNCTION, ARGC);
     };
 
     names = dict();
