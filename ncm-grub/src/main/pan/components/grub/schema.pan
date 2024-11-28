@@ -41,9 +41,8 @@ type type_grub_password = {
     @{See description of the file option. The user (first field) to be picked from a password field.}
     "file_user" : string = "root"
 } with {
-    if (is_defined(SELF["enabled"]) && SELF["enabled"]
-        && !is_defined(SELF["file"]) && !is_defined(SELF["password"])) {
-            error("specify either a hashed password or file to retrieve it from.");
+    if (is_defined(SELF["enabled"]) && SELF["enabled"] && !is_defined(SELF["file"]) && !is_defined(SELF["password"])) {
+        error("specify either a hashed password or file to retrieve it from.");
     };
     if (is_defined(SELF["file"]) && is_defined(SELF["password"])) {
         error("specify either a hashed password or file to retrieve it from, not both.");
