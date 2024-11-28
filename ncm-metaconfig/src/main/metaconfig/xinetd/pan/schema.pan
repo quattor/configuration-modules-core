@@ -4,7 +4,8 @@ type xinetd_options_type = choice("RPC", "INTERNAL", "TCPMUX", "TCPMUXPLUS", "UN
 
 type xinetd_options_flags = choice("INTERCEPT", "NORETRY", "IDONLY",
     "NAMEINARGS", "NODELAY", "KEEPALIVE", "NOLIBWRAP", "SENSOR", "IPv4", "IPv6",
-    "LABELED", "REUSE");
+    "LABELED", "REUSE"
+);
 
 type xinetd_options_ips = string; # TODO, write proper check for all possible combinations
 
