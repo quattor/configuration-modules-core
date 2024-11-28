@@ -21,25 +21,25 @@ prefix "/software/components/metaconfig/services/{/etc/carbon-relay-ng.ini}/cont
         'opts', dict(
             'spool', true,
             'pickle', false,
-            ),
-        )),
-    );
+        ),
+    )),
+);
 'init/2/addRoute' = dict(
     'type', 'sendAllMatch',
     'key', 'carbon-tagger',
     'opts', dict(
         'sub', '=',
-        ),
+    ),
     'dest', list(dict(
         'addr', '127.0.0.1:2006',
-        )),
-    );
+    )),
+);
 'init/3/addRoute' = dict(
     'type', 'sendFirstMatch',
     'key', 'analytics',
     'opts', dict(
         'regex', '(Err/s|wait_time|logger)',
-        ),
+    ),
     'dest', list(
         dict(
             'addr', 'graphite.prod:2003',
@@ -47,13 +47,15 @@ prefix "/software/components/metaconfig/services/{/etc/carbon-relay-ng.ini}/cont
                 'prefix', 'prod.',
                 'spool', true,
                 'pickle', true,
-                )),
+            ),
+        ),
         dict(
             'addr', 'graphite.staging:2003',
             'opts', dict(
                 'prefix', 'staging.',
                 'spool', true,
                 'pickle', true,
-                )),
+            ),
         ),
-    );
+    ),
+);
