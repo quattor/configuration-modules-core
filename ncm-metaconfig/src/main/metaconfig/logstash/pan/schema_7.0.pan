@@ -36,8 +36,11 @@ type logstash_conditional = {
 type logstash_plugin_common = {
     @{using _conditional to avoid name clash with plugin option name.
       The conditional is only for the single plugin and has to be type 'if' (the default).}
-    "_conditional" ? logstash_conditional with { if (SELF['type'] != 'if') {
-        error('plugin _conditional has to be type if (the default)'); }; true;
+    "_conditional" ? logstash_conditional with {
+        if (SELF['type'] != 'if') {
+            error('plugin _conditional has to be type if (the default)');
+        };
+        true;
     }
 };
 

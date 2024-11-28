@@ -10,9 +10,8 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "custom_fields", dict("type", "remotegelf"),
         "host", "remotehost.domain",
         "sender", "myhost.domain",
-        ),
     ),
-);
+));
 
 "conditionals" = append(dict(
     "type", "ifelseif",
@@ -20,7 +19,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'httpd'",
-        )),
+    )),
     "plugins", list(dict("gelf", dict(
         "port", 12201,
         "sender", 'myhost.domain',
@@ -28,7 +27,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "host", 'remotehost.domain',
         "custom_fields", dict("type", "remotegelf"),
         "level", list("info"),
-        ))),
+    ))),
 ));
 
 "conditionals" = append(dict(
@@ -37,7 +36,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
-        )),
+    )),
     "plugins", list(dict("gelf", dict(
         "port", 12201,
         "ship_metadata", true,
@@ -45,7 +44,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "custom_fields", dict("type", "remotegelf"),
         "level", list("%{level}"),
         "facility", "%{facility}",
-        ))),
+    ))),
 ));
 
 
@@ -71,7 +70,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
-        )),
+    )),
     "plugins", list(dict("mutate", dict(
         "split", dict("tags", ", "),
     ))),
@@ -84,21 +83,21 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'gpfs'",
-        )),
+    )),
     "plugins", list(
         dict("grok", dict(
             "match", list(dict(
                 "name", "message",
                 "pattern", list("%{GPFSLOG}"),
-                )),
+            )),
             "patterns_dir", list("/usr/share/grok"),
             "add_field", dict("program", "gpfs"),
-            )),
+        )),
         dict("date", dict(
             "match", dict(
                 "name", "timestamp",
                 "pattern", list("E MMM dd HH:mm:ss.SSS yyyy", "E MMM  d HH:mm:ss.SSS yyyy"),
-                ),
-            )),
-        ),
+            ),
+        )),
+    ),
 ));
