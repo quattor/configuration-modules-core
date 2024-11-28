@@ -9,7 +9,7 @@ prefix "/software/components/metaconfig/services/{/etc/cumulus/acl/policy.d/50_q
     'in-interface', list('swp1'),
     'protocol', 'tcp',
     'dport', list(80, 90),  # range
-    );
+);
 "iptables/1" = dict(
     'append', 'INPUT',
     'jump', 'DROP',
@@ -20,10 +20,10 @@ prefix "/software/components/metaconfig/services/{/etc/cumulus/acl/policy.d/50_q
     'tcp-flags', dict(  # --syn
         'mask', list('SYN', 'ACK', 'FIN', 'RST'),
         'compare', list('SYN'),
-        ),
+    ),
     'invert', dict(
         'source', true,
         'sport', true,
         'out-interface', true,
-        ),
-    );
+    ),
+);
