@@ -44,8 +44,8 @@ function openldap_loglevels_to_long = {
         lvls = list(default);
     };
 
-    total=0;
-    foreach(idx;lvl;lvls) {
+    total = 0;
+    foreach(idx; lvl; lvls) {
         if(!exists(the_map[lvl])) {
             return(undef);
         };
