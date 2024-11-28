@@ -4,9 +4,9 @@ object template all_aliases;
 
 prefix "/software/components/sudo";
 
-"user_aliases" = dict (
-    "USER", list ("u")
-    );
+"user_aliases" = dict(
+    "USER", list("u"),
+);
 "cmd_aliases" = dict("CMD", list("c"));
 "run_as_aliases" = dict("RUN", list("r"));
 "host_aliases" = dict("HOST", list("h", "h2"));

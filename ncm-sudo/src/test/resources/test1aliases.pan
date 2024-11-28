@@ -3,16 +3,17 @@
 object template test1aliases;
 
 
-"/software/components/sudo/privilege_lines" = list (
-    dict ( "user", "ALL",
+"/software/components/sudo/privilege_lines" = list(
+    dict(
+        "user", "ALL",
         "run_as", "ALL",
         "host", "ALL",
         "cmd", "ALL"
-        )
-    );
+    ),
+);
 
-"/software/components/sudo/user_aliases" = dict (
-    "FOO", list ("bar")
-    );
+"/software/components/sudo/user_aliases" = dict(
+    "FOO", list("bar"),
+);
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;

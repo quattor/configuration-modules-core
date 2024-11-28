@@ -35,11 +35,11 @@ function sudo_check_aliases_list = {
 function sudo_check_default_options_list = {
     if (exists(ARGV[0][ARGV[1]])) {
         foreach(idx; v; ARGV[0][ARGV[1]]) {
-            if ((exists (v["user"]) && (exists (v["run_as"]) ||
-                exists (v["host"]))) ||
-                (exists (v["run_as"]) && exists (v["host"]))) {
-                error ("Only one of user, run_as or host may be " +
-                        "specified for default options");
+            if (
+                (exists (v["user"]) && (exists (v["run_as"]) || exists (v["host"]))) ||
+                (exists (v["run_as"]) && exists (v["host"]))
+            ) {
+                error ("Only one of user, run_as or host may be specified for default options");
             };
         };
     };
