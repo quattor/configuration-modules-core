@@ -12,13 +12,20 @@ prefix "/software/components/pam";
 "modules/limits/path" = "/lib/security/$ISA/pam_limits.so";
 
 # configure /etc/pam.d/sshd
-"services/sshd/auth" = append(dict("control", "required", "module", "env"));
-"services/sshd/password" = append(dict("control", "required",
-                      "module", "include",
-                      "options", dict("service", "/etc/pam.d/system-auth")));
+"services/sshd/auth" = append(dict(
+    "control", "required",
+    "module", "env",
+));
+"services/sshd/password" = append(dict(
+    "control", "required",
+    "module", "include",
+    "options", dict("service", "/etc/pam.d/system-auth"),
+));
 
-"services/sshd/session" = append(dict("control", "required",
-                                       "module", "limits"));
+"services/sshd/session" = append(dict(
+    "control", "required",
+    "module", "limits",
+));
 
 # declare an ACL
 "access/access/acl/0/origins" = "ALL";
