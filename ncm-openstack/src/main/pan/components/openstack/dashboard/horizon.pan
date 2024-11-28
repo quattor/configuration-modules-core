@@ -5,8 +5,10 @@
 
 declaration template components/openstack/dashboard/horizon;
 
-type openstack_horizon_session_engine = choice('django.contrib.sessions.backends.cache',
-    'django.contrib.sessions.backends.db');
+type openstack_horizon_session_engine = choice(
+    'django.contrib.sessions.backends.cache',
+    'django.contrib.sessions.backends.db'
+);
 
 @documentation{
     The Horizon configuration options in "caches" Section.
@@ -270,10 +272,10 @@ type openstack_horizon_config_identity_keystone = {
                 found = true;
             };
         };
-        if (!found) {
-            error("available_regions %s require openstack_keystone_url %s to be one of the regions",
-                    SELF['available_regions'], def);
-        };
+        if (!found) error(
+            "available_regions %s require openstack_keystone_url %s to be one of the regions",
+            SELF['available_regions'], def,
+        );
     };
     true;
 };
@@ -387,7 +389,7 @@ type openstack_horizon_config_general = {
     'rest_api_required_settings' : string[] = list(
         'OPENSTACK_HYPERVISOR_FEATURES', 'LAUNCH_INSTANCE_DEFAULTS',
         'OPENSTACK_IMAGE_FORMATS', 'OPENSTACK_KEYSTONE_DEFAULT_DOMAIN',
-        )
+    )
     'security_group_files' : openstack_horizon_security_group{} = dict(
         'all_tcp', dict('name', 'ALL TCP', 'from_port', 1, 'to_port', 65535),
         'all_udp', dict('name', 'ALL UDP', 'from_port', 1, 'to_port', 65535, 'ip_protocol', 'udp'),
@@ -406,7 +408,7 @@ type openstack_horizon_config_general = {
         'ms_sql', dict('name', 'MS SQL', 'from_port', 1433, 'to_port', 1433),
         'mysql', dict('name', 'MYSQL', 'from_port', 3306, 'to_port', 3306),
         'rdp', dict('name', 'RDP', 'from_port', 3389, 'to_port', 3389),
-        )
+    )
     'use_ssl' ? boolean
     'csrf_cookie_secure' ? boolean
     'session_cookie_secure' ? boolean

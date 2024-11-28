@@ -6,8 +6,8 @@ declaration template components/openstack/container-infra;
 
 include 'components/openstack/container-infra/magnum';
 
-@documentation {
-Type to define OpenStack container orchestration engine
+@documentation{
+    Type to define OpenStack container orchestration engine
 }
 type openstack_container_infra_config = {
     'magnum' ? openstack_magnum_config
