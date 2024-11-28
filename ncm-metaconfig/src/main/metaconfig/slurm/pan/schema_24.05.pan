@@ -6,15 +6,19 @@ https://slurm.schedmd.com
 
 include 'pan/types';
 
-type slurm_debuglevel = choice('quiet', 'fatal', 'error', 'info', 'verbose',
-    'debug', 'debug2', 'debug3', 'debug4', 'debug5');
+type slurm_debuglevel = choice(
+    'quiet', 'fatal', 'error', 'info', 'verbose',
+    'debug', 'debug2', 'debug3', 'debug4', 'debug5'
+);
 
-type slurm_debugflags = choice('AuditRPCs', 'Backfill', 'BackfillMap', 'BGBlockAlgo', 'BGBlockAlgoDeep', 'BGBlockPick',
-        'BGBlockWires', 'BurstBuffer', 'Cgroup', 'CPU_Bind', 'CpuFrequency', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS',
-        'DB_QUERY', 'DB_RESERVATION', 'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'DBD_Agent', 'Elasticsearch',
-        'Energy', 'Federation', 'FrontEnd', 'GLOB_SILENCE', 'Gres', 'HeteroJobs', 'Gang', 'JobAccountGather',
-        'JobContainer', 'License', 'NodeFeatures', 'NO_CONF_HASH', 'Power', 'Priority', 'Profile', 'Protocol',
-        'Reservation', 'Script', 'SelectType', 'Steps', 'Switch', 'TraceJobs', 'Triggers')[];
+type slurm_debugflags = choice(
+    'AuditRPCs', 'Backfill', 'BackfillMap', 'BGBlockAlgo', 'BGBlockAlgoDeep', 'BGBlockPick',
+    'BGBlockWires', 'BurstBuffer', 'Cgroup', 'CPU_Bind', 'CpuFrequency', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS',
+    'DB_QUERY', 'DB_RESERVATION', 'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'DBD_Agent', 'Elasticsearch',
+    'Energy', 'Federation', 'FrontEnd', 'GLOB_SILENCE', 'Gres', 'HeteroJobs', 'Gang', 'JobAccountGather',
+    'JobContainer', 'License', 'NodeFeatures', 'NO_CONF_HASH', 'Power', 'Priority', 'Profile', 'Protocol',
+    'Reservation', 'Script', 'SelectType', 'Steps', 'Switch', 'TraceJobs', 'Triggers'
+)[];
 
 
 
@@ -175,9 +179,9 @@ type slurm_conf_health_check = {
     'HealthCheckProgram' ? absolute_file_path
 };
 
-
-type slurm_control_resourcelimits = choice( 'ALL', 'NONE', 'AS', 'CORE', 'CPU', 'DATA', 'FSIZE',
-    'MEMLOCK', 'NOFILE', 'NPROC', 'RSS', 'STACK');
+type slurm_control_resourcelimits = choice(
+    'ALL', 'NONE', 'AS', 'CORE', 'CPU', 'DATA', 'FSIZE', 'MEMLOCK', 'NOFILE', 'NPROC', 'RSS', 'STACK'
+);
 
 type slurm_mpi_params = {
     @{port or port range}
@@ -285,8 +289,9 @@ type slurm_conf_control = {
     'JobCredentialPublicCertificate' ? absolute_file_path
     'JobFileAppend' ? boolean # 0/1
     'JobRequeue' ? boolean # 0/1
-    'JobSubmitPlugins' ? choice('lua', 'pbs', 'all_partitions', 'require_timelimit', 'throttle',
-                                'defaults', 'logging', 'partition')[]
+    'JobSubmitPlugins' ? choice(
+        'lua', 'pbs', 'all_partitions', 'require_timelimit', 'throttle', 'defaults', 'logging', 'partition'
+    )[]
     'KillOnBadExit' ? boolean # 0/1
     'LaunchType' ? choice( 'aprun', 'poe', 'runjob', 'slurm')
     'LaunchParameters' ? slurm_launch_params
@@ -325,8 +330,9 @@ type slurm_conf_control = {
     'MailDomain' ? string
     'MinJobAge' ? long(0..)
     'MsgAggregationParams' ? slurm_msg_aggregation
-    'PrivateData' ? choice('accounts', 'cloud', 'events', 'jobs', 'nodes', 'partitions',
-        'reservations', 'usage', 'users')[]
+    'PrivateData' ? choice(
+        'accounts', 'cloud', 'events', 'jobs', 'nodes', 'partitions', 'reservations', 'usage', 'users'
+    )[]
     'SallocDefaultCommand' ? string
     'SbcastParameters' ? slurm_sbcast_parameters
     'BcastExclude' ? absolute_file_path[]
@@ -345,8 +351,9 @@ type slurm_conf_prolog_epilog = {
     'EpilogSlurmctld' ? absolute_file_path
     'Prolog' ? absolute_file_path
     'PrologEpilogTimeout' ? long(0..) # seconds
-    'PrologFlags' ? choice( 'Alloc', 'Contain', 'DeferBatch', 'NoHold', 'ForceRequeueOnFail',
-                            'RunInJob', 'Serial', 'X11')[]
+    'PrologFlags' ? choice(
+        'Alloc', 'Contain', 'DeferBatch', 'NoHold', 'ForceRequeueOnFail', 'RunInJob', 'Serial', 'X11'
+    )[]
     'PrologSlurmctld' ? absolute_file_path
     'ResvEpilog' ? absolute_file_path
     @{in minutes}
@@ -457,8 +464,10 @@ type slurm_conf_job_priority = {
     @{in minutes}
     'PriorityCalcPeriod' ? long(0..)
     'PriorityFavorSmall' ? boolean
-    'PriorityFlags' ? choice( 'ACCRUE_ALWAYS', 'CALCULATE_RUNNING', 'DEPTH_OBLIVIOUS', 'FAIR_TREE',
-        'INCR_ONLY', 'MAX_TRES', 'SMALL_RELATIVE_TO_TIME' )[]
+    'PriorityFlags' ? choice(
+        'ACCRUE_ALWAYS', 'CALCULATE_RUNNING', 'DEPTH_OBLIVIOUS', 'FAIR_TREE', 'INCR_ONLY', 'MAX_TRES',
+        'SMALL_RELATIVE_TO_TIME'
+    )[]
     'PriorityParameters' ? dict
     @{in minutes}
     'PriorityMaxAge' ? long(0..)
@@ -515,8 +524,10 @@ type slurm_conf_accounting = {
 };
 
 type slurm_conf_logging = {
-    'LogTimeFormat' ? choice("iso8601", "iso8601_ms", "rfc5424", "rfc5424_ms", "rfc3339",
-                                "clock", "short", "thread_id", "format_stderr")[]
+    'LogTimeFormat' ? choice(
+        "iso8601", "iso8601_ms", "rfc5424", "rfc5424_ms", "rfc3339",
+        "clock", "short", "thread_id", "format_stderr"
+    )[]
     'SlurmctldDebug' ? slurm_debuglevel
     'SlurmctldLogFile' ? absolute_file_path
     'SlurmctldSyslogDebug' ? slurm_debuglevel
@@ -762,8 +773,10 @@ type slurm_dbd_conf = {
     'DbdHost' ? string
     # TODO: must be equal to the AccountingStoragePort parameter in the slurm.conf
     'DbdPort' ? long(0..)
-    'DebugFlags' ? choice('DB_ARCHIVE', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS', 'DB_QUERY', 'DB_RESERVATION',
-        'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'FEDERATION')[]
+    'DebugFlags' ? choice(
+        'DB_ARCHIVE', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS', 'DB_QUERY', 'DB_RESERVATION',
+        'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'FEDERATION'
+    )[]
     'DebugLevel' ? slurm_debuglevel
     'DebugLevelSyslog' ? slurm_debuglevel
     'DefaultQOS' ? string
@@ -773,8 +786,10 @@ type slurm_dbd_conf = {
     'keepaliveprobes' ? long(1..)
     'keepalivetime' ? long(1..)
     'LogFile' ? absolute_file_path
-    'LogTimeFormat' ? choice("iso8601", "iso8601_ms", "rfc5424", "rfc5424_ms", "rfc3339",
-                                "clock", "short", "thread_id", "format_stderr")[]
+    'LogTimeFormat' ? choice(
+        "iso8601", "iso8601_ms", "rfc5424", "rfc5424_ms", "rfc3339",
+        "clock", "short", "thread_id", "format_stderr"
+    )[]
     'MaxQueryTimeRange' ? long(0..)  # unsure of this type
     'MessageTimeout' ? long(0..)
     'PidFile' ? absolute_file_path
@@ -835,8 +850,10 @@ type slurm_gres_per_node_conf = {
     'Cores' ? long[]
     'Count' ? long(0..)
     'File' ? absolute_file_path
-    'Flags' ? choice('CountOnly', 'explicit', 'one_sharing', 'all_sharing', 'nvidia_gpu_env',
-                    'amd_gpu_env', 'intel_gpu_env', 'opencl_env', 'no_gpu_env')[]
+    'Flags' ? choice(
+        'CountOnly', 'explicit', 'one_sharing', 'all_sharing', 'nvidia_gpu_env',
+        'amd_gpu_env', 'intel_gpu_env', 'opencl_env', 'no_gpu_env'
+    )[]
     'Links' ? long(0..)[]
     'Name' ? choice('gpu', 'mps', 'nic', 'shard')
     'Type' ? string

@@ -128,7 +128,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
     "{no_backup_scheduling}", false,
     "{no_env_cache}", false,
     "{partition_job_depth}", 5,
-    );
+);
 "DependencyParameters" = dict('{max_depend_depth}', 5);
 "SelectType" = "cons_tres";
 "SelectTypeParameters" = dict("CR_Core_Memory", true);
@@ -169,7 +169,7 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
 "JobAcctGatherFrequency" = dict(
     "network", 30,
     "energy", 10,
-    );
+);
 "JobAcctGatherType" = "cgroup";
 
 
@@ -216,18 +216,18 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/content
     "name", "gpu",
     "type", "kepler1",
     "number", 1,
-    );
+);
 "Gres/1" = dict(
     "name", "gpu",
     "type", "tesla1",
     "number", 1,
-    );
+);
 "Gres/2" = dict(
     "name", "bandwidth",
     "type", "lustre",
     "consume", false,
     "number", 4 * 1024 * 1024,
-    );
+);
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/slurm.conf}/contents/nodes/down/DEFAULT";
 "State" = "FAIL";

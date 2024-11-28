@@ -12,8 +12,8 @@ prefix "/software/components/metaconfig/services/{/etc/slurm/plugstack.conf}/con
 "plugin" = "/some/other/path";
 "arguments" = dict(
     "woohoo", true,
-    "hello", "world"
-    );
+    "hello", "world",
+);
 "optional" = true;
 
 prefix "/software/components/metaconfig/services/{/etc/slurm/plugstack.conf}/contents/plugins/2";
