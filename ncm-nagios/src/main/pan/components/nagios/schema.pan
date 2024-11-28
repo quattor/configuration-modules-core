@@ -11,21 +11,21 @@ include 'pan/types';
 # validation code easier. If you want hosts to inherit settings then use
 # Pan statements like create ("...") or value ("...")
 
-type nagios_hoststring =  string with exists ("/software/components/nagios/hosts/" + SELF) || SELF=="*";
+type nagios_hoststring =  string with exists("/software/components/nagios/hosts/" + SELF) || SELF == "*";
 
-type nagios_hostgroupstring = string with exists ("/software/components/nagios/hostgroups/" + SELF) || SELF=="*";
+type nagios_hostgroupstring = string with exists("/software/components/nagios/hostgroups/" + SELF) || SELF == "*";
 
-type nagios_commandstrings = string [] with exists ("/software/components/nagios/commands/" + SELF[0]);
+type nagios_commandstrings = string [] with exists("/software/components/nagios/commands/" + SELF[0]);
 
-type nagios_timeperiodstring = string with exists ("/software/components/nagios/timeperiods/" + SELF) || SELF=="*";
+type nagios_timeperiodstring = string with exists("/software/components/nagios/timeperiods/" + SELF) || SELF == "*";
 
-type nagios_contactgroupstring = string with exists ("/software/components/nagios/contactgroups/" + SELF) || SELF=="*";
+type nagios_contactgroupstring = string with exists("/software/components/nagios/contactgroups/" + SELF) || SELF == "*";
 
-type nagios_contactstring = string with exists ("/software/components/nagios/contacts/" + SELF) || SELF=="*";
+type nagios_contactstring = string with exists("/software/components/nagios/contacts/" + SELF) || SELF == "*";
 
-type nagios_servicegroupstring = string with exists ("/software/components/nagios/servicegroups/" + SELF) || SELF=="*";
+type nagios_servicegroupstring = string with exists("/software/components/nagios/servicegroups/" + SELF) || SELF == "*";
 
-type nagios_servicestring = string with exists ("/software/components/nagios/services/" + SELF) || SELF=="*";
+type nagios_servicestring = string with exists("/software/components/nagios/services/" + SELF) || SELF == "*";
 
 type nagios_service_notification_string = string with match (SELF, "^(w|u|c|r|f)$");
 type nagios_host_notification_string = string with match (SELF, "^(d|u|r|f)$");
@@ -144,7 +144,7 @@ type structure_nagios_service = {
     "register" : boolean = true
     "failure_prediction_enabled" ? boolean
     "action_url" ? string
-} with nagios_has_host_or_hostgroup (SELF);;
+} with nagios_has_host_or_hostgroup (SELF);
 
 # Servicegroup definition:
 type structure_nagios_servicegroup = {
@@ -168,7 +168,7 @@ type structure_nagios_servicedependency = {
     "execution_failure_criteria" ? nagios_execution_failure_string []
     "notification_failure_criteria" ? nagios_notification_failure_string []
     "dependency_period" ? nagios_timeperiodstring
-} with nagios_has_host_or_hostgroup (SELF);;
+} with nagios_has_host_or_hostgroup (SELF);
 
 # Contact definition
 type structure_nagios_contact = {
@@ -378,7 +378,7 @@ type structure_nagios_nagios_cfg = {
     "ocsp_command" ? string
 };
 
-type structure_nagios_service_list=structure_nagios_service[];
+type structure_nagios_service_list = structure_nagios_service[];
 
 # Everything that can be handled by this component
 type structure_component_nagios = {
