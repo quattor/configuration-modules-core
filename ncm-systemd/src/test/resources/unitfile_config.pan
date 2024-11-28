@@ -15,16 +15,16 @@ prefix "/software/components/systemd/unit";
                     '', # reset
                     '/path/1',
                     '/path/2',
-                    ),
                 ),
+            ),
             'RequiresMountsFor', list("/x/y/z"),
             'After', list(systemd_make_mountunit("/g/h/i/")),
-            ),
-        'service', dict(
-            'CPUAffinity', list(list(), list(0,1)),
-            ),
         ),
-    );
+        'service', dict(
+            'CPUAffinity', list(list(), list(0, 1)),
+        ),
+    ),
+);
 
 "{replace.service}/file" = dict(
     'only', true,
@@ -33,6 +33,6 @@ prefix "/software/components/systemd/unit";
         'includes', list(
             '/unit/1',
             '/unit/2',
-            ),
         ),
-    );
+    ),
+);

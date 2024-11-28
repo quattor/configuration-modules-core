@@ -17,7 +17,8 @@ type hwloc_location = string with match(SELF, '^[\w:.]+$');
     syslog facility to use when logging to syslog
 }
 type syslog_facility = string with match(SELF,
-    '^(kern|user|mail|daemon|auth|syslog|lpr|news|uucp|cron|authpriv|ftp|local[0-7])$');
+    '^(kern|user|mail|daemon|auth|syslog|lprnews|uucp|cron|authpriv|ftp|local[0-7])$'
+);
 
 @documentation{
     syslog level to use when logging to syslog or the kernel log buffer
@@ -30,13 +31,15 @@ type ${project.artifactId}_skip = {
 
 type ${project.artifactId}_unit_architecture = string with match(SELF,
     '^(native|x86(-64)?|ppc(64)?(-le)?|ia64|parisc(64)?|s390x?|sparc(64)?)' +
-    '|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$');
+    '|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$'
+);
 
 type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|apparmor|ima|smack|audit)$');
 
 type ${project.artifactId}_unit_virtualization = string with match(SELF,
     '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen' +
-    '|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$');
+    '|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$'
+);
 
 # TODO: https://github.com/quattor/configuration-modules-core/issues/646:
 #    make this more finegrained, e.g. has to be existing unit; or check types
@@ -120,7 +123,8 @@ type ${project.artifactId}_unitfile_config_unit = {
     'NetClass' ? string
     'OnFailure' ? string[]
     'OnFailureJobMode' ? string with match(SELF,
-        '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$')
+        '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$'
+    )
     'PartOf' ? ${project.artifactId}_valid_unit[]
     'PropagatesReloadTo' ? string[]
     'RefuseManualStart' ? boolean
@@ -149,7 +153,8 @@ type ${project.artifactId}_unitfile_config_install = {
 };
 
 type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr =  string with match(SELF,
-    '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$');
+    '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$'
+);
 
 @documentation{
 systemd.kill directives
@@ -159,7 +164,8 @@ valid for [Service], [Socket], [Mount], or [Swap] sections
 type ${project.artifactId}_unitfile_config_systemd_kill = {
     'KillMode' ? string with match(SELF, '^(control-group|process|mixed|none)$')
     'KillSignal' ? string with match(SELF,
-        '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$')
+        '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$'
+    )
     'SendSIGHUP' ? boolean
     'SendSIGKILL' ? boolean
 };
@@ -190,7 +196,7 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'LimitFSIZE' ? long(-1..) # The maximum size of files that the process may create
     'LimitLOCKS' ? long(-1..) # (Early Linux 2.4 only) A limit on the number of locks
     'LimitMEMLOCK' ? long(-1..) # The maximum number of bytes of memory that may be locked into RAM
-    'LimitMSGQUEUE' ? long(-1..) # pecifies the limit on the number of bytes that can be allocated for POSIX message queues for the real user ID of the calling process.
+    'LimitMSGQUEUE' ? long(-1..) # Specifies the limit on the number of bytes that can be allocated for POSIX message queues for the real user ID of the calling process.
     'LimitNICE' ? long(0..40) # Specifies a ceiling to which the process's nice value can be raised. The actual ceiling for the nice value is calculated as 20 - rlim_cur.
     'LimitNOFILE' ? long(-1..) # Specifies a value one greater than the maximum file descriptor number that can be opened by this process.
     'LimitNPROC' ? long(-1..) # The maximum number of processes (or, more precisely on Linux, threads) that can be created for the real user ID of the calling process.
@@ -228,11 +234,13 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'WorkingDirectory' ? string
 };
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[] with length(SELF) == 2 &&
-        match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$');
+type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[] with {
+    length(SELF) == 2 && match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$')
+};
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[] with length(SELF) == 2 &&
-        match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$');
+type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[] with {
+    length(SELF) == 2 && match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$')
+};
 
 @documentation{
 systemd.resource-control directives
