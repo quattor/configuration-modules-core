@@ -168,7 +168,8 @@ type ssh_daemon_options_type = {
     "StrictModes" ? legacy_binary_affirmation_string
     "Subsystem" ? string
     "SyslogFacility" ? string with match (SELF,
-        '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
+        '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$'
+    )
     "TcpRcvBuf" ? long
     "TcpRcvBufPoll" ? legacy_binary_affirmation_string
     "UseDNS" ? legacy_binary_affirmation_string
