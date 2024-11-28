@@ -12,21 +12,37 @@ include 'pan/types';
 # validation code easier. If you want hosts to inherit settings then use
 # Pan statements like create("...") or value("...")
 
-type icinga_hoststring = string with exists("/software/components/icinga/hosts/" + SELF) || SELF == "*" || SELF == 'dummy';
+type icinga_hoststring = string with {
+    exists("/software/components/icinga/hosts/" + SELF) || SELF == "*" || SELF == 'dummy';
+};
 
-type icinga_hostgroupstring = string with exists("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF == "*";
+type icinga_hostgroupstring = string with {
+    exists("/software/components/icinga/hostgroups/" + escape(SELF)) || SELF == "*";
+};
 
-type icinga_commandstrings = string [] with exists("/software/components/icinga/commands/" + SELF[0]);
+type icinga_commandstrings = string [] with {
+    exists("/software/components/icinga/commands/" + SELF[0]);
+};
 
-type icinga_timeperiodstring = string with exists("/software/components/icinga/timeperiods/" + SELF) || SELF == "*";
+type icinga_timeperiodstring = string with {
+    exists("/software/components/icinga/timeperiods/" + SELF) || SELF == "*";
+};
 
-type icinga_contactgroupstring = string with exists("/software/components/icinga/contactgroups/" + SELF) || SELF == "*";
+type icinga_contactgroupstring = string with {
+    exists("/software/components/icinga/contactgroups/" + SELF) || SELF == "*";
+};
 
-type icinga_contactstring = string with exists("/software/components/icinga/contacts/" + SELF) || SELF == "*";
+type icinga_contactstring = string with {
+    exists("/software/components/icinga/contacts/" + SELF) || SELF == "*";
+};
 
-type icinga_servicegroupstring = string with exists("/software/components/icinga/servicegroups/" + SELF) || SELF == "*";
+type icinga_servicegroupstring = string with {
+    exists("/software/components/icinga/servicegroups/" + SELF) || SELF == "*";
+};
 
-type icinga_servicestring = string with exists("/software/components/icinga/services/" + SELF) || SELF == "*";
+type icinga_servicestring = string with {
+    exists("/software/components/icinga/services/" + SELF) || SELF == "*";
+};
 
 type icinga_service_notification_string = string with match(SELF, "^(w|u|c|r|f|n)$");
 type icinga_host_notification_string = string with match(SELF, "^(d|u|r|f|n)$");
