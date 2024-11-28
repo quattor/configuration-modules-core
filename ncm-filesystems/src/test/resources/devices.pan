@@ -5,49 +5,49 @@ unique template devices;
 "/system/network/domainname" = 'y';
 
 "/hardware/harddisks/sda" = dict(
-    "capacity", 4000, 
+    "capacity", 4000,
 );
 
-"/system/blockdevices" = dict (
-    "physical_devs", dict (
-        "sda", dict ("label", "gpt")
+"/system/blockdevices" = dict(
+    "physical_devs", dict(
+        "sda", dict("label", "gpt")
+    ),
+    "partitions", dict(
+        "sda1", dict(
+            "holding_dev", "sda",
+            "size", 100,
+            "type", "primary", # no defaults !
         ),
-    "partitions", dict (
-        "sda1", dict (
+        "sda2", dict(
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
-        "sda2", dict (
+        ),
+        "sda3", dict(
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
-        "sda3", dict (
+        ),
+        "sda4", dict(
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
-        "sda4", dict (
+        ),
+        "sda5", dict(
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
-        "sda5", dict (
+        ),
+        "sda6", dict(
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
-        "sda6", dict (
-            "holding_dev", "sda",
-            "size", 100,
-            "type", "primary", # no defaults !
-            ),
+        ),
     ),
 );
 
-"/system/filesystems" = list (
-    dict (
+"/system/filesystems" = list(
+    dict(
         "mount", true,
         "mountpoint", "/boot",
         "preserve", true,
@@ -57,10 +57,10 @@ unique template devices;
         "type", "ext4",
         "freq", 0,
         "pass", 0
-        )
+    )
 );
 
-"/system/filesystems" = { 
+"/system/filesystems" = {
     # always make a copy
 
     fs = value("/system/filesystems/0");
