@@ -8,14 +8,17 @@
 
 declaration template components/authconfig/sssd/ldap;
 
-type ldap_schema = string with match(SELF, "^(IPA|AD|rfc2307|rfc2307bis)") ||
-    error ("LDAP schema must be valid according to sssd-ldap: " + SELF);
+type ldap_schema = string with match(SELF, "^(IPA|AD|rfc2307|rfc2307bis)") || error(
+    "LDAP schema must be valid according to sssd-ldap: " + SELF
+);
 
-type ldap_authok = string with match(SELF, "^(obfuscated_)?password") ||
-    error ("LDAP authok must be valid according to sssd-ldap: " + SELF);
+type ldap_authok = string with match(SELF, "^(obfuscated_)?password") || error(
+    "LDAP authok must be valid according to sssd-ldap: " + SELF
+);
 
-type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") ||
-    error ("Invalid LDAP alias dereferencing method: " + SELF);
+type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") || error(
+    "Invalid LDAP alias dereferencing method: " + SELF
+);
 
 type ldap_order = string with match(SELF, "^(filter|expire|authorized_service|host)$");
 
