@@ -11,38 +11,38 @@ object template configure;
 "/system/blockdevices" = dict (
     "physical_devs", dict (
         "sda", dict ("label", "gpt")
-        ),
+    ),
     "partitions", dict (
         "sda1", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
         "sda2", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
         "sda3", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
         "sda4", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
         "sda5", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
         "sda6", dict (
             "holding_dev", "sda",
             "size", 100,
             "type", "primary", # no defaults !
-            ),
+        ),
     ),
 );
 
@@ -57,7 +57,7 @@ object template configure;
         "type", "ext4",
         "freq", 0,
         "pass", 0
-        )
+    )
 );
 
 "/system/filesystems" = {
