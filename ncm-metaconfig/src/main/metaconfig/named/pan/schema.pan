@@ -7,10 +7,11 @@ declaration template metaconfig/named/schema;
 
 include 'pan/types';
 
-type named_acl_name = string with
-    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/" + SELF) ||
-    match (SELF, "^(none|localhost|any|localnets)$") ||
-    error ("ACL with name " + SELF + " is not defined");
+type named_acl_name = string with {
+    exists("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/" + SELF) ||
+    match(SELF, "^(none|localhost|any|localnets)$") ||
+    error("ACL with name " + SELF + " is not defined");
+};
 
 type named_source = {
     "ip" ? type_ip
@@ -95,9 +96,10 @@ type named_zone = {
     true;
 };
 
-type named_channel_name = string with
+type named_channel_name = string with {
     exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/" + SELF) ||
     error (SELF + " doesn't refer to a logging channel");
+};
 
 @{
     Named log parameters
