@@ -59,12 +59,9 @@ function openldap_loglevels_to_long = {
 
 @documentation{
     power of 2 (up to 64k)
+    This is based on public domain code from http://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 }
-type long_pow2 = long with (
-    SELF==1||SELF==2||SELF==4||SELF==8||SELF==16||SELF==32||SELF==64||SELF==128||SELF==256||
-    SELF==512||SELF==1024||SELF==2048||SELF==4096||SELF==8192||SELF==16384||SELF==32768||SELF==65536||
-    error("Only powers of two are accepted")
-);
+type long_pow2 = long(1..65535) with (SELF & (SELF - 1)) == 0 || error("Only powers of two are accepted");
 
 @documentation{
      Possible acceptable values
