@@ -63,31 +63,31 @@ object template configure;
 "/system/filesystems" = {
     # always make a copy
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda2";
     fs["mountpoint"] = "/";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda3";
     fs["mountpoint"] = "/new";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda4";
     fs["mountpoint"] = "/food";
     fs["label"] = "FRIETJES";
     fs["type"] = "chokotoFS";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda5";
     fs["mountpoint"] = "/home";
     fs["type"] = "ext4";
     fs["label"] = "HOME";
     append(fs);
 
-    fs=value("/system/filesystems/0");
+    fs = value("/system/filesystems/0");
     fs["block_device"] = "partitions/sda6";
     fs["mountpoint"] = "/special";
     fs["label"] = "BLT";
