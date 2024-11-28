@@ -36,4 +36,4 @@ prefix "/software/components/download/files";
     "href", "def://ok/something/entirely/different",
     "post", "postprocess",
     "daemons", dict("magic", "restart"),
-    );
+);
