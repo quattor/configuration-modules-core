@@ -4,7 +4,7 @@ include 'quattor/types/component';
 include 'pan/types';
 include if_exists('components/accounts/functions');
 
-@documentation {
+@documentation{
     kerberos_principal_string is a string with format `principal[/component1[/component2[...]]]@REALM`
 }
 type kerberos_principal_string = string with {
@@ -87,7 +87,8 @@ type ccm_component = {
             is_user_or_group('group', SELF)
         } else {
             true;
-        }}
+        }
+    }
     @{Whether the profiles should be world-readable. Defaults to 0. }
     'world_readable' : long(0..1) = 0
     @{If `profile` is not a URL, a profile url will be calculated from `base_url` and the local hostname.}
