@@ -23,7 +23,7 @@ include pro_declaration_functions_sudo;
 "/software/components/sudo/active" = true;
 "/software/components/sudo/dispatch" = true;
 
-"/software/components/sudo/general_options/" = list(
+"/software/components/sudo/general_options" = list(
     dict(
         "run_as", "munoz",
         "options", dict("insults", true),
