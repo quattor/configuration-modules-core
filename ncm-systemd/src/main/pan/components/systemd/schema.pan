@@ -81,7 +81,9 @@ type ${project.artifactId}_unit_architecture = choice(
     'native'
 );
 
-type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|apparmor|ima|smack|audit)$');
+type ${project.artifactId}_unit_security = string with match(SELF,
+    '^!?(selinux|apparmor|tomoyo|smack|ima|audit|uefi-secureboot|tpm2|cvm|measured-uki)$'
+);
 
 type ${project.artifactId}_unit_virtualization = choice(
     '0',
