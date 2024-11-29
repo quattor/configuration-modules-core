@@ -5,22 +5,7 @@
 @{
     Contains the data structure describing the SSSD LDAP provider
 }
-
 declaration template components/authconfig/sssd/ldap;
-
-type ldap_schema = string with match(SELF, "^(IPA|AD|rfc2307|rfc2307bis)") || error(
-    "LDAP schema must be valid according to sssd-ldap: " + SELF
-);
-
-type ldap_authok = string with match(SELF, "^(obfuscated_)?password") || error(
-    "LDAP authok must be valid according to sssd-ldap: " + SELF
-);
-
-type ldap_deref = string with match(SELF, "^(never|searching|finding|always)$") || error(
-    "Invalid LDAP alias dereferencing method: " + SELF
-);
-
-type ldap_order = string with match(SELF, "^(filter|expire|authorized_service|host)$");
 
 @{
     LDAP chpass fields
@@ -34,7 +19,7 @@ type sssd_chpass = {
 
 type sssd_ldap_defaults = {
     "bind_dn" ? string
-    "authtok_type" : ldap_authok = "password"
+    "authtok_type" : choice('password', 'obfuscated_password') = 'password'
     "authtok" ? string
 };
 
@@ -93,7 +78,7 @@ type authconfig_sssd_ldap = {
     "uri" ? type_absoluteURI[]
     "backup_uri" ? type_absoluteURI[]
     "search_base" ? string
-    "schema" : ldap_schema = "rfc2307"
+    "schema" : choice('IPA', 'AD', 'rfc2307', 'rfc2307bis') = 'rfc2307'
     "service" ? sssd_ldap_service
 
     "krb5_backup_server" ? string
@@ -101,7 +86,7 @@ type authconfig_sssd_ldap = {
     "krb5_realm" ? string
     "krb5_server" ? string
     "access_filter" ? string
-    "access_order" : ldap_order = "filter"
+    "access_order" : choice('filter', 'expire', 'authorized_service', 'host') = 'filter'
     "connection_expire_timeout" : long = 900
     "deref" ? string
     "deref_threshold" ? long
@@ -124,5 +109,5 @@ type authconfig_sssd_ldap = {
     "referrals" ? boolean
     "rootdse_last_usn" ? string
     "search_timeout" : long = 6
-    "account_expire_policy" ? string with match(SELF, "^(shadow|ad|rhds|ipa|389ds|nds)$")
+    "account_expire_policy" ? choice('shadow', 'ad', 'rhds', 'ipa', '389ds', 'nds')
 };
