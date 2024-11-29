@@ -360,12 +360,12 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'WorkingDirectory' ? string
 };
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[] with {
-    length(SELF) == 2 && match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$')
+type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[2] with {
+    match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$')
 };
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[] with {
-    length(SELF) == 2 && match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$')
+type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[2] with {
+    match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$')
 };
 
 @documentation{
