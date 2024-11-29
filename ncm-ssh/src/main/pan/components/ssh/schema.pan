@@ -43,13 +43,32 @@ type ssh_gssapikexalgorithms = choice(
 );
 
 function is_valid_ssh_MAC = {
-    match(ARGV[0], "^(hmac-(sha2-256|sha2-512|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha2-256-etm" +
-        "|hmac-sha2-512-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
+    valid_options = list(
+        'hmac-ripemd160',
+        'hmac-ripemd160@openssh.com',
+        'hmac-ripemd160-etm@openssh.com',
+        'hmac-sha2-256',
+        'hmac-sha2-256-etm@openssh.com',
+        'hmac-sha2-512',
+        'hmac-sha2-512-etm@openssh.com',
+        'umac-64@openssh.com',
+        'umac-64-etm@openssh.com',
+        'umac-128@openssh.com',
+        'umac-128-etm@openssh.com',
+    );
+    index(ARGV[0], valid_options) >= 0;
 };
 
 function is_valid_ssh_cipher = {
-    match (ARGV[0], "^((aes128|aes192|aes256)-ctr|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
-};
+    valid_options = list(
+        'aes128-ctr',
+        'aes192-ctr',
+        'aes256-ctr',
+        'aes128-gcm@openssh.com',
+        'aes256-gcm@openssh.com',
+        'chacha20-poly1305@openssh.com',
+    );
+    index(ARGV[0], valid_options) >= 0;
 };
 
 type legacy_ssh_MACs = string with {
