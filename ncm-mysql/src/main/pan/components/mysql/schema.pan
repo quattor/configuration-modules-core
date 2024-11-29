@@ -30,9 +30,11 @@ function component_mysql_valid = {
 
 
 function component_mysql_check_db_script = {
-    if ((exists(SELF['file']) && is_defined(SELF['file'])) ||
-        (exists(SELF['content']) && is_defined(SELF['content']))) {
-            return(true);
+    if (
+        (exists(SELF['file']) && is_defined(SELF['file'])) ||
+        (exists(SELF['content']) && is_defined(SELF['content']))
+    ) {
+        return(true);
     } else {
         error('Invalid DB script : either script name or script content must be specified');
     };
@@ -52,7 +54,8 @@ function component_mysql_password_valid = {
 type component_mysql_user_right = string with match(SELF, '^(ALL( PRIVILEGES)?|ALTER( ROUTINE)?|' +
     'CREATE( (ROUTINE|TEMPORARY TABLES|USER|VIEW))?|DELETE|DROP|EVENT|EXECUTE|FILE|GRANT OPTION|INDEX|INSERT|' +
     'LOCK TABLES|PROCESS|REFERENCES|RELOAD|REPLICATION (CLIENT|SLAVE)|SELECT|SHOW (DATABASES|VIEW)|SHUTDOWN|' +
-    'SUPER|TRIGGER|UPDATE|USAGE)$');
+    'SUPER|TRIGGER|UPDATE|USAGE)$'
+);
 
 
 type component_mysql_db_user = {
