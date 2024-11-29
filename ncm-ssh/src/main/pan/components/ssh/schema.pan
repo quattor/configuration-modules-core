@@ -12,14 +12,26 @@ variable SSH_SCHEMA_VERSION ?= '5.3';
 
 include 'components/ssh/schema-' + SSH_SCHEMA_VERSION;
 
-type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey' +
-    '|keyboard-interactive|password)$');
-
+type ssh_preferred_authentication = choice(
+    'gssapi-with-mic',
+    'hostbased',
+    'keyboard-interactive',
+    'password',
+    'publickey'
+);
 
 type ssh_ciphers = string with is_valid_ssh_cipher(SELF);
-type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group-exchange-sha256|" +
-    "ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
+
+type ssh_kexalgorithms = choice(
+    'diffie-hellman-group-exchange-sha256',
+    'ecdh-sha2-nistp256',
+    'ecdh-sha2-nistp384',
+    'ecdh-sha2-nistp521',
+    'curve25519-sha256@libssh.org'
+);
+
 type ssh_MACs = string with is_valid_ssh_MAC(SELF);
+
 type ssh_gssapikexalgorithms = choice(
     'gss-gex-sha1-',
     'gss-group1-sha1-',
@@ -68,17 +80,17 @@ type legacy_ssh_kexalgorithm = string with {
 };
 
 type ssh_core_options_type = {
-    "AddressFamily" ? string with match (SELF, '^(any|inet6?)$')
+    "AddressFamily" ? choice('any', 'inet', 'inet6')
     "ChallengeResponseAuthentication" ? legacy_binary_affirmation_string
     "Ciphers" ? legacy_ssh_ciphers
-    "Compression" ? string with match (SELF, '^(yes|delayed|no)$')
+    "Compression" ? choice('yes', 'delayed', 'no')
     "GSSAPIAuthentication" ? legacy_binary_affirmation_string
     "GSSAPICleanupCredentials" ? legacy_binary_affirmation_string
     "GSSAPIKexAlgorithms" ? ssh_gssapikexalgorithms[1..]
     "GSSAPIKeyExchange" ? legacy_binary_affirmation_string
     "GatewayPorts" ? legacy_binary_affirmation_string
     "HostbasedAuthentication" ? legacy_binary_affirmation_string
-    "LogLevel" ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
+    "LogLevel" ? choice('QUIET', 'FATAL', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG1', 'DEBUG2', 'DEBUG3')
     "MACs" ? legacy_ssh_MACs
     "PasswordAuthentication" ? legacy_binary_affirmation_string
     "Protocol" ? string
@@ -142,7 +154,7 @@ type ssh_daemon_options_type = {
         };
         true;
     }
-    "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
+    "PermitTunnel" ? choice('yes', 'point-to-point', 'ethernet', 'no')
     "PermitUserEnvironment" ? legacy_binary_affirmation_string
     "PidFile" ? string
     "Port" ? long
