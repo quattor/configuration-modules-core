@@ -38,10 +38,6 @@ function is_valid_ssh_MAC = {
 function is_valid_ssh_cipher = {
     match (ARGV[0], "^((aes128|aes192|aes256)-ctr|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
 };
-
-function is_valid_ssh_kexalgorithm = {
-    match (ARGV[0], "^(diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp(256|384|521)|" +
-        "curve25519-sha256@libssh.org)$");
 };
 
 type legacy_ssh_MACs = string with {
