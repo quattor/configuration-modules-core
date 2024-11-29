@@ -13,11 +13,11 @@ example usage:
 }
 function validate_aii_freeipa_hooks = {
     if (ARGC != 1) {
-        error(format("%s: requires only one argument", FUNCTION));
+        error("%s: requires only one argument", FUNCTION);
     };
 
     if (! exists(SELF[ARGV[0]])) {
-        error(format("%s: no %s hook found.", FUNCTION, ARGV[0]));
+        error("%s: no %s hook found.", FUNCTION, ARGV[0]);
     };
 
 
@@ -27,7 +27,7 @@ function validate_aii_freeipa_hooks = {
     foreach (i; v; hook) {
         if (exists(v['module']) && v['module'] == FREEIPA_AII_MODULE_NAME) {
             if (found) {
-                error(format("%s: second freeipa %s hook found", FUNCTION, name));
+                error("%s: second freeipa %s hook found", FUNCTION, name);
             } else {
                 found = true;
                 ind = i;
@@ -36,7 +36,7 @@ function validate_aii_freeipa_hooks = {
     };
 
     if (! found) {
-        error(format("%s: no freeipa %s hook found with module %s", FUNCTION, ARGV[0], FREEIPA_AII_MODULE_NAME));
+        error("%s: no freeipa %s hook found with module %s", FUNCTION, ARGV[0], FREEIPA_AII_MODULE_NAME);
     };
 
     true;
