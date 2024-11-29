@@ -44,8 +44,8 @@ function openldap_loglevels_to_long = {
         lvls = list(default);
     };
 
-    total=0;
-    foreach(idx;lvl;lvls) {
+    total = 0;
+    foreach(idx; lvl; lvls) {
         if(!exists(the_map[lvl])) {
             return(undef);
         };
@@ -59,31 +59,27 @@ function openldap_loglevels_to_long = {
 
 @documentation{
     power of 2 (up to 64k)
+    This is based on public domain code from http://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 }
-type long_pow2 = long with (SELF==1||SELF==2||SELF==4||SELF==8||
-    SELF==16||SELF==32||SELF==64||SELF==128||SELF==256||SELF==512||
-    SELF==1024||SELF==2048||SELF==4096||SELF==8192||SELF==16384||
-    SELF==32768||SELF==65536||
-    error("Only powers of two are accepted"));
+type long_pow2 = long(1..65535) with (SELF & (SELF - 1)) == 0 || error("Only powers of two are accepted");
 
 @documentation{
      Possible acceptable values
 }
-type ldap_hash = string with match(SELF, '\{(S?(SHA|MD5))\}') ||
-    error ("Only secure hashes are accepted here: {SSHA, SHA, SMD5, MD5}");
+type ldap_hash = string with match(SELF, '\{(S?(SHA|MD5))\}') || error(
+    "Only secure hashes are accepted here: {SSHA, SHA, SMD5, MD5}"
+);
 
 type ldap_sizelimit = {
     "soft" ? long
     "hard" ? long
-} with exists(SELF["soft"]) || exists(SELF["hard"]) ||
-    error("Either 'soft' or 'hard' limits must be supplied");
+} with exists(SELF["soft"]) || exists(SELF["hard"]) || error("Either 'soft' or 'hard' limits must be supplied");
 
 type ldap_buffer_size = {
     "listener" ? type_absoluteURI
     "read" ? long
     "write" ? long
-} with exists(SELF["read"]) || exists(SELF["write"]) ||
-    error("Either 'read' or 'write' limits must be supplied");
+} with exists(SELF["read"]) || exists(SELF["write"]) || error("Either 'read' or 'write' limits must be supplied");
 
 type ldap_access_item = {
     "who" ? string
@@ -181,12 +177,13 @@ type ldap_global = {
 };
 
 
-type ldap_database_string = string with
-    match(SELF, "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|monitor|null|passwd|perl|relay|shell|sql)$") ||
-        error("Unknown LDAP database type. Check sladpd.conf man page");
+type ldap_database_string = string with match(SELF,
+    "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|monitor|null|passwd|perl|relay|shell|sql)$"
+) || error("Unknown LDAP database type. Check sladpd.conf man page");
 
-type ldap_ops = string with
-    match(SELF, '^(add|bind|compare|delete|modify|rename|search|read|write|(extended=\w+)|rename)$');
+type ldap_ops = string with match(SELF,
+    '^(add|bind|compare|delete|modify|rename|search|read|write|(extended=\w+)|rename)$'
+);
 
 type ldap_replica_retries = {
     "interval" : string
