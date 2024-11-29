@@ -425,8 +425,8 @@ type ${project.artifactId}_unitfile_config_service = {
     'ExecStopPost' ? transitional_string_or_list_of_strings
     'GuessMainPID' ? boolean
     'NonBlocking' ? boolean
-    'PIDFile' ? string with match(SELF, '^/')
     'NotifyAccess' ? choice('none', 'main', 'all')
+    'PIDFile' ? absolute_file_path
     'PermissionsStartOnly' ? boolean
     'RemainAfterExit' ? boolean
     'Restart' ? choice('no', 'on-success', 'on-failure', 'on-abnormal', 'on-watchdog', 'on-abort', 'always')
@@ -462,7 +462,7 @@ type ${project.artifactId}_unitfile_config_socket = {
     'ListenFIFO' ? absolute_file_path
     'ListenSpecial' ? absolute_file_path
     'ListenNetlink' ? string
-    'ListenMessageQueue' ? string with match(SELF, '^/')
+    'ListenMessageQueue' ? absolute_file_path
     'ListenUSBFunction' ? string
     'SocketProtocol' ? choice('udplite', 'sctp')
     'BindIPv6Only' ? choice('default', 'both', 'ipv6-only')
