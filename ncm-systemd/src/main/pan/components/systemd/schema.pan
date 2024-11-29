@@ -162,7 +162,7 @@ type ${project.artifactId}_unitfile_config_unit_condition = {
     'FirstBoot' ? boolean
     'Host' ? string[] # TODO: make custom type for hostname or machineid
     'KernelCommandLine' ? string[]
-    'NeedsUpdate' ? string with match(SELF, '^!?/(var|etc)')
+    'NeedsUpdate' ? string with match(SELF, '^!?/(var|etc)$')
     'PathExistsGlob' ? string[]
     'PathExists' ? string[]
     'PathIsDirectory' ? string[]
