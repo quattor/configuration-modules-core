@@ -1000,11 +1000,8 @@ type opennebula_oneflow = {
     "lcm_interval" : long = 30
     @{default cooldown period after a scale operation, in seconds}
     "default_cooldown" : long = 300
-    @{default shutdown action
-    terminate : OpenNebula >= 5.0.0
-    shutdown : OpenNebula < 5.0.0
-    }
-    "shutdown_action" : string = 'terminate' with match (SELF, '^(shutdown|shutdown-hard|terminate|terminate-hard)$')
+    @{default shutdown action}
+    "shutdown_action" : string = 'terminate' with match (SELF, '^(terminate|terminate-hard)$')
     @{default numner of virtual machines that will receive the given call in each interval
     defined by action_period, when an action is performed on a role}
     "action_number" : long(1..) = 1

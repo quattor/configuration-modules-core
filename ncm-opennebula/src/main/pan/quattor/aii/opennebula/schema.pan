@@ -308,9 +308,7 @@ type opennebula_vmtemplate = {
     "pci" ? opennebula_vmtemplate_pci[]
     @{labels is a list of strings to group the VMs under a given name and filter them
     in the admin and cloud views. It is also possible to include in the list
-    sub-labels using a common slash: list("Name", "Name/SubName")
-    This feature is available since OpenNebula 5.x, below this version the change
-    does not take effect.}
+    sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
     "placements" ? opennebula_placements
     @{The optional memoryBacking element may contain several elements that influence
