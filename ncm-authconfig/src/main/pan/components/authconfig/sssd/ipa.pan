@@ -15,7 +15,7 @@ type authconfig_sssd_ipa_krb5 = {
     'validate' ? boolean
     'realm' ? string
     'canonicalize' ? boolean
-    'use_fast' ? string with match(SELF, '^(never|try|demand)$')
+    'use_fast' ? choice('never', 'try', 'demand')
     'confd_path' ? absolute_file_path
     'server' ? type_hostname[]
     'backup_server'? type_hostname[]

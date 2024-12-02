@@ -11,13 +11,13 @@ type authconfig_method_generic_type = {
 include 'components/authconfig/sssd';
 
 type authconfig_pamadditions_line_type = {
-    "order" : string with match(SELF, '^(first|last)$')
+    "order" : choice('first', 'last')
     "entry" : string with match(SELF, '^\s*(required|requisite|sufficient|optional|include|substack)\s+\S+\.so(\s|$)')
 };
 
 type authconfig_pamadditions_type = {
     "conffile" : string = "/etc/pam.d/system_auth"
-    "section" : string with match(SELF, "^(auth|account|password|session)$")
+    "section" : choice('auth', 'account', 'password', 'session')
     "lines" : authconfig_pamadditions_line_type[]
 };
 
@@ -61,7 +61,7 @@ type authconfig_nss_override_attribute_value = {
     "gidNumber" ? long
 };
 
-type connect_policy = string with match(SELF, "^(oneshot|persistent)$");
+type connect_policy = choice('oneshot', 'persistent');
 
 type authconfig_method_ldap_type = {
     include authconfig_method_generic_type
@@ -203,7 +203,7 @@ type authconfig_method_nslcd_type = {
     "basedn" : string
     "base" : authconfig_nslcd_filter
     "scope" ? string
-    "deref" ? string with match(SELF, "^never|searching|finding|always$")
+    "deref" ? choice('never', 'searching', 'finding', 'always')
     "filter" ? authconfig_nslcd_filter
     "map" ? authconfig_nslcd_maps
     "bind_timelimit" ? long
@@ -211,8 +211,8 @@ type authconfig_method_nslcd_type = {
     "idle_timelimit" ? long
     "reconnect_sleeptime" ? long
     "reconnect_retrytime" ? long
-    "ssl" ? string with match(SELF, "^on|off|start_tls$")
-    "tls_reqcert" ? string with match(SELF, "^never|allow|try|demand|hard$")
+    "ssl" ? choice('on', 'off', 'start_tls')
+    "tls_reqcert" ? choice('never', 'allow', 'try', 'demand', 'hard')
     "tls_cacertdir" ? string
     "tls_randfile" ? string
     "tls_ciphers" ? string[]
@@ -236,7 +236,7 @@ type authconfig_method_type = {
     "sssd" ? authconfig_method_sssd_type
 };
 
-type hash_string = string with match(SELF, "^(descrypt|md5|sha256|sha512)$");
+type hash_string = choice('descrypt', 'md5', 'sha256', 'sha512');
 
 type authconfig_component = {
     include structure_component
