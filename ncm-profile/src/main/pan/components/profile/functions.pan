@@ -21,13 +21,13 @@ declaration template components/profile/functions;
 function component_profile_add_env = {
     function_name = 'component_profile_add_env';
     if ( (ARGC < 2) || (ARGC > 3) ) {
-        error(function_name+': invalid number of arguments. Must be 2 or 3.');
+        error('%s: invalid number of arguments. Must be 2 or 3.', function_name);
     };
     if ( ARGC == 2 ) {
         if ( is_dict(ARGV[1]) ) {
             env_list = ARGV[1];
         } else {
-            error(function_name+': with 2 arguments, second argument must be a dict.');
+            error('%s: with 2 arguments, second argument must be a dict.', function_name);
         };
     } else {
         env_list = dict(ARGV[1], ARGV[2]);
@@ -43,16 +43,19 @@ function component_profile_add_env = {
     };
 
 
-    foreach (var_name;var_value;env_list) {
+    foreach (var_name; var_value; env_list) {
         var_value_str = '';
         if ( is_string(var_value) ) {
             var_value_str = var_value;
         } else if ( is_long(var_value) || is_boolean(var_value) ) {
             var_value_str = to_string(var_value);
         } else if ( is_list(var_value) ) {
-            foreach (j;val;var_value) {
+            foreach (j; val; var_value) {
                 if ( !is_string(val) ) {
-                    error(function_name+': variable '+var_name+' value is a list whose elements are not string');
+                    error(
+                        '%s: variable %s value is a list whose elements are not string',
+                        function_name, var_name,
+                    );
                 };
                 if ( length(var_value_str) > 0 ) {
                     var_value_str = var_value_str + ':';
@@ -60,7 +63,10 @@ function component_profile_add_env = {
                 var_value_str = var_value_str + val;
             };
         } else {
-            error(function_name+': variable '+var_name+' value has an unsupported type (must be string, long, boolean or list of string');
+            error(
+                '%s: variable %s value has an unsupported type (must be string, long, boolean or list of string',
+                function_name, var_name,
+            );
         };
         SELF['scripts'][script_name]['env'][var_name] = var_value_str;
     };
@@ -89,7 +95,7 @@ function component_profile_add_env = {
 function component_profile_add_path = {
     function_name = 'component_profile_add_path';
     if ( (ARGC < 3) || (ARGC > 4) ) {
-        error(function_name+': invalid number of arguments. Must be 3 or 4.');
+        error('%s: invalid number of arguments. Must be 3 or 4.', function_name);
     };
     if ( ARGC == 4 ) {
         value_type = ARGV[3];
@@ -114,7 +120,10 @@ function component_profile_add_path = {
     } else if ( is_list(ARGV[2]) ) {
         var_value = ARGV[2];
     } else {
-        error(function_name+': variable '+var_name+' value has an unsupported type (must be string, or a list of string');
+        error(
+            '%s: variable %s value has an unsupported type (must be string, or a list of string',
+            function_name, var_name,
+        );
     };
     SELF['scripts'][script_name]['path'][ARGV[1]][value_type] = var_value;
 
