@@ -183,7 +183,7 @@ In this case to request this IB device we should set:
   class:  0x0c06
 
 For more info:
-http://docs.opennebula.org/5.0/deployment/open_cloud_host_setup/pci_passthrough.html
+https://docs.opennebula.io/6.10/open_cluster_deployment/kvm_node/pci_passthrough.html
 }
 type opennebula_vmtemplate_pci = {
     @{first value from onehost TYPE section}
@@ -215,7 +215,7 @@ Re-scheduling of VMs works as for any other VM, it will look for a different hos
 considering the placement constraints.
 
 For more info:
-https://docs.opennebula.org/5.8/advanced_components/application_flow_and_auto-scaling/vmgroups.html
+https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/affinity.html
 }
 type opennebula_vmtemplate_vmgroup = {
     "vmgroup_name" : string
@@ -224,7 +224,7 @@ type opennebula_vmtemplate_vmgroup = {
 
 @documentation{
 Type that sets placement constraints and preferences for the VM, valid for all hosts
-More info: http://docs.opennebula.org/5.0/operation/references/template.html#placement-section
+More info: https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/scheduling.html
 }
 type opennebula_placements = {
     @{Boolean expression that rules out provisioning hosts from list of machines
@@ -289,12 +289,12 @@ type opennebula_vmtemplate = {
         '/system/opennebula/diskrdmpath/vdd/' = '/dev/sdf';
      will passthrough the block device to the VM as vdd disk. Disk size is ignored in this case.
      It requires a RDM datastore.
-     See: https://docs.opennebula.org/5.8/deployment/open_cloud_storage_setup/dev_ds.html}
+     See: https://docs.opennebula.io/6.10/open_cluster_deployment/storage_setup/dev_ds.html}
     "diskrdmpath" ? opennebula_rdm_disk
     @{Set ignoremac tree to avoid to include MAC values within AR/VM templates}
     "ignoremac" ? opennebula_ignoremac
     @{Set how many queues will be used for the communication between CPUs and virtio drivers.
-    see: https://docs.opennebula.org/5.6/deployment/open_cloud_host_setup/kvm_driver.html}
+    see: https://docs.opennebula.io/6.10/open_cluster_deployment/kvm_node/kvm_driver.html}
     "virtio_queues" ? long(0..)
     @{Set graphics to export VM graphical display (VNC is used by default)}
     "graphics" : string = 'VNC' with match (SELF, '^(VNC|SDL|SPICE)$')
