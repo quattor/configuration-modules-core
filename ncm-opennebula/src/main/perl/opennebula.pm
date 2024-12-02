@@ -54,7 +54,9 @@ Features that are implemented at this moment:
 
 =item * Updates KVM PCI passthrough filter config file
 
-=item * Cloud resource labels (OpenNebula >= 5.x)
+=item * Cloud resource labels
+
+=item * VMs CPU pinning
 
 =back
 
