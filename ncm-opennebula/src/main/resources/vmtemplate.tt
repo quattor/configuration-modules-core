@@ -98,6 +98,11 @@ VMGROUP = [% INCLUDE 'opennebula/oned_level1.tt' data=item -%]
 [%- IF system.opennebula.labels.defined %]
 LABELS = "[% system.opennebula.labels.join(',') %]"
 [%- END %]
+[%- IF system.opennebula.topology.pin_policy.defined %]
+TOPOLOGY = [
+[%      INCLUDE 'opennebula/topology_level1.tt' data=system.opennebula.topology FILTER indent -%]
+]
+[%- END %]
 [%- FOREACH sched IN system.opennebula.placements %]
 [%      sched.key FILTER upper %] = "[% sched.value %]"
 [%- END %]

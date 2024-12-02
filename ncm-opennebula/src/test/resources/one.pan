@@ -247,8 +247,10 @@ prefix "/software/components/opennebula";
     'hyp101', dict(),
     'hyp102', dict(),
     # Add hyp103 in a different cluster
+    # and CPU pinning policy
     'hyp103', dict(
         "cluster", "red.cluster",
+        "pin_policy", "PINNED",
     ),
     'hyp104', dict(),
 );
