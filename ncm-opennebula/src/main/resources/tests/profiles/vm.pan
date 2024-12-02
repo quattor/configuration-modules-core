@@ -223,3 +223,10 @@ prefix "/system/opennebula";
 "cpuratio" = 1.0;
 "cpu_model" = "Broadwell-noTSX-IBRS";
 
+"topology" = dict(
+    "pin_policy", "NONE",
+    "sockets", 1,
+    "threads", 1,
+    "cores", 1,
+);
+
