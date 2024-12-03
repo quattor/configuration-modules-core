@@ -86,20 +86,17 @@ To set up the initial cluster, some steps should be taken:
 
 =over
 
-=item 1. First install the required Ruby gems in your OpenNebula server (only for OpenNebula 5.10 or older).
-You can use OpenNebula installgems addon : L<https://github.com/OpenNebula/addon-installgems>.
-
-=item 2. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the host hosts of the cluster.
+=item 1. The OpenNebula server(s) should have passwordless ssh access as oneadmin user to all the host hosts of the cluster.
  e.g. by distributing the public key(s) of the OpenNebula host over the cluster.
 
-=item 3. Start OpenNebula services: C<< # for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done >>
+=item 2. Start OpenNebula services: C<< # for i in '' -econe -gate -novnc -occi -sunstone; do service opennebula$i stop; done >>
 
-=item 4. Run the component a first time.
+=item 3. Run the component a first time.
 
-=item 5. The new oneadmin password will be available from C<< /var/lib/one/.one/one_auth >> file.
+=item 4. The new oneadmin password will be available from C<< /var/lib/one/.one/one_auth >> file.
 The old auth files are stored with .quattor.backup extension.
 
-=item 6. It is also possible to change sunstone service password, just include
+=item 5. It is also possible to change sunstone service password, just include
 'serveradmin' user and passwd within opennebula/users tree.
 In that case the component also updates the C<< sunstone_auth >> file.
 
