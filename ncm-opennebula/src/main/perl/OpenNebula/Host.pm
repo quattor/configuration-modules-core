@@ -91,7 +91,6 @@ sub manage_hosts
         $new = $self->update_something($one, "host", $host, "QUATTOR = 1");
         if (defined($hosts->{$host}->{pin_policy})) {
             $new = $self->update_something($one, "host", $host, "PIN_POLICY = $hosts->{$host}->{pin_policy}");
-            $self->verbose("HELLO pin defined: ", $hosts->{$host}->{pin_policy});
         };
         if (defined($new) and defined($hosts->{$host}->{cluster})) {
             $self->verbose("Host $host cluster is set to: ", $hosts->{$host}->{cluster});
