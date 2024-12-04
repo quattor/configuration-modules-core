@@ -161,8 +161,9 @@ type component_shorewall_rules = {
     "loglevel" ? string
 };
 
-type component_shorewall_shorewall_blacklist = string with
-    match(SELF, '^(ALL|NEW|ESTABLISHED|RELATED|INVALID|UNTRACKED)$');
+type component_shorewall_shorewall_blacklist = string with match(SELF,
+    '^(ALL|NEW|ESTABLISHED|RELATED|INVALID|UNTRACKED)$'
+);
 
 @{shorewall.conf options. only configured options are written to the configfile}
 type component_shorewall_shorewall = {
@@ -296,8 +297,10 @@ type component_shorewall = {
     @{tcpri configuration}
     "tcpri" ? component_shorewall_tcpri[]
     @{masq configuration}
-    "masq" ? component_shorewall_masq[] with {deprecated(0,
-        'deprecated in favor of shorewall-snat which was introduced in Shorewall 5.0.14'); true; }
+    "masq" ? component_shorewall_masq[] with {
+        deprecated(0, 'deprecated in favor of shorewall-snat which was introduced in Shorewall 5.0.14');
+        true;
+    }
     @{snat configuration}
     "snat" ? component_shorewall_snat[]
     @{providers configuration}
