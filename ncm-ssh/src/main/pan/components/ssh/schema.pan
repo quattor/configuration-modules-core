@@ -12,18 +12,26 @@ variable SSH_SCHEMA_VERSION ?= '5.3';
 
 include 'components/ssh/schema-' + SSH_SCHEMA_VERSION;
 
-type ssh_preferred_authentication = string with match(SELF, '^(gssapi-with-mic|hostbased|publickey' +
-    '|keyboard-interactive|password)$');
-
+type ssh_preferred_authentication = choice(
+    'gssapi-with-mic',
+    'hostbased',
+    'keyboard-interactive',
+    'password',
+    'publickey'
+);
 
 type ssh_ciphers = string with is_valid_ssh_cipher(SELF);
-type ssh_hostkeyalgorithms = string with match(SELF, "^(ssh-(rsa|dss|ed25519)|ecdsa-sha2-nistp(256|384|521)" +
-    "(ssh-rsa-cert-v01|ssh-dss-cert-v01|ecdsa-sha2-nistp256-cert-v01|ecdsa-sha2-nistp384-cert-v01|" +
-    "|ecdsa-sha2-nistp521-cert-v01|ssh-rsa-cert-v00|ssh-dss-cert-v00|ssh-ed25519-cert-v01)@openssh.com)$");
-type ssh_kbdinteractivedevices = string with match (SELF, "^(bsdauth|pam|skey)$");
-type ssh_kexalgorithms = string with match (SELF, "^(diffie-hellman-group-exchange-sha256|" +
-    "ecdh-sha2-nistp(256|384|521)|curve25519-sha256@libssh.org)$");
+
+type ssh_kexalgorithms = choice(
+    'diffie-hellman-group-exchange-sha256',
+    'ecdh-sha2-nistp256',
+    'ecdh-sha2-nistp384',
+    'ecdh-sha2-nistp521',
+    'curve25519-sha256@libssh.org'
+);
+
 type ssh_MACs = string with is_valid_ssh_MAC(SELF);
+
 type ssh_gssapikexalgorithms = choice(
     'gss-gex-sha1-',
     'gss-group1-sha1-',
@@ -35,17 +43,32 @@ type ssh_gssapikexalgorithms = choice(
 );
 
 function is_valid_ssh_MAC = {
-    match(ARGV[0], "^(hmac-(sha2-256|sha2-512|ripemd160)|(hmac-ripemd160|umac-64|umac-128|hmac-sha2-256-etm" +
-        "|hmac-sha2-512-etm|hmac-ripemd160-etm|umac-64-etm|umac-128-etm)@openssh.com)$");
+    valid_options = list(
+        'hmac-ripemd160',
+        'hmac-ripemd160@openssh.com',
+        'hmac-ripemd160-etm@openssh.com',
+        'hmac-sha2-256',
+        'hmac-sha2-256-etm@openssh.com',
+        'hmac-sha2-512',
+        'hmac-sha2-512-etm@openssh.com',
+        'umac-64@openssh.com',
+        'umac-64-etm@openssh.com',
+        'umac-128@openssh.com',
+        'umac-128-etm@openssh.com',
+    );
+    index(ARGV[0], valid_options) >= 0;
 };
 
 function is_valid_ssh_cipher = {
-    match (ARGV[0], "^((aes128|aes192|aes256)-ctr|(aes128-gcm|aes256-gcm|chacha20-poly1305)@openssh.com)$");
-};
-
-function is_valid_ssh_kexalgorithm = {
-    match (ARGV[0], "^(diffie-hellman-group-exchange-sha256|ecdh-sha2-nistp(256|384|521)|" +
-        "curve25519-sha256@libssh.org)$");
+    valid_options = list(
+        'aes128-ctr',
+        'aes192-ctr',
+        'aes256-ctr',
+        'aes128-gcm@openssh.com',
+        'aes256-gcm@openssh.com',
+        'chacha20-poly1305@openssh.com',
+    );
+    index(ARGV[0], valid_options) >= 0;
 };
 
 type legacy_ssh_MACs = string with {
@@ -76,17 +99,17 @@ type legacy_ssh_kexalgorithm = string with {
 };
 
 type ssh_core_options_type = {
-    "AddressFamily" ? string with match (SELF, '^(any|inet6?)$')
+    "AddressFamily" ? choice('any', 'inet', 'inet6')
     "ChallengeResponseAuthentication" ? legacy_binary_affirmation_string
     "Ciphers" ? legacy_ssh_ciphers
-    "Compression" ? string with match (SELF, '^(yes|delayed|no)$')
+    "Compression" ? choice('yes', 'delayed', 'no')
     "GSSAPIAuthentication" ? legacy_binary_affirmation_string
     "GSSAPICleanupCredentials" ? legacy_binary_affirmation_string
     "GSSAPIKexAlgorithms" ? ssh_gssapikexalgorithms[1..]
     "GSSAPIKeyExchange" ? legacy_binary_affirmation_string
     "GatewayPorts" ? legacy_binary_affirmation_string
     "HostbasedAuthentication" ? legacy_binary_affirmation_string
-    "LogLevel" ? string with match (SELF, '^(QUIET|FATAL|ERROR|INFO|VERBOSE|DEBUG[123]?)$')
+    "LogLevel" ? choice('QUIET', 'FATAL', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG1', 'DEBUG2', 'DEBUG3')
     "MACs" ? legacy_ssh_MACs
     "PasswordAuthentication" ? legacy_binary_affirmation_string
     "Protocol" ? string
@@ -150,7 +173,7 @@ type ssh_daemon_options_type = {
         };
         true;
     }
-    "PermitTunnel" ? string with match (SELF, '^(yes|point-to-point|ethernet|no)$')
+    "PermitTunnel" ? choice('yes', 'point-to-point', 'ethernet', 'no')
     "PermitUserEnvironment" ? legacy_binary_affirmation_string
     "PidFile" ? string
     "Port" ? long
@@ -168,7 +191,8 @@ type ssh_daemon_options_type = {
     "StrictModes" ? legacy_binary_affirmation_string
     "Subsystem" ? string
     "SyslogFacility" ? string with match (SELF,
-        '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$')
+        '^(AUTH(PRIV)?|DAEMON|USER|KERN|UUCP|NEWS|MAIL|SYSLOG|LPR|FTP|CRON|LOCAL[0-7])$'
+    )
     "TcpRcvBuf" ? long
     "TcpRcvBufPoll" ? legacy_binary_affirmation_string
     "UseDNS" ? legacy_binary_affirmation_string

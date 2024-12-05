@@ -7,6 +7,6 @@
 declaration template components/ssh/schema-5.3;
 
 type ssh_authkeyscommand_options_type = {
-            "AuthorizedKeysCommand" ? string
-            "AuthorizedKeysCommandRunAs" ? string
+    "AuthorizedKeysCommand" ? string
+    "AuthorizedKeysCommandRunAs" ? string
 };

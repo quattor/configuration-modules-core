@@ -16,5 +16,5 @@ prefix "/software/components/ssh/daemon/comment_options";
 "Banner" = "Foobar";
 
 prefix "/software/components/ssh/client/options";
-"PreferredAuthentications" = list('gssapi-with-mic','hostbased','publickey');
+"PreferredAuthentications" = list('gssapi-with-mic', 'hostbased', 'publickey');
 "Port" = 22222;
