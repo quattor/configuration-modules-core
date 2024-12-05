@@ -10,9 +10,9 @@ include 'quattor/schema';
 function component_profile_script_valid = {
     if ( exists(SELF['flavors']) && is_defined(SELF['flavors']) ) {
         if ( is_list(SELF['flavors']) ) {
-            foreach (i;flavor;SELF['flavors']) {
+            foreach (i; flavor; SELF['flavors']) {
                 if ( !match(flavor, 'csh|sh') ) {
-                    error("Invalid script flavor '"+flavor+"'. Must be 'csh' or 'sh'");
+                    error("Invalid script flavor '%s'. Must be 'csh' or 'sh'", flavor);
                     return(false);
                 };
             };
@@ -37,7 +37,7 @@ type structure_profile_path = {
 };
 
 type structure_profile_script = {
-    'flavors' : string[]=list('sh', 'csh')
+    'flavors' : string[] = list('sh', 'csh')
     'env' ? string{}
     'path' ? structure_profile_path{}
     'flavorSuffix' : boolean = true
