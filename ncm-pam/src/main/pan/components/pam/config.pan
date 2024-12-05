@@ -51,10 +51,12 @@ function pam_add = {
             options = ARGV[4];
         };
     };
-    ret[service][pamtype][tail] = dict("control", control,
-                                    "module", module,
-                                    "options", options,
-                                    "options_list", options_list);
+    ret[service][pamtype][tail] = dict(
+        "control", control,
+        "module", module,
+        "options", options,
+        "options_list", options_list,
+    );
 
     ret;
 };
@@ -197,11 +199,11 @@ function pam_add_access_acl = {
 
     if(!ret[key]["allowpos"] && permission == "+") {
         error("PAM access policy for " + key + "does not permit positive acls, discarding " + entry_string);
-        };
+    };
 
     if(!ret[key]["allowneg"] && permission == "-") {
         error("PAM access policy for " + key + "does not permit negative acls, discarding " + entry_string);
-        };
+    };
 
     tail = length(ret[key][acl]);
     ret[key][acl][tail] = dict("permission", permission, "users", users, "origins", origins);

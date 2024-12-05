@@ -1,4 +1,5 @@
 # ${license-info}
+
 # ${developer-info}
 # ${author-info}
 
@@ -33,7 +34,6 @@ type pam_component_options = extensible {
 };
 
 type pam_component_listfile_acl = {
-
     "filename" : string
     "items" : string[]
 };
@@ -64,7 +64,7 @@ type pam_component_module = {
 type pam_component_access_entry = {
     "permission" : string with match(SELF, "^[-+]$")
     "users" : string
-        "origins" : string
+    "origins" : string
 };
 
 type pam_component_access = {
