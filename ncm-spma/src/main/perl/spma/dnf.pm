@@ -559,10 +559,14 @@ sub Configure
             $will_remove->delete($rpm);
         }
 
+        # set rpm with version without epoch, epoch is added between version and package name, e.g audit-0:3.1.2-1.el8.x86_64, -0: is epoch.
+        # remove the epoch part and combine package name and version
+        # below will give audit-3.1.2-1.el8.x86_64, which will be used to compare against any rpm in whitelist.
+        my $rpm_without_epoch = $rpm =~ s/-\d+:/-/r;
         # Do not remove whitelisted packages.
         if (defined($whitelist)) {
             for my $white_pkg (@$whitelist) {
-                if (index($rpm_version, $white_pkg) == 0 || match_glob($white_pkg, $rpm_version)) {
+                if (index($rpm_without_epoch, $white_pkg) == 0 || match_glob($white_pkg, $rpm_without_epoch)) {
                     $will_remove->delete($rpm);
                     $whitelisted->insert($rpm);
                 }
