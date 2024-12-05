@@ -132,7 +132,7 @@ function purge_rep_list = {
     arg = (optional) arch. If arch is not specified (no argument provided), then ALL existing archs for the specified version are removed from the profile.
 }
 function pkg_del = {
-    debug(format('%s: pkg_del: removing package %s', OBJECT, ARGV[0]));
+    debug('%s: pkg_del: removing package %s', OBJECT, ARGV[0]);
 
     # SELF handles the current list of packages
     name = ARGV[0];
@@ -216,12 +216,12 @@ function pkg_del = {
                     SELF[e_name][v] = null;
                 };
             } else {
-                debug(format('%s: deleting package %s (all versions/archs)', OBJECT, ARGV[0]));
+                debug('%s: deleting package %s (all versions/archs)', OBJECT, ARGV[0]);
                 SELF[e_name] = null;
             };
         };
     } else {
-        debug(format('%s: package %s not part of the configuration, nothing done', OBJECT, ARGV[0]));
+        debug('%s: package %s not part of the configuration, nothing done', OBJECT, ARGV[0]);
     };
 
     SELF;
@@ -260,7 +260,7 @@ function pkg_repl = {
                         arch = package_default[u_name][1];
                     };
                 } else {
-                    error(format('No default version defined for package %s', ARGV[0]));
+                    error('No default version defined for package %s', ARGV[0]);
                 };
             } else {
                 version = ARGV[1];
@@ -295,7 +295,7 @@ function pkg_repl = {
             };
         };
         if ( !is_defined(SELF[e_name]) || !arch_found ) {
-            debug(format('%s: package %s not part of the configuration, not replacing it', OBJECT, ARGV[0]));
+            debug('%s: package %s not part of the configuration, not replacing it', OBJECT, ARGV[0]);
             return(SELF);
         };
     };
@@ -344,7 +344,7 @@ function pkg_repl = {
             } else {
                 arch_params = undef;
             };
-            debug(format('%s: arch_params=%s, arch selected=%s', OBJECT, to_string(arch_params), to_string(arch)));
+            debug('%s: arch_params=%s, arch selected=%s', OBJECT, arch_params, arch);
             # If arch is unspecified, remove any explicit arch else add specified arch
             if ( is_defined(arch) ) {
                 if (!is_defined(arch_params) ) {
@@ -431,7 +431,7 @@ add the most recent of emacs to the profile
 "/software/packages"=pkg_add("emacs");
 }
 function pkg_add = {
-    debug(format('%s: pkg_add: adding package %s', OBJECT, ARGV[0]));
+    debug('%s: pkg_add: adding package %s', OBJECT, ARGV[0]);
 
     version = undef;
     arch = undef;
@@ -457,7 +457,7 @@ function pkg_add = {
     arg = (optional) arch
 }
 function pkg_ronly = {
-    debug(format('%s: pkg_ronly: replacing package %s if currently present', OBJECT, ARGV[0]));
+    debug('%s: pkg_ronly: replacing package %s if currently present', OBJECT, ARGV[0]);
 
     version = undef;
     arch = undef;
