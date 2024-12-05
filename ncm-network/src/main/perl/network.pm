@@ -95,6 +95,7 @@ use CAF::FileEditor;
 use CAF::FileWriter;
 use CAF::Path 17.7.0;
 use NetAddr::IP;
+use File::Basename;
 
 use POSIX qw(WIFEXITED WEXITSTATUS);
 use Readonly;
@@ -153,25 +154,16 @@ Readonly my $HARDWARE_PATH => '/hardware/cards/nic';
 
 # Regexp for the supported ifcfg-<device> devices.
 # $1 must match the device name
+# Note that device names cannot contain ":", but the filenames generated may use ":" to delimit named alias IPs
 Readonly my $DEVICE_REGEXP => qr{
+    ^
+    (?:ifcfg|route6?|rule6?)
     - # separator from e.g. ifcfg or route
     ( # start whole match group $1
         ( # start devicename group $2
-            (?:
-                eth|seth|em|
-                bond|br|ovirtmgmt|
-                vlan|usb|vxlan|
-                ib|
-                tun|
-                p\d+p|
-                en(?:
-                    o(?:\d+d)?| # onboard
-                    (?:p\d+)?s(?:\d+f)?(?:\d+d)? # [pci]slot[function][device]
-                )(?:\d+np)?  # [partition]
-             )\d+| # mandatory numbering
-             enx[[:xdigit:]]{12} # enx MAC address
+            [^\s_:.]+
         )
-        (?:_(\w+))? # opional suffix group $3
+        (?:_(\w+))? # optional suffix group $3
         (?:\.\d+)? # optional VLAN
         (?::\w+)? # optional alias
     ) # end whole matching group
@@ -222,26 +214,34 @@ sub _is_executable
     return -x $fn;
 }
 
-# Given the configuration ifcfg/route[6]/rule[6] filename,
+# Given the configuration ifcfg/route[6]/rule[6] file,
 # Determine if this is a valid interface for ncm-network to manage,
 # Return arrayref tuple [interface name, ifdown/ifup name] when valid,
 # undef otherwise.
 sub is_valid_interface
 {
-    my ($self, $filename) = @_;
+    my ($self, $filepath) = @_;
+
+    my $filename = basename($filepath);
 
     # Very primitive, based on regex only
-    # Not even the full filename (eg ifcfg) or anything
     if ($filename =~ m/$DEVICE_REGEXP/) {
         my $ifupdownname = $1;
-        my $name = $2;
+        my $devicename = $2;
+
+        if (length($devicename) >= 16) {
+            return;
+        };
+
         my $suffix = $3;
         if ($suffix && $suffix =~ m/^\d+$/) {
-            $name .= "_$suffix";
-            $self->verbose("Found digit-only suffix $suffix for device $name ($filename), ",
-                           "added it to the interface name");
+            $devicename .= "_$suffix";
+            $self->verbose(
+                "Found digit-only suffix $suffix for device $devicename ($filename), added it to the interface name"
+            );
         }
-        return [$name, $ifupdownname];
+
+        return [$devicename, $ifupdownname];
     } else {
         return;
     };
