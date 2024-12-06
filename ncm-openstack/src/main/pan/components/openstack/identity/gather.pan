@@ -18,10 +18,10 @@ function openstack_vivify = {
         if (idx > 0) {
             if (exists(current[arg])) {
                 value = current[arg];
-                if (!is_dict(value)) {
-                    error("%s: existing key %s found, but is not a dict (%s)",
-                            FUNCTION, arg, value);
-                };
+                if (!is_dict(value)) error(
+                    "%s: existing key %s found, but is not a dict (%s)",
+                    FUNCTION, arg, value,
+                );
             } else {
                 current[arg] = dict();
             };
@@ -42,10 +42,10 @@ function openstack_merge = {
 
     if (exists(data[key])) {
         foreach (k; v; values) {
-            if (data[key][k] != v) {
-                error("%s: %s %s has different existing value %s (expected %s) (whole section %s)",
-                        FUNCTION, msg, key, data[key][k], v, data[key]);
-            };
+            if (data[key][k] != v) error(
+                "%s: %s %s has different existing value %s (expected %s) (whole section %s)",
+                FUNCTION, msg, key, data[key][k], v, data[key],
+            );
         };
     } else {
         data[key] = values;
@@ -91,7 +91,7 @@ function openstack_identity_gather_service_add = {
         name,
         dict('type', srvdata['type'], 'description', sdescr),
         msg,
-        );
+    );
 
     # internal first, to make the default for the others
     foreach (idx; intf; list('internal', 'public', 'admin')) {
@@ -153,7 +153,7 @@ function openstack_identity_gather_service = {
             user,
             dict('password', pwd, 'domain_id', domain, 'description', udescr),
             format("host %s service %s", host, service)
-            );
+        );
 
         data_r = openstack_vivify(data, 'rolemap', 'project', 'service', 'user');
         data_r[user] = append(data_r[user], 'admin');
@@ -182,7 +182,7 @@ function openstack_identity_gather_service = {
                 qsrv,
                 dict(), # no defaults
                 srvmsg,
-                );
+            );
             if (exists(qt['services'])) {
                 foreach (name; srvdata; qt['services']) {
                     openstack_identity_gather_service_add(
@@ -191,7 +191,7 @@ function openstack_identity_gather_service = {
                         srvdata,
                         qsrv['internal'],
                         format("%s extra %s", srvmsg, name)
-                        );
+                    );
                 };
             };
         };
@@ -217,9 +217,10 @@ function openstack_identity_gather = {
     data = ARGV[0];
 
     os_component = '/software/components/openstack';
-    os_services = list('identity', 'network', 'compute', 'image',
-                        'volume', 'share', 'catalog', 'orchestration', 'metric', 'rating',
-                        'container-infra', 'key-manager');
+    os_services = list(
+        'identity', 'network', 'compute', 'image', 'volume', 'share', 'catalog', 'orchestration', 'metric', 'rating',
+        'container-infra', 'key-manager',
+    );
 
     hosts = list(list(OBJECT, ''));
     if (ARGC > 1) {

@@ -20,7 +20,8 @@ type openstack_tunnel_types = string with match(SELF, '^(vxlan|gre)$');
 type openstack_neutron_mechanism_drivers = string with match(SELF, '^(linuxbridge|l2population|openvswitch)$');
 
 type openstack_neutron_firewall_driver = string with match(SELF,
-    '^(neutron.agent.linux.iptables_firewall.IptablesFirewallDriver|openvswitch|iptables_hybrid|iptables)$');
+    '^(neutron.agent.linux.iptables_firewall.IptablesFirewallDriver|openvswitch|iptables_hybrid|iptables)$'
+);
 
 type openstack_share_backends = string with match(SELF, '^(lvm|generic|cephfsnative|cephfsnfs)$');
 

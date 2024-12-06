@@ -6,8 +6,8 @@ declaration template components/openstack/key-manager;
 
 include 'components/openstack/key-manager/barbican';
 
-@documentation {
-Type to define OpenStack Key Manager service
+@documentation{
+    Type to define OpenStack Key Manager service
 }
 type openstack_key_manager_config = {
     'barbican' ? openstack_barbican_config
