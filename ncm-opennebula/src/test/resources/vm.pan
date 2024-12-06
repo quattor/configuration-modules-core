@@ -133,11 +133,13 @@ prefix "/system/opennebula";
     "eth0", "altaria.os",
     "eth1", "altaria.vsc",
     "eth2", "altaria.vsc",
-    "eth3", "altaria.vsc");
+    "eth3", "altaria.vsc",
+);
 
 "datastore" = dict(
     "vda", "ceph.altaria",
-    "vdb", "ceph.altaria");
+    "vdb", "ceph.altaria",
+);
 
 "graphics" = "SPICE";
 
