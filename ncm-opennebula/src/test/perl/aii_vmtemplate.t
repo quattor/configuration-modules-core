@@ -20,7 +20,7 @@ $opennebulaaii->mock('read_one_aii_conf', Net::OpenNebula->new(url  => "http://l
                                                       user => "oneadmin",));
 
 my $aii = NCM::Component::opennebula->new();
-my $oneversion = version->new("5.0.0");
+my $oneversion = version->new("6.0.0");
 
 my $ttout = $aii->process_template_aii($cfg, "vmtemplate", $oneversion);
 
