@@ -96,7 +96,7 @@ type named_zone = {
 };
 
 type named_channel_name = string with
-    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/" + SELF) ||
+    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/channels/" + SELF) ||
     error (SELF + " doesn't refer to a logging channel");
 
 @{

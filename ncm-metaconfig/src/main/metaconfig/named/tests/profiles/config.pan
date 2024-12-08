@@ -7,7 +7,9 @@ prefix "/software/components/metaconfig/services/{/etc/named.conf}/contents";
 "logging/channels/default_debug" = dict (
     "severity", "dynamic",
     "file", "data/named.run");
-"logging/category" = dict();
+"logging/category" = dict(
+    "queries", list("default_debug"),
+);
 "includes" = append("/etc/named.rfc1912.zones");
 "includes" = append("/etc/another.conf");
 
