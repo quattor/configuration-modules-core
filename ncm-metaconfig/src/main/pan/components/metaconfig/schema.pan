@@ -157,10 +157,10 @@ type ${project.artifactId}_component = {
     foreach (esc_fn; srv; SELF['services']) {
         if (exists(srv['actions'])) {
             foreach (action; cmd_ref; srv['actions']) {
-                if (!(exists(SELF['commands']) && exists(SELF['commands'][cmd_ref]))) {
-                    error('Found %s action %s for %s, but no matching command registered',
-                            action, cmd_ref, unescape(esc_fn));
-                };
+                if (!(exists(SELF['commands']) && exists(SELF['commands'][cmd_ref]))) error(
+                    'Found %s action %s for %s, but no matching command registered',
+                    action, cmd_ref, unescape(esc_fn),
+                );
             };
         };
     };
