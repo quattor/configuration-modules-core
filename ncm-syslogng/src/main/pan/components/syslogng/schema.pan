@@ -7,12 +7,15 @@ declaration template components/syslogng/schema;
 include 'quattor/schema';
 
 # Convenience definitions
-type filterstring = string with
-    exists("/software/components/syslogng/filters/" + SELF) || error("No filters with name " + SELF);
-type srcstring = string with
-    exists ("/software/components/syslogng/sources/" + SELF) || error ("No sources with name " + SELF);
-type dststring = string with
-    exists ("/software/components/syslogng/destinations/" + SELF) || error ("No destinations with name " + SELF);
+type filterstring = string with exists("/software/components/syslogng/filters/" + SELF) || error(
+    "No filters with name '%s'", SELF,
+);
+type srcstring = string with exists("/software/components/syslogng/sources/" + SELF) || error(
+    "No sources with name '%s'", SELF,
+);
+type dststring = string with exists("/software/components/syslogng/destinations/" + SELF) || error(
+    "No destinations with name '%s'", SELF,
+);
 
 type prioritystring = string with match (SELF, "^(emerg|alert|crit|err|warning|notice|info|debug)$");
 
@@ -77,7 +80,7 @@ type structure_syslogng_network_dest = {
     include structure_syslogng_sock_dest
     "localip" ? type_ip
     "localport" ? long
-#    "destport" : long = 514
+    # "destport" : long = 514
     "spoof_source" ? boolean
     "ip_ttl" ? long
     "ip_tos" ? long
@@ -219,7 +222,7 @@ type structure_syslogng_options = {
     "time_reopen" : long = 60
     "time_reap" : long = 60
     "time_sleep" : long = 0
-#    "marq_freq" : long = 1200
+    # "marq_freq" : long = 1200
     "stats_freq" : long = 600
     "log_fifo_size" : long = 100
     "chain_hostnames" : boolean = true
@@ -238,7 +241,7 @@ type structure_syslogng_options = {
     "dns_cache" : boolean = true
     "dns_cache_size" : long = 1007
     "dns_cache_expire" : long = 3600
-#    "dns_cache_expire_time_failed" : long = 60
+    # "dns_cache_expire_time_failed" : long = 60
     "dns_cache_hosts" ? string
     "log_msg_size" : long = 8192
     "use_fqdn" : boolean = false
