@@ -7,7 +7,8 @@ declaration template components/openstack/compute/nova;
 include 'components/openstack/identity';
 
 type openstack_disk_cachemodes = string with match(SELF,
-    '^((file=|block=|network=)(default|none|writethrough|writeback|directsync|unsafe))$');
+    '^((file=|block=|network=)(default|none|writethrough|writeback|directsync|unsafe))$'
+);
 
 @documentation{
     The Nova configuration options in "api_database" Section.

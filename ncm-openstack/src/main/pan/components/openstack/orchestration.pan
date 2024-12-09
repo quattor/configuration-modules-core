@@ -6,8 +6,8 @@ declaration template components/openstack/orchestration;
 
 include 'components/openstack/orchestration/heat';
 
-@documentation {
-Type to define OpenStack orchestration services
+@documentation{
+    Type to define OpenStack orchestration services
 }
 type openstack_orchestration_config = {
     'heat' ? openstack_heat_config

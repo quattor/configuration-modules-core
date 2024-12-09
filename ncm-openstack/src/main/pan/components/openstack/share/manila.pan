@@ -8,8 +8,11 @@ declaration template components/openstack/share/manila;
 include 'components/openstack/identity';
 
 
-type openstack_manila_share_driver = choice('manila.share.drivers.lvm.LVMShareDriver',
-    'manila.share.drivers.cephfs.driver.CephFSDriver', 'manila.share.drivers.generic.GenericShareDriver');
+type openstack_manila_share_driver = choice(
+    'manila.share.drivers.lvm.LVMShareDriver',
+    'manila.share.drivers.cephfs.driver.CephFSDriver',
+    'manila.share.drivers.generic.GenericShareDriver'
+);
 
 @documentation{
     Common Manila storage backends options
