@@ -83,13 +83,13 @@ check if a specific type of vnet has the right attributes
 }
 function is_consistent_vnet = {
     vn = ARGV[0];
-    # phydev is only required by vxlan networks
     if (vn['vn_mad'] == 'vxlan') {
+        # phydev is only required by vxlan networks
         if (!exists(vn['phydev'])) {
             error("VXLAN vnet requires 'phydev' value to attach a bridge");
         };
-    # if not the bridge is mandatory
     } else {
+        # if not the bridge is mandatory
         if (!exists(vn['bridge'])) {
             error("vnet with 'vn_mad' '%s' requires a 'bridge' value", vn['vn_mad']);
         };

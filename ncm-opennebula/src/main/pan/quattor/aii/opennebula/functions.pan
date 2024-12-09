@@ -20,12 +20,11 @@ function opennebula_ipv42mac = {
         error("usage: \"hwaddr\" = opennebula_ipv42mac(MAC_PREFIX, IP)");
     };
     # Sanity check
-    if (!match(ARGV[0],
-        '^[0-9a-f]{2}[:][0-9a-f]{2}$')) {
-        error(format("Invalid MAC_PREFIX format: %s", ARGV[0]));
+    if (!match(ARGV[0], '^[0-9a-f]{2}[:][0-9a-f]{2}$')) {
+        error("Invalid MAC_PREFIX format: %s", ARGV[0]);
     };
     if (!is_ipv4(ARGV[1])) {
-        error(format("Invalid IPv4 format: %s", ARGV[1]));
+        error("Invalid IPv4 format: %s", ARGV[1]);
     };
     # Convert IP octets to Hex
     macaddr = ARGV[0];
@@ -53,9 +52,8 @@ function opennebula_replace_vm_mac = {
         error("usage: opennebula_replace_vm_mac(MAC_PREFIX)");
     };
     # Sanity check
-    if (!match(ARGV[0],
-        '^[0-9a-f]{2}[:][0-9a-f]{2}$')) {
-        error(format("Invalid MAC_PREFIX format (%s)", ARGV[0]));
+    if (!match(ARGV[0], '^[0-9a-f]{2}[:][0-9a-f]{2}$')) {
+        error("Invalid MAC_PREFIX format (%s)", ARGV[0]);
     };
     foreach (ethk; ethv; value("/hardware/cards/nic")) {
         if (exists(ethv['hwaddr'])) {
@@ -69,8 +67,10 @@ function opennebula_replace_vm_mac = {
                     };
                     if (exists(interv['bridge']) &&
                         exists("/system/network/interfaces/" + interv['bridge'] + "/ip")) {
-                        mac = opennebula_ipv42mac(ARGV[0],
-                            value("/system/network/interfaces/" + interv['bridge'] + "/ip"));
+                        mac = opennebula_ipv42mac(
+                            ARGV[0],
+                            value("/system/network/interfaces/" + interv['bridge'] + "/ip")
+                        );
                         SELF[eth]['hwaddr'] = mac;
                     };
                 };

@@ -936,19 +936,49 @@ type opennebula_sunstone = {
     "marketplace_password" ? string
     "marketplace_url" : type_absoluteURI = 'http://marketplace.opennebula.io/'
     "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
-    "instance_types" : opennebula_instance_types[] = list (
-        dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128,
-                "description", "Very small instance for testing purposes"),
-        dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512,
-                "description", "Small instance for testing multi-core applications"),
-        dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024,
-                "description", "General purpose instance for low-load servers"),
-        dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048,
-                "description", "General purpose instance for medium-load servers"),
-        dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096,
-                "description", "General purpose instance for servers"),
-        dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192,
-                "description", "General purpose instance for high-load servers"),
+    "instance_types" : opennebula_instance_types[] = list(
+        dict(
+            "name", "small-x1",
+            "cpu", 1,
+            "vcpu", 1,
+            "memory", 128,
+            "description", "Very small instance for testing purposes",
+        ),
+        dict(
+            "name", "small-x2",
+            "cpu", 2,
+            "vcpu", 2,
+            "memory", 512,
+            "description", "Small instance for testing multi-core applications",
+        ),
+        dict(
+            "name", "medium-x2",
+            "cpu", 2,
+            "vcpu", 2,
+            "memory", 1024,
+            "description", "General purpose instance for low-load servers",
+        ),
+        dict(
+            "name", "medium-x4",
+            "cpu", 4,
+            "vcpu", 4,
+            "memory", 2048,
+            "description", "General purpose instance for medium-load servers",
+        ),
+        dict(
+            "name", "large-x4",
+            "cpu", 4,
+            "vcpu", 4,
+            "memory", 4096,
+            "description", "General purpose instance for servers",
+        ),
+        dict(
+            "name", "large-x8",
+            "cpu", 8,
+            "vcpu", 8,
+            "memory", 8192,
+            "description", "General purpose instance for high-load servers",
+        ),
     )
     @{List of Ruby files containing custom routes to be loaded}
     "routes" : string[] = list("oneflow", "vcenter", "support", "nsx")

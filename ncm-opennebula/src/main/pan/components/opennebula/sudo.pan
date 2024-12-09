@@ -29,10 +29,12 @@ include 'components/sudo/config';
         '/usr/sbin/brctl',
     );
     foreach (i; cmd; sudolist){
-        nl = dict("host", "ALL",
+        nl = dict(
+            "host", "ALL",
             "options", "NOPASSWD:",
             "run_as", "ALL",
-            "user", "oneadmin");
+            "user", "oneadmin",
+        );
         nl["cmd"] = cmd;
         append(nl);
     };
