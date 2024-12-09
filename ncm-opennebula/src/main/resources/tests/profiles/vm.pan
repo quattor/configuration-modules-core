@@ -159,12 +159,14 @@ prefix "/system/opennebula";
     "eth0", "br100",
     "eth1", "br101",
     "eth2", "br101",
-    "eth3", "br101");
+    "eth3", "br101",
+);
 
 "datastore" = dict(
     "vda", "ceph",
     "vdb", "default",
-    "vdc", "rdm");
+    "vdc", "rdm",
+);
 
 "diskrdmpath" = dict(
     "vdc", "/dev/sdc",
@@ -219,4 +221,12 @@ prefix "/system/opennebula";
 ));
 
 "cpuratio" = 1.0;
+"cpu_model" = "Broadwell-noTSX-IBRS";
+
+"topology" = dict(
+    "pin_policy", "NONE",
+    "sockets", 1,
+    "threads", 1,
+    "cores", 1,
+);
 

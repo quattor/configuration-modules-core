@@ -324,9 +324,6 @@ Set OpenNebula hypervisor options and their virtual clusters (if any)
 type opennebula_host = {
     @{set OpenNebula hosts type.}
     'host_hyp' : string = 'kvm' with match (SELF, '^(kvm|xen)$')
-    @{set the network driver in your hosts.
-    This option is not longer used by ONE >= 5.x versions.}
-    'vnm_mad' ? string with match (SELF, '^(dummy|ovswitch|ovswitch_brcompat)$')
     @{Set the hypervisor cluster. Any new hypervisor is always included within
     "Default" cluster.
     Hosts can be in only one cluster at a time.}
@@ -938,17 +935,17 @@ type opennebula_sunstone = {
     "oneflow_server" : type_absoluteURI = 'http://localhost:2474/'
     "instance_types" : opennebula_instance_types[] = list (
         dict("name", "small-x1", "cpu", 1, "vcpu", 1, "memory", 128,
-                "description", "Very small instance for testing purposes"),
+        "description", "Very small instance for testing purposes"),
         dict("name", "small-x2", "cpu", 2, "vcpu", 2, "memory", 512,
-                "description", "Small instance for testing multi-core applications"),
+        "description", "Small instance for testing multi-core applications"),
         dict("name", "medium-x2", "cpu", 2, "vcpu", 2, "memory", 1024,
-                "description", "General purpose instance for low-load servers"),
+        "description", "General purpose instance for low-load servers"),
         dict("name", "medium-x4", "cpu", 4, "vcpu", 4, "memory", 2048,
-                "description", "General purpose instance for medium-load servers"),
+        "description", "General purpose instance for medium-load servers"),
         dict("name", "large-x4", "cpu", 4, "vcpu", 4, "memory", 4096,
-                "description", "General purpose instance for servers"),
+        "description", "General purpose instance for servers"),
         dict("name", "large-x8", "cpu", 8, "vcpu", 8, "memory", 8192,
-                "description", "General purpose instance for high-load servers"),
+        "description", "General purpose instance for high-load servers"),
     )
     @{List of Ruby files containing custom routes to be loaded}
     "routes" : string[] = list("oneflow", "vcenter", "support", "nsx")
@@ -970,11 +967,8 @@ type opennebula_oneflow = {
     "lcm_interval" : long = 30
     @{default cooldown period after a scale operation, in seconds}
     "default_cooldown" : long = 300
-    @{default shutdown action
-    terminate : OpenNebula >= 5.0.0
-    shutdown : OpenNebula < 5.0.0
-    }
-    "shutdown_action" : string = 'terminate' with match (SELF, '^(shutdown|shutdown-hard|terminate|terminate-hard)$')
+    @{default shutdown action}
+    "shutdown_action" : string = 'terminate' with match (SELF, '^(terminate|terminate-hard)$')
     @{default numner of virtual machines that will receive the given call in each interval
     defined by action_period, when an action is performed on a role}
     "action_number" : long(1..) = 1
