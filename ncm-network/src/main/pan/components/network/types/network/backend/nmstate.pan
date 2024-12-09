@@ -47,6 +47,10 @@ function network_valid_route = {
         if (exists(SELF['prefix']) && exists(SELF['netmask'])) error("Use either prefix or netmask as route");
     };
 
+    if (exists(SELF['gateway']) && exists(SELF['type'])) {
+        error("The route gateway will be ignored when type is defined");
+    };
+
     if (exists(SELF['prefix'])) {
         network_valid_prefix(SELF);
     };
