@@ -14,4 +14,4 @@ prefix '/software/components/postfix';
 'dispatch' ?= true;
 'dependencies/pre' ?= list('spma');
 
-'/software/packages' = pkg_repl('ncm-postfix','${no-snapshot-version}-${rpm.release}','noarch');
+'/software/packages' = pkg_repl('ncm-postfix', '${no-snapshot-version}-${rpm.release}', 'noarch');
