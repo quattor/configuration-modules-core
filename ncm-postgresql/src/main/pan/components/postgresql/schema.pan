@@ -4,8 +4,7 @@ include 'quattor/types/component';
 
 function postgresql_is_hba_db = {
     # Check cardinality and type of argument.
-    if (ARGC != 1 || !is_string(ARGV[0]))
-        error(format("usage: %s(string)", FUNCTION));
+    if (ARGC != 1 || !is_string(ARGV[0])) error("usage: %s(string)", FUNCTION);
 
     if (match(ARGV[0], "^(all|sameuser|samerole|replication)$")) {
         true;
@@ -16,8 +15,7 @@ function postgresql_is_hba_db = {
 
 function postgresql_is_hba_address = {
     # Check cardinality and type of argument.
-    if (ARGC != 1 || !is_string(ARGV[0]))
-        error(format("usage: %s(string)", FUNCTION));
+    if (ARGC != 1 || !is_string(ARGV[0])) error("usage: %s(string)", FUNCTION);
 
     if (match(ARGV[0], "^(samehost|samenet)$")) {
         true;
@@ -362,7 +360,7 @@ type postgresql_component = {
     };
 
     if (exists(SELF["config"]) && (pg_port != port)) {
-        error(format("Legacy pg_port %s and config/main/port %s must be the same", pg_port, port));
+        error("Legacy pg_port %s and config/main/port %s must be the same", pg_port, port);
     };
 
     true;
