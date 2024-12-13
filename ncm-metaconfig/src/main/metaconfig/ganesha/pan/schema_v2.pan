@@ -139,7 +139,7 @@ function is_ganesha_v2_log_Components = {
     components = ARGV[0];
     foreach(cmp; logl; components) {
         if(index(cmp, GANESHA_V2_LOG_COMPONENTS)  == -1) {
-            error(format("%s is not a valid Ganesha Log Component !", cmp));
+            error("%s is not a valid Ganesha Log Component !", cmp);
             return(false);
         };
     };
