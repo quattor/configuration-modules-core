@@ -57,7 +57,7 @@ type ganesha_v2_export_FSAL = {
     #"FSAL" ? ganesha_v2_export_FSAL
     #FSAL_VFS
     "pnfs" ? boolean = false
-    "fsid_type" ? string with match(SELF, '^(None|One64|Major64|Two64|uuid|Two32|Dev|Device)$')
+    "fsid_type" ? choice('None', 'One64', 'Major64', 'Two64', 'uuid', 'Two32', 'Dev', 'Device')
     #FSAL_GLUSTER
     "glfs_log" ? string = "/tmp/gfapi.log"
     "hostname" ? string # Mandatory
@@ -71,16 +71,17 @@ type ganesha_v2_export_FSAL = {
     "PNFS" ? ganesha_v2_export_FSAL_PNFS
 };
 
-type ganesha_v2_protocol = string with match(SELF, '^((NFS)?[vV]?[34]|9P)$');
-type ganesha_v2_SecType = string with match(SELF, '^(none|sys|krb5[ip]?)$');
-type ganesha_v2_Transports = string with match(SELF, '^(UDP|TCP)$');
+type ganesha_v2_protocol = choice('3', '4', 'NFS3', 'NFS4', 'V3', 'V4', 'NFSv3', 'NFSv4', '9P');
+type ganesha_v2_SecType = choice('none', 'sys', 'krb5', 'krb5i', 'krb5p');
+type ganesha_v2_Transports = choice('UDP', 'TCP');
+type ganesha_v2_delegations = choice('None', 'read', 'write', 'readwrite', 'r', 'w', 'rw');
 
 @{ Ganesha Export Permissions for EXPORT_DEFAULLTS, EXPORT and CLIENT sections @}
 type ganesha_v2_export_permissions = {
-    "Access_Type" ? string = 'None' with match(SELF, '^(None|RW|RO|MDONLY|MDONLY_RO)$')
+    "Access_Type" ? choice('None', 'RW', 'RO', 'MDONLY', 'MDONLY_RO') = 'None'
     "Anonymous_gid" ? long = -2
     "Anonymous_uid" ? long = -2
-    "Delegations" ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
+    "Delegations" ? ganesha_v2_delegations
     "Disable_ACL" ? boolean = false
     "DisableReaddirPlus" ? boolean = false
     "Manage_Gids" ? boolean = false
@@ -88,9 +89,22 @@ type ganesha_v2_export_permissions = {
     "PrivilegedPort" ? boolean = false
     "Protocols" ? ganesha_v2_protocol[] = list('3', '4', '9P')
     "SecType" ? ganesha_v2_SecType[] = list('none', 'sys')
-    "Squash" ? string = "root_squash" with match(SELF,
-        '^((root|all)(_?squash)?|no_root_squash|none|noidsquash)$'
-    )
+    "Squash" ? choice(
+        'root',
+        'root_squash',
+        'rootsquash',
+        'rootid',
+        'root_id_squash',
+        'rootidsquash',
+        'all',
+        'all_squash',
+        'allsquash',
+        'all_anomnymous',
+        'allanonymous',
+        'no_root_squash',
+        'none',
+        'noidsquash'
+    ) = "root_squash"
     "Transports" ? ganesha_v2_Transports[] = list('UDP', 'TCP')
     "Trust_Readdir_Negative_Cache" ? boolean = false
 };
@@ -130,8 +144,19 @@ type ganesha_v2_exports = {
     "UseCookieVerifier" ? boolean = true
 };
 
-type ganesha_v2_log_level = string with match(SELF,
-    '^(NULL|FATAL|MAJ|CRIT|WARN|EVENT|INFO|DEBUG|MID_DEBUG|M_DBG|FULL_DEBUG|F_DBG)$'
+type ganesha_v2_log_level = choice(
+    'NULL',
+    'FATAL',
+    'MAJ',
+    'CRIT',
+    'WARN',
+    'EVENT',
+    'INFO',
+    'DEBUG',
+    'MID_DEBUG',
+    'M_DBG',
+    'FULL_DEBUG',
+    'F_DBG'
 );
 
 @{ Check for valid Ganesha Log Component names @}
@@ -146,8 +171,19 @@ function is_ganesha_v2_log_Components = {
 };
 type ganesha_v2_log_Components = ganesha_v2_log_level{} with is_ganesha_v2_log_Components(SELF);
 
-type ganesha_v2_log_time_format = string with match(SELF,
-    '^(ganesha|true|local|8601|ISO-8601|ISO 8601|ISO|syslog|syslog_usec|false|none|user_defined)$'
+type ganesha_v2_log_time_format = choice(
+    'ganesha',
+    'true',
+    'local',
+    '8601',
+    'ISO-8601',
+    'ISO 8601',
+    'ISO',
+    'syslog',
+    'syslog_usec',
+    'false',
+    'none',
+    'user_defined'
 );
 
 @{ Ganesha Log Format subsection @}
@@ -173,8 +209,8 @@ type ganesha_v2_log_Format = {
 @{ Ganesha Log Facility subsection @}
 type ganesha_v2_log_Facility = {
     "destination" : string
-    "enable" ? string = 'idle' with match(SELF, '^(idle|active|default)$')
-    "headers" ? string = 'all' with match(SELF, '^(none|component|all)$')
+    "enable" ? choice('idle', 'active', 'default') = 'idle'
+    "headers" ? choice('none', 'component', 'all') = 'all'
     "max_level" ? ganesha_v2_log_level = 'FULL_DEBUG'
     "name" ? string
 };
@@ -283,7 +319,7 @@ type ganesha_v2_proxy_remote_server = {
     "RPC_Client_Timeout" ? long(0..) = 60
     "Remote_PrincipalName" ? string
     "Retry_SleepTime" ? long(0..) = 10
-    "Sec_Type" ? string = 'krb5' with match(SELF, '^krb5[ip]?$')
+    "Sec_Type" ? choice('none', 'krb5', 'krb5i', 'krb5p') = 'krb5'
     "Srv_Addr" ? type_ip = "127.0.0.1"
     "Use_Privileged_Client_Port" ? boolean = false
 };
@@ -314,7 +350,7 @@ type ganesha_v2_proxy = {
 @{ Ganesha GPFS section @}
 type ganesha_v2_GPFS = {
     include ganesha_v2_fsalsettings_all
-    "Delegations" ? string with match(SELF, '^(None|read|write|readwrite|r|w|rw)$')
+    "Delegations" ? ganesha_v2_delegations
     "fsal_grace" ? boolean = false
     "fsal_trace" ? boolean = true
     "pnfs_file" ? boolean = false

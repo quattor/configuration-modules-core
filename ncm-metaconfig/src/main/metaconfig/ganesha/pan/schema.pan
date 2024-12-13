@@ -2,9 +2,9 @@ declaration template metaconfig/ganesha/schema;
 
 # the defaults are based on the GPFS FSAL
 
-type ganesha_nfs_protocol = long with SELF == 2 || SELF == 3 || SELF == 4;
-type ganesha_transport_protocol = string with SELF == 'TCP' || SELF == 'UDP';
-type ganesha_sec_type = string with SELF == 'sys' || SELF == 'krb5' || SELF == 'krb5i' || SELF == 'krb5p';
+type ganesha_nfs_protocol = long(2..4);
+type ganesha_transport_protocol = choice('TCP', 'UDP');
+type ganesha_sec_type = choice('sys', 'krb5', 'krb5i', 'krb5p');
 
 type ganesha_export_client = {
     "Root_Access" ? string[] # Grant root access to thoses nodes, networks and @netgroups. A hostname can contain wildcards (*?).
