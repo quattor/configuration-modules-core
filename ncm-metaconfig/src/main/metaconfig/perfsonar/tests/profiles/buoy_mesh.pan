@@ -2,12 +2,7 @@ object template buoy_mesh;
 
 include 'metaconfig/perfsonar/buoy/mesh';
 
-prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents";
-
-"addrtype" = list("MYSITE", "OS");
-"bwctl" = BW_DEFS;
-"owamp" = OWAMP_DEFS;
-"nodes" = dict(
+final variable OWMESH_NODES = dict(
     "my.host.domain", dict(
         "longname", "longname",
         "contact_addr", "1.2.3.5",
@@ -15,14 +10,20 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
             "MYSITE", "1.2.3.5",
             "OS", "1.2.3.4",
         ),
-    )
+    ),
 );
+
+prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents";
+"addrtype" = list("MYSITE", "OS");
+"bwctl" = BW_DEFS;
+"owamp" = OWAMP_DEFS;
+"nodes" = OWMESH_NODES;
 
 
 "localnodes" = list("my.host.domain");
 
 "hosts" = {
-    foreach (name; desc; value("/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents/nodes")) {
+    foreach (name; desc; OWMESH_NODES) {
         SELF[name]["node"] = name;
     };
     SELF;
@@ -34,7 +35,7 @@ prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuo
         "type", "MESH"
     );
     l["nodes"] = list();
-    foreach (name; desc; value("/software/components/metaconfig/services/{/opt/perfsonar_ps/perfsonarbuoy_ma/etc/owmesh.conf}/contents/nodes")) {
+    foreach (name; desc; OWMESH_NODES) {
         if (match(name, '\.domain$')) {
             l["nodes"] = append(l["nodes"], name);
         }
