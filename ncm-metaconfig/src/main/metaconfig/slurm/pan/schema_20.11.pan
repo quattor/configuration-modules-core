@@ -7,8 +7,9 @@ https://slurm.schedmd.com
 
 include 'pan/types';
 
-type slurm_debuglevel = choice('quiet', 'fatal', 'error', 'info', 'verbose',
-    'debug', 'debug2', 'debug3', 'debug4', 'debug5');
+type slurm_debuglevel = choice(
+    'quiet', 'fatal', 'error', 'info', 'verbose', 'debug', 'debug2', 'debug3', 'debug4', 'debug5'
+);
 
 type slurm_gres = {
     'name' : string
@@ -176,8 +177,9 @@ type slurm_conf_health_check = {
 };
 
 
-type slurm_control_resourcelimits = choice( 'ALL', 'NONE', 'AS', 'CORE', 'CPU', 'DATA', 'FSIZE',
-    'MEMLOCK', 'NOFILE', 'NPROC', 'RSS', 'STACK');
+type slurm_control_resourcelimits = choice(
+    'ALL', 'NONE', 'AS', 'CORE', 'CPU', 'DATA', 'FSIZE', 'MEMLOCK', 'NOFILE', 'NPROC', 'RSS', 'STACK'
+);
 
 type slurm_mpi_params = {
     @{port or port range}
@@ -225,12 +227,14 @@ type slurm_conf_control = {
     'CpuFreqDef' ? choice( 'Conservative', 'OnDemand', 'Performance', 'PowerSave')
     'CpuFreqGovernors' ? choice('Conservative', 'OnDemand', 'Performance', 'PowerSave', 'UserSpace')
     'CryptoType' ? choice("munge", "openssl")
-    'DebugFlags' ? choice( 'Backfill', 'BackfillMap', 'BGBlockAlgo', 'BGBlockAlgoDeep', 'BGBlockPick',
+    'DebugFlags' ? choice(
+        'Backfill', 'BackfillMap', 'BGBlockAlgo', 'BGBlockAlgoDeep', 'BGBlockPick',
         'BGBlockWires', 'BurstBuffer', 'CPU_Bind', 'CpuFrequency', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS',
         'DB_QUERY', 'DB_RESERVATION', 'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'Elasticsearch', 'Energy',
         'ExtSensors', 'Federation', 'FrontEnd', 'Gres', 'HeteroJobs', 'Gang', 'JobContainer', 'License',
         'NodeFeatures', 'NO_CONF_HASH', 'Power', 'Priority', 'Profile', 'Protocol', 'Reservation', 'SelectType',
-        'Steps', 'Switch', 'TimeCray', 'TraceJobs', 'Triggers')[]
+        'Steps', 'Switch', 'TimeCray', 'TraceJobs', 'Triggers'
+    )[]
 
     'DefaultStorageHost' ? string
     'DefaultStorageLoc' ? string
@@ -293,8 +297,9 @@ type slurm_conf_control = {
     'MemLimitEnforce' ? boolean # yes/no
     'MinJobAge' ? long(0..)
     'MsgAggregationParams' ? slurm_msg_aggregation
-    'PrivateData' ? choice('accounts', 'cloud', 'events', 'jobs', 'nodes', 'partitions',
-        'reservations', 'usage', 'users')[]
+    'PrivateData' ? choice(
+        'accounts', 'cloud', 'events', 'jobs', 'nodes', 'partitions', 'reservations', 'usage', 'users'
+    )[]
     'RoutePlugin' ? choice("default", "topology")   # prefix=route/
     'SallocDefaultCommand' ? string
     'SbcastParameters' ? slurm_sbcast_parameters
@@ -404,8 +409,10 @@ type slurm_conf_job_priority = {
     @{in minutes}
     'PriorityCalcPeriod' ? long(0..)
     'PriorityFavorSmall' ? boolean
-    'PriorityFlags' ? choice( 'ACCRUE_ALWAYS', 'CALCULATE_RUNNING', 'DEPTH_OBLIVIOUS', 'FAIR_TREE',
-        'INCR_ONLY', 'MAX_TRES', 'SMALL_RELATIVE_TO_TIME' )[]
+    'PriorityFlags' ? choice(
+        'ACCRUE_ALWAYS', 'CALCULATE_RUNNING', 'DEPTH_OBLIVIOUS', 'FAIR_TREE',
+        'INCR_ONLY', 'MAX_TRES', 'SMALL_RELATIVE_TO_TIME'
+    )[]
     'PriorityParameters' ? dict
     @{in minutes}
     'PriorityMaxAge' ? long(0..)
@@ -427,8 +434,7 @@ type slurm_job_gather_params = {
 
 type slurm_conf_accounting = {
     'AccountingStorageBackupHost' ? string
-    'AccountingStorageEnforce' ? choice('associations', 'limits', 'nojobs', 'nosteps',
-        'qos', 'safe', 'wckeys', 'all')[]
+    'AccountingStorageEnforce' ? choice('associations', 'limits', 'nojobs', 'nosteps', 'qos', 'safe', 'wckeys', 'all')[]
     'AccountingStorageHost' ? string
     'AccountingStorageLoc' ? string
     'AccountingStoragePass' ? string
@@ -692,8 +698,10 @@ type slurm_dbd_conf = {
     'DbdHost' ? string
     # TODO: must be equal to the AccountingStoragePort parameter in the slurm.conf
     'DbdPort' ? long(0..)
-    'DebugFlags' ? choice('DB_ARCHIVE', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS', 'DB_QUERY', 'DB_RESERVATION',
-        'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'FEDERATION')[]
+    'DebugFlags' ? choice(
+        'DB_ARCHIVE', 'DB_ASSOC', 'DB_EVENT', 'DB_JOB', 'DB_QOS', 'DB_QUERY', 'DB_RESERVATION',
+        'DB_RESOURCE', 'DB_STEP', 'DB_USAGE', 'DB_WCKEY', 'FEDERATION'
+    )[]
     'DebugLevel' ? slurm_debuglevel
     'DebugLevelSyslog' ? slurm_debuglevel
     'DefaultQOS' ? string
