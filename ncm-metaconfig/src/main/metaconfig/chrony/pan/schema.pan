@@ -3,7 +3,8 @@ declaration template metaconfig/chrony/schema;
 include 'pan/types';
 
 type chrony_service_server_flag = choice(
-    'iburst', 'burst', 'offline', 'auto_offline', 'prefer', 'noselect', 'trust', 'require', 'xleave');
+    'iburst', 'burst', 'offline', 'auto_offline', 'prefer', 'noselect', 'trust', 'require', 'xleave'
+);
 
 @documentation{
     the crony.conf configuration entry for server/pool/peer options
