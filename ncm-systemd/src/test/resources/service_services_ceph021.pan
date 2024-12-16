@@ -6,17 +6,17 @@ prefix "/software/components/systemd/unit";
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user", "graphical"),
-    );
+);
 "netconsole" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user"),
-    );
+);
 "rbdmap" = dict(
     "state", "enabled",
     "startstop", true,
     "targets", list("multi-user"),
-    );
+);
 "cups" = dict(
     "state", "disabled",
     "startstop", false,

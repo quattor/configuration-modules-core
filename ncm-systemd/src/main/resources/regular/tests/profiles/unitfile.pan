@@ -8,27 +8,27 @@ bind "/unitfile" = systemd_unitfile_config[];
     'includes', list(
         '/unit/1',
         '/unit/2',
-        ),
+    ),
     'unit', dict(
         'Assert', dict(
             'PathExists', list(
                 '', # reset
                 '/path/1',
                 '/path/2',
-                ),
             ),
+        ),
         'Condition', dict(
             'PathExists', list(
                 '', # reset
                 '/path/C1',
                 '/path/C2',
-                ),
             ),
+        ),
         'Description', 'my test',
         'Requires', list('unit1', 'unit2'),
         'After', list('unit0', 'unit01'),
         'Before', list('unita', 'unitb'),
-        ),
+    ),
     'service', dict(
         'CPUAffinity', list(
             list(), # reset
@@ -38,16 +38,16 @@ bind "/unitfile" = systemd_unitfile_config[];
             dict(
                 'VAR1-1', 'val1-1 val1-1b',
                 'VAR1-2', 'val1-2',
-                ),
+            ),
             dict(
                 'VAR2-1', 'val2-1',
                 'VAR2-2', 'val2-2 val2-2b',
-                ),
             ),
+        ),
         'EnvironmentFile', list(
             '/envfile/1',
             '/envfile/2',
-            ),
+        ),
         'ExecStart', '/usr/bin/special',
         'TTYReset', true,
         'TTYVHangup', false,
@@ -61,14 +61,14 @@ bind "/unitfile" = systemd_unitfile_config[];
         'BlockIODeviceWeight', list(list('/var', '100'), list('/tmp', '50')),
         'ExecStartPre', list('/usr/bin/true', '-/bin/false'),
         'ExecStopPost', '/usr/bin/true',
-        ),
+    ),
     'socket', dict(
         'ExecStartPre', list('/some/path arg1', '-/some/other/path arg2'),
         'ListenStream', list('/path/to/pipe'),
         'SocketUser', 'pipeuser',
         'SocketGroup', 'pipegroup',
         'SocketMode', '660',
-        ),
+    ),
     'path', dict(
         'PathExists', '/path/to/file',
         'PathExistsGlob', '/path/to/glob*',
@@ -80,24 +80,24 @@ bind "/unitfile" = systemd_unitfile_config[];
         'DirectoryMode', '0755',
         'TriggerLimitIntervalSec', 10,
         'TriggerLimitBurst', 5,
-        ),
+    ),
     'mount', dict(
         'What', 'server:/share',
         'Where', '/data/share',
         'Type', 'glusterfs',
         'Options', list('_netdev', 'defaults'),
         'DirectoryMode', '0750',
-        ),
+    ),
     'timer', dict(
         'OnCalendar', list('weekly', '2021-04-07 10:32:01'),
         'Persistent', true,
-        ),
+    ),
     'slice', dict(
         'MemoryAccounting', true,
         'MemoryLimit', 'infinity',
         'MemoryMax', '28%',
-        ),
+    ),
     'install', dict(
         'WantedBy', list('1.service', '2.service'),
-        ),
-    );
+    ),
+);
