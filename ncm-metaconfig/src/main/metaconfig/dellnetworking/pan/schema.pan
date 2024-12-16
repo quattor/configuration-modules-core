@@ -5,8 +5,7 @@ include 'quattor/functions/network';
 
 # see TODO below why this is split in a function
 function is_dellnetworking_interface_name = {
-    match(ARGV[0],
-        '^((ethernet)\s?(\d+/\d+/\d+(:\d+)?))|((port-channel|vlan)\s?\d+)$');
+    match(ARGV[0], '^((ethernet)\s?(\d+/\d+/\d+(:\d+)?))|((port-channel|vlan)\s?\d+)$');
 };
 
 type dellnetworking_interface_name = string with is_dellnetworking_interface_name(SELF);
@@ -96,10 +95,12 @@ type dellnetworking_interface = {
             };
         };
     };
-    if (exists(SELF['access']) &&
+    if (
+        exists(SELF['access']) &&
         exists(SELF['vids']) &&
-        index(SELF['access'], SELF['vids']) >= 0) {
-            error("access vlan %s cannot be part of trunk allowed vlan ids %s", SELF['access'], SELF['vids']);
+        index(SELF['access'], SELF['vids']) >= 0
+    ) {
+        error("access vlan %s cannot be part of trunk allowed vlan ids %s", SELF['access'], SELF['vids']);
     };
     true;
 };
@@ -238,8 +239,7 @@ type dellnetworking_config = {
             };
             foreach (idx; slname; inf['slaves']) {
                 if (exists(SELF['interfaces'][escape(slname)])) {
-                    error("slave interface %s (for interface %s) cannot be configured as interface",
-                            slname, name);
+                    error("slave interface %s (for interface %s) cannot be configured as interface", slname, name);
                 };
                 if (index(slname, slifs) >= 0) {
                     error('slave interface %s found twice (last for interface %s)', slname, name);
