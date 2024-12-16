@@ -18,10 +18,10 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/sshd_config}/contents
 "Match/0/criteria" = dict(
     "User", list("testuser2"),
     "Address", list("192.168.0.0/16", "!192.168.10.0/24"),
-    );
+);
 "Match/0/PasswordAuthentication" = true;
 
 "Match/1/criteria" = dict(
     "All", true,
-    );
+);
 "Match/1/PasswordAuthentication" = false;

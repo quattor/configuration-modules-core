@@ -12,44 +12,30 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/ssh_config}/contents"
     "ForwardX11", false,
     "BatchMode", true,
     "NumberOfPasswordPrompts", 1,
+    "criteria", dict(
+        "user", list("testuser2"),
+        "originalhost", list("hostname4"),
+        "exec", "/a/b/c",
+        "canonical", true,
+    ),
 );
-'Match/0/criteria' = dict(
-    "user", list("testuser2"),
-    "originalhost", list("hostname4"),
-    "exec", "/a/b/c",
-    "canonical", true,
-);
 
-'Host' =  append(
-            dict(
-                "hostnames", list("hostname.example.com", "hostname4.example.com"),
-                "ProxyCommand", "ssh -q -W %h:%p gateway.example.com",
-                "User", "testuser",
-                )
-        );
+'Host' = append(dict(
+    "hostnames", list("hostname.example.com", "hostname4.example.com"),
+    "ProxyCommand", "ssh -q -W %h:%p gateway.example.com",
+    "User", "testuser",
+));
 
+'Host' = append(dict(
+    "hostnames", list("hostname2.example.com"),
+    "ProxyCommand", "ssh -q -W %h:%p gateway2.example.com",
+    "User", "testuser",
+    "VerifyHostKeyDNS", "ask",
+));
 
-'Host' =  append(
-            dict(
-                "hostnames", list("hostname2.example.com"),
-                "ProxyCommand", "ssh -q -W %h:%p gateway2.example.com",
-                "User", "testuser",
-                "VerifyHostKeyDNS", "ask",
-                )
-        );
-
-
-'Host' =  append(
-            dict(
-                "hostnames", list("*"),
-                "GSSAPIAuthentication", true,
-                "ForwardX11Trusted", true,
-                "SendEnv", list("LANG", "LC_CTYPE", "LC_NUMERIC", "LC_TIME", "LC_ALL",
-                                "LC_MESSAGES", "LANGUAGE", "XMODIFIERS"),
-                )
-        );
-
-
-
-
-
+'Host' = append(dict(
+    "hostnames", list("*"),
+    "GSSAPIAuthentication", true,
+    "ForwardX11Trusted", true,
+    "SendEnv", list("LANG", "LC_CTYPE", "LC_NUMERIC", "LC_TIME", "LC_ALL", "LC_MESSAGES", "LANGUAGE", "XMODIFIERS"),
+));
