@@ -17,7 +17,7 @@ type hwloc_location = string with match(SELF, '^[\w:.]+$');
     syslog facility to use when logging to syslog
 }
 type syslog_facility = string with match(SELF,
-    '^(kern|user|mail|daemon|auth|syslog|lprnews|uucp|cron|authpriv|ftp|local[0-7])$'
+    '^(kern|user|mail|daemon|auth|syslog|lpr|news|uucp|cron|authpriv|ftp|local[0-7])$'
 );
 
 @documentation{
