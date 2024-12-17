@@ -1236,12 +1236,22 @@ sub make_ifcfg_ip_route
                 # in absence of netmask, NetAddr::IP uses 32 or 128
                 $ip = NetAddr::IP->new($route->{address}, $route->{netmask});
             }
+
             # Generate it
-            $route->{command} = "$ip";
-            $route->{command} .= " via $route->{gateway}" if $route->{gateway};
-            $route->{command} .= " dev $device";
-            $route->{command} .= " onlink" if $route->{onlink};
-            $route->{command} .= " table $route->{table}" if $route->{table};
+            my @commands;
+            push(@commands, $route->{type}) if $route->{type};
+            push(@commands, $ip);
+
+            if (!$route->{type}) {
+                # This is part of the next-hop config
+                push(@commands, "via", $route->{gateway}) if $route->{gateway};
+                push(@commands, "dev", $device);
+            };
+
+            push(@commands, "onlink") if $route->{onlink};
+            push(@commands, "table", $route->{table}) if $route->{table};
+
+            $route->{command} = join(" ", @commands);
         }
         push(@text, $route->{command});
     }
