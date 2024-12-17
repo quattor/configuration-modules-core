@@ -19,8 +19,8 @@ prefix "/software/components/metaconfig/services/{/etc/openvpn/client.conf}/cont
 "proto" = "tcp";
 "remote" = list(
     "vpntest.domain.example 1194",
-    "fallbackvpntest.domain.example 1195"
-    );
+    "fallbackvpntest.domain.example 1195",
+);
 "resolv-retry" = "infinite";
 "tls-auth" = "/etc/openvpn/vpntest/ta.key 1";
 "tun-mtu" = 1500;
