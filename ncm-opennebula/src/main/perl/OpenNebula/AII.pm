@@ -4,7 +4,7 @@ use NCM::Component::OpenNebula::Server qw($ONEADMIN_USER);
 use Readonly;
 use EDG::WP4::CCM::TextRender;
 
-Readonly my $MINIMAL_ONE_VERSION => version->new("4.8.0");
+Readonly my $MINIMAL_ONE_VERSION => version->new("5.0.0");
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
 Readonly my $HOSTNAME => "/system/network/hostname";
 Readonly my $DOMAINNAME => "/system/network/domainname";
@@ -12,7 +12,6 @@ Readonly my $MAXITER => 20;
 Readonly my $TIMEOUT => 30;
 Readonly my $ONE_DEFAULT_URL => 'http://localhost:2633/RPC2';
 Readonly my $ONE_DEFAULT_PORT => 2633;
-Readonly my $BOOT_V4 => [qw(network hd)];
 Readonly my $BOOT_V5 => [qw(nic0 disk0)];
 
 =head1 NAME
@@ -79,9 +78,6 @@ sub process_template_aii
     if ((defined $oneversion) and ($oneversion >= version->new("5.0.0"))) {
         $tree->{system}->{opennebula}->{boot} = $BOOT_V5;
         $self->verbose("BOOT section set to support OpenNebula versions >= 5.0.0");
-    } else {
-        $self->verbose("BOOT section set to support OpenNebula versions < 5.0.0");
-        $tree->{system}->{opennebula}->{boot} = $BOOT_V4;
     };
 
     my $tpl = EDG::WP4::CCM::TextRender->new(
