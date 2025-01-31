@@ -150,6 +150,14 @@ type beats_logging = {
     'level' ? choice('critical', 'error', 'warning', 'info', 'debug')
 };
 
+
+@documentation{
+    Secomp settings for RHEL with Linux >3.16
+    (see https://www.elastic.co/guide/en/beats/filebeat/7.10/linux-seccomp.html)
+}
+type beats_seccomp = {
+    'default_action' : choice('errno', 'trace', 'trap', 'kill_thread', 'kill_process', 'log', 'allow')
+};
 @documenation{
     Shared components for each beats service
 }
@@ -163,24 +171,96 @@ type beats_service = {
     'topology_expire' ? long(0..)
     'geoip' ? beats_shipper_geoip
     'seccomp.enabled' ? boolean
+    'seccomp' ? beats_seccomp
 };
 
 @documentation{
     Handle logmessages spread over multiple lines
 }
 type beats_filebeat_input_multiline = {
-    'pattern' ? string_trimmed
+    'pattern' ? string #string type to consider for potential whitespaced pattern
     'negate' ? boolean
     'match' ? choice('after', 'before')
     'max_lines' ? long(0..)
     'timeout' ? long(0..)
+    'max_lines' ? long(0..)
+    'close_inactive' ? string_trimmed
+    'close_eof' ? boolean
+};
+@documentation{
+    Handle logs from Docker containers
+}
+type beats_filebeat_input_docker_containers = {
+    'ids' ? string
+    'path' ? string
+    'stream' ? string with match(SELF, '^(all|stdout|stderr)$')
 };
 
+@documentation{
+    Handle logs processors pipeline for dissect processors
+}
+type beats_filebeat_input_processors_dissect = {
+    'tokenizer' ? string
+    'field' ? string
+    'target_prefix' ? string
+};
+
+@documentation{
+    Handle logs processors pipeline for decode_json_fields processors
+}
+type beats_filebeat_input_processors_decode_json_fields = {
+    'fields' ? string[]
+    'process_array' ? boolean
+    'max_depth' ? long(0..)
+    'target' ? string
+    'overwrite_keys' ? boolean
+};
+
+@documentation{
+    Handle target fields for logs processors pipeline of convert processors
+}
+type beats_filebeat_input_processors_convert_fields = {
+    'from' ? string
+    'to' ? string
+    'type' ? choice(
+        'integer',
+        'long',
+        'float',
+        'double',
+        'string',
+        'boolean',
+        'ip'
+    )
+};
+
+@documentation{
+    Handle logs processors pipeline for convert processors
+}
+type beats_filebeat_input_processors_convert = {
+    'fields' ? beats_filebeat_input_processors_convert_fields[]
+    'ignore_missing' ? boolean
+    'fail_on_error' ? boolean
+    'tag' ? string
+    'mode' ? choice(
+        'copy',
+        'rename'
+    )
+};
+
+@documentation{
+    Handle logs processors pipeline
+}
+type beats_filebeat_input_processors = {
+    'dissect' ? beats_filebeat_input_processors_dissect
+    'decode_json_fields' ? beats_filebeat_input_processors_decode_json_fields
+    'convert' ? beats_filebeat_input_processors_convert
+};
 @documentation{
     Configure a input (source of certain class of data, can come multiple paths)
 }
 type beats_filebeat_input = {
     'paths' ? absolute_file_path[]
+    'containers' ? beats_filebeat_input_docker_containers
     'encoding' ? choice(
         'big5',
         'euc-jp',
@@ -196,7 +276,7 @@ type beats_filebeat_input = {
         'utf-16le',
         'utf-8'
     )
-    'type' ? choice('log', 'stdin')
+    'type' ? choice('log', 'stdin', 'docker')
     'exclude_lines' ? string_trimmed[]
     'include_lines' ? string_trimmed[]
     'exclude_files' ? absolute_file_path[]
@@ -212,6 +292,14 @@ type beats_filebeat_input = {
     'max_backoff' ? long(0..)
     'backoff_factor' ? long(0..)
     'enabled' ? boolean
+    'processors' ? beats_filebeat_input_processors[]
+};
+
+@documentation{
+    Filebeat registry path configuration
+}
+type beats_filebeat_filebeat_registry = {
+    'path' : absolute_file_path
 };
 
 @documentation{
@@ -219,9 +307,8 @@ type beats_filebeat_input = {
 }
 type beats_filebeat_filebeat = {
     'inputs' : beats_filebeat_input[]
-    'prospectors' : beats_filebeat_input[]
-    'registry_file' ? absolute_file_path
     'config_dir' ? absolute_file_path
+    'registry' ? beats_filebeat_filebeat_registry
 };
 
 @documentation{
