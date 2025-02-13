@@ -104,6 +104,7 @@ contentspath=/software/components/authconfig/method/sssd
 ^force_timeout = 60$
 ^full_name_format = %1\$s@%2\$s$
 ^id_provider = ldap$
+^ignore_group_members = True$
 ^lookup_family_order = ipv4_first$
 ^max_id = 123456$
 ^min_id = 234567$

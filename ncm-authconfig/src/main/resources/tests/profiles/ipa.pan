@@ -8,6 +8,7 @@ prefix "/desc";
 'krb5/canonicalize'  = false;
 'krb5/server'  = list('k1', 'k2');
 'krb5/backup_server'  = list('k3', 'k4');
+'krb5/auth_timeout' = 60;
 
 'ldap/deref_threshold' = 5;
 

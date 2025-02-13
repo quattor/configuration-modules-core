@@ -127,6 +127,7 @@ type authconfig_sssd_domain  = {
     "case_sensitive" : boolean = true
     "proxy_fast_alias" ? boolean
     "subdomain_homedir" ? string_trimmed
+    "override_homedir" ? string_trimmed
     "proxy_pam_target" ? string_trimmed
     "proxy_lib_name" ? string_trimmed
     "min_id" : long(0..) = 1
@@ -167,6 +168,7 @@ type authconfig_sssd_domain  = {
     "ad_domain" ? string_trimmed
     "ad_enabled_domains" ? string_trimmed
     "ad_gpo_access_control" ? string_trimmed
+    "ignore_group_members" ? boolean
 };
 
 type authconfig_method_sssd_type = {
