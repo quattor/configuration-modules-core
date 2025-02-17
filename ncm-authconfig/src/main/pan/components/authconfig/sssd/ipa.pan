@@ -19,6 +19,7 @@ type authconfig_sssd_ipa_krb5 = {
     'confd_path' ? absolute_file_path
     'server' ? type_hostname[]
     'backup_server'? type_hostname[]
+    'auth_timeout' ? long(0..)
 };
 
 @{

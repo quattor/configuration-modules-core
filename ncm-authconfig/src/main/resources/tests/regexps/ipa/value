@@ -10,6 +10,7 @@ contentspath=/
 ^dyndns_ttl = 123$
 ^dyndns_update = false$
 ^ipa_enable_dns_sites = true$
+^krb5_auth_timeout = 60$
 ^krb5_backup_server = k3,k4$
 ^krb5_canonicalize = false$
 ^krb5_realm = MY.REALM$

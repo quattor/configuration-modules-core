@@ -127,6 +127,7 @@ type authconfig_sssd_domain  = {
     "case_sensitive" : boolean = true
     "proxy_fast_alias" ? boolean
     "subdomain_homedir" ? string_trimmed
+    "override_homedir" ? string_trimmed
     "proxy_pam_target" ? string_trimmed
     "proxy_lib_name" ? string_trimmed
     "min_id" : long(0..) = 1
@@ -139,14 +140,14 @@ type authconfig_sssd_domain  = {
         );
         true;
     }
-    "entry_cache_timeout" : long(1..) = 5400
-    "entry_cache_user_timeout" ? long(1..)
-    "entry_cache_group_timeout" ? long(1..)
-    "entry_cache_netgroup_timeout" ? long(1..)
-    "entry_cache_service_timeout" ? long(1..)
-    "entry_cache_sudo_timeout" ? long(1..)
-    "entry_cache_autofs_timeout" ? long(1..)
-    "refresh_expired_interval" ? long(1..)
+    "entry_cache_timeout" : long(0..) = 5400
+    "entry_cache_user_timeout" ? long(0..)
+    "entry_cache_group_timeout" ? long(0..)
+    "entry_cache_netgroup_timeout" ? long(0..)
+    "entry_cache_service_timeout" ? long(0..)
+    "entry_cache_sudo_timeout" ? long(0..)
+    "entry_cache_autofs_timeout" ? long(0..)
+    "refresh_expired_interval" ? long(0..)
     "cache_credentials" : boolean = false
     "account_cache_expiration" : long(0..) = 0
     "pwd_expiration_warning" ? long(0..)
@@ -167,6 +168,7 @@ type authconfig_sssd_domain  = {
     "ad_domain" ? string_trimmed
     "ad_enabled_domains" ? string_trimmed
     "ad_gpo_access_control" ? string_trimmed
+    "ignore_group_members" ? boolean
 };
 
 type authconfig_method_sssd_type = {
