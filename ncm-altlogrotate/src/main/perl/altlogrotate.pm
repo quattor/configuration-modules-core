@@ -136,7 +136,7 @@ sub Configure
     }
 
     # Next process global config file
-    if (@globals) {
+    if (@globals || $overallglobal) {
         if ($overallglobal) {
             unshift @globals, 'global';
 
