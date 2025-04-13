@@ -381,10 +381,11 @@ ok($cmp->default_options({arguments => {
     b => {enable => 0},
     escape("c_aa") => {enable => 1, value => 'xyz'},
     escape("d.e.f") => {enable => 0, value => 'ghi'},
-    }}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
+    }, for_next => 1}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on non-fullcontrol");
 ok(command_history_ok([
    '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c_aa=xyz --remove-args b d.e.f=ghi',
+   '/sbin/grubby --bls-directory /.*?/ncm-grub-bls-\w{6} --update-kernel ALL --args a c_aa=xyz --remove-args b d.e.f=ghi',
 ]), 'grubby commands from default options non-fullcontrol from arguments');
 
 command_history_reset();
@@ -392,12 +393,25 @@ command_history_reset();
 # but there are current args to remove first
 # settings args with a - with fullcontrol is pointless; all current args are removed first
 set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4', "blablah\nargs=\"something special\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
-ok($cmp->default_options({fullcontrol => 1, args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on fullcontrol");
+ok($cmp->default_options({fullcontrol => 1, args => 'a -b c', for_next => 1}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on fullcontrol");
 ok(command_history_ok([
    '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
    '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c',  # no remove opts, they make no sense
+   '/sbin/grubby --bls-directory /.*?/ncm-grub-bls-\w{6} --update-kernel ALL --args a c',
 ]), 'grubby commands from default options fullcontrol');
+
+command_history_reset();
+# fullcontrol, existing options will not match; no for_next
+# but there are current args to remove first
+# settings args with a - with fullcontrol is pointless; all current args are removed first
+set_desired_output('/sbin/grubby --info /boot/vmlinuz-1.2.3.4', "blablah\nargs=\"something special\"\nkernel=/boot/vmlinuz-1.2.3.4\n");
+ok($cmp->default_options({fullcontrol => 1, args => 'a -b c'}, '/boot/vmlinuz-1.2.3.4'), "default_options returns success on fullcontrol without for_next");
+ok(command_history_ok([
+   '/sbin/grubby --info /boot/vmlinuz-1.2.3.4',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --remove-args something special',
+   '/sbin/grubby --update-kernel /boot/vmlinuz-1.2.3.4 --args a c',  # no remove opts, they make no sense
+], ['bls-directtory']), 'grubby commands from default options fullcontrol without for_next');
 
 
 =head1 pxeboot
