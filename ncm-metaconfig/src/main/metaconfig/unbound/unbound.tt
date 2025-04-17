@@ -1,0 +1,76 @@
+server:
+[% FOREACH key IN server.keys.sort -%]
+        [% key %]: [% server.$key %]
+[% END -%]
+[% FOREACH interface IN interfaces -%]
+        interface: [% interface %]
+[% END -%]
+[% FOREACH source IN access_control.deny -%]
+        access-control: [% source %] deny
+[% END -%]
+[% FOREACH source IN access_control.allow -%]
+        access-control: [% source %] allow
+[% END -%]
+[% FOREACH source IN access_control.allow_snoop -%]
+        access-control: [% source %] allow_snoop
+[% END -%]
+[% FOREACH zone IN local_zone.nodefault -%]
+        local-zone: "[% zone %]" nodefault
+[% END -%]
+[% FOREACH zone IN local_zone.static -%]
+        local-zone: "[% zone %]" static
+[% END -%]
+[% FOREACH zone IN local_zone.redirect -%]
+        local-zone: "[% zone %]" redirect
+[% END -%]
+[% FOREACH record IN local_data -%]
+        local-data: "[% record %]"
+[% END -%]
+remote-control:
+[% FOREACH key IN remote_control.keys.sort -%]
+        [% key %]: [% remote_control.$key %]
+[% END -%]
+[% FOREACH zone IN forward_zone.name -%]
+forward-zone:
+        name: "[% zone %]"
+[% FOREACH addr IN forward_zone.forward_addr -%]
+        forward-addr: [% addr %]
+[% END -%]
+[% END -%]
+[% FOREACH zone IN stub_zones -%]
+[% FOREACH name IN zone.names -%]
+stub-zone:
+        name: "[% name %]"
+[% FOREACH addr IN zone.addrs -%]
+        stub-addr: [% addr %]
+[% END -%]
+[% END -%]
+[% END -%]
+[% FOREACH zone IN odc_forward_zone -%]
+[% FOREACH name IN zone.name -%]
+forward-zone:
+        name: "[% name %]"
+[% FOREACH addr IN zone.forward_addr -%]
+        forward-addr: [% addr %]
+[% END -%]
+[% END -%]
+[% END -%]
+[% FOREACH zone IN sp_forward_zone -%]
+[% FOREACH name IN zone.name -%]
+forward-zone:
+        name: "[% name %]"
+[% FOREACH addr IN zone.forward_addr -%]
+        forward-addr: [% addr %]
+[% END -%]
+[% FOREACH addr IN zone.forward_host -%]
+        forward-host: [% addr %]
+[% END -%]
+[% END -%]
+[% END -%]
+[% IF default_forwarders.defined && default_forwarders.size > 0 -%]
+forward-zone:
+        name: "."
+[% FOREACH addr IN default_forwarders -%]
+        forward-addr: [% addr %]
+[% END -%]
+[% END -%]
