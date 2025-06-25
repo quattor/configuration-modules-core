@@ -230,3 +230,5 @@ prefix "/system/opennebula";
     "cores", 1,
 );
 
+"machine" = "pc-q35-rhel9.4.0";
+
