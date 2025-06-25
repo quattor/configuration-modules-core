@@ -187,3 +187,5 @@ prefix "/system/opennebula";
 "cpuratio" = 1.0;
 "cpu_model" = "Broadwell-noTSX-IBRS";
 
+"machine" = "pc-q35-rhel9.4.0";
+
