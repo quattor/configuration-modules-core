@@ -75,7 +75,7 @@ sub process_template_aii
     my ($self, $config, $tt_name, $oneversion) = @_;
 
     my $tree = $config->getElement('/')->getTree();
-    if ((defined $oneversion) and ($oneversion >= version->new("5.0.0"))) {
+    if (defined $oneversion) {
         $tree->{system}->{opennebula}->{boot} = $BOOT_V5;
         $self->verbose("BOOT section set to support OpenNebula versions >= 5.0.0");
     };
