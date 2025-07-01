@@ -676,6 +676,7 @@ type httpd_global_system = {
     "indexignore" : string[] = list(".??*", "*~", "*#", "HEADER*", "README*", "RCS", "CVS", "*,v", "*,t")
     "readmename" : string = "README.html"
     "headername" : string = "HEADER.html"
+    "header" ? httpd_header[]
     "adddefaultcharset" : string = "UTF-8"
 
     "limitrequestfieldsize" ? long
