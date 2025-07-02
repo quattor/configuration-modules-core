@@ -183,7 +183,7 @@ In this case to request this IB device we should set:
   class:  0x0c06
 
 For more info:
-http://docs.opennebula.org/5.0/deployment/open_cloud_host_setup/pci_passthrough.html
+https://docs.opennebula.io/6.10/open_cluster_deployment/kvm_node/pci_passthrough.html
 }
 type opennebula_vmtemplate_pci = {
     @{first value from onehost TYPE section}
@@ -215,7 +215,7 @@ Re-scheduling of VMs works as for any other VM, it will look for a different hos
 considering the placement constraints.
 
 For more info:
-https://docs.opennebula.org/5.8/advanced_components/application_flow_and_auto-scaling/vmgroups.html
+https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/affinity.html
 }
 type opennebula_vmtemplate_vmgroup = {
     "vmgroup_name" : string
@@ -224,7 +224,7 @@ type opennebula_vmtemplate_vmgroup = {
 
 @documentation{
 Type that sets placement constraints and preferences for the VM, valid for all hosts
-More info: http://docs.opennebula.org/5.0/operation/references/template.html#placement-section
+More info: https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/scheduling.html
 }
 type opennebula_placements = {
     @{Boolean expression that rules out provisioning hosts from list of machines
@@ -289,12 +289,12 @@ type opennebula_vmtemplate = {
         '/system/opennebula/diskrdmpath/vdd/' = '/dev/sdf';
      will passthrough the block device to the VM as vdd disk. Disk size is ignored in this case.
      It requires a RDM datastore.
-     See: https://docs.opennebula.org/5.8/deployment/open_cloud_storage_setup/dev_ds.html}
+     See: https://docs.opennebula.io/6.10/open_cluster_deployment/storage_setup/dev_ds.html}
     "diskrdmpath" ? opennebula_rdm_disk
     @{Set ignoremac tree to avoid to include MAC values within AR/VM templates}
     "ignoremac" ? opennebula_ignoremac
     @{Set how many queues will be used for the communication between CPUs and virtio drivers.
-    see: https://docs.opennebula.org/5.6/deployment/open_cloud_host_setup/kvm_driver.html}
+    see: https://docs.opennebula.io/6.10/open_cluster_deployment/kvm_node/kvm_driver.html}
     "virtio_queues" ? long(0..)
     @{Set graphics to export VM graphical display (VNC is used by default)}
     "graphics" : string = 'VNC' with match (SELF, '^(VNC|SDL|SPICE)$')
@@ -308,9 +308,7 @@ type opennebula_vmtemplate = {
     "pci" ? opennebula_vmtemplate_pci[]
     @{labels is a list of strings to group the VMs under a given name and filter them
     in the admin and cloud views. It is also possible to include in the list
-    sub-labels using a common slash: list("Name", "Name/SubName")
-    This feature is available since OpenNebula 5.x, below this version the change
-    does not take effect.}
+    sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
     "placements" ? opennebula_placements
     @{The optional memoryBacking element may contain several elements that influence
@@ -352,4 +350,8 @@ type opennebula_vmtemplate = {
     https://docs.opennebula.io/6.10/management_and_operations/capacity_planning/overcommitment.html
     }
     "cpuratio" : double(0..1) = 1.0
+    @{The CPU model exposed to the guest. host-passthrough is the same model as the host.
+    Available modes are stored in the host information and obtained through monitor (onehost show <id>).
+    }
+    "cpu_model" : string = "host-passthrough"
 } = dict();

@@ -34,6 +34,11 @@ TOKEN = "YES"
 ]
 CPU = "[% vcpus * system.opennebula.cpuratio %]"
 VCPU = "[% vcpus %]"
+CPU_MODEL = [
+[%     FILTER indent -%]
+MODEL = "[%- system.opennebula.cpu_model %]"
+[%-    END %]
+]
 DESCRIPTION = "[% hardware.model %] [% fqdn %]"
 [%-    FOR pair IN hardware.harddisks.pairs %]
 DISK = [
@@ -92,6 +97,11 @@ VMGROUP = [% INCLUDE 'opennebula/oned_level1.tt' data=item -%]
 [%- END %]
 [%- IF system.opennebula.labels.defined %]
 LABELS = "[% system.opennebula.labels.join(',') %]"
+[%- END %]
+[%- IF system.opennebula.topology.pin_policy.defined %]
+TOPOLOGY = [
+[%      INCLUDE 'opennebula/topology_level1.tt' data=system.opennebula.topology FILTER indent -%]
+]
 [%- END %]
 [%- FOREACH sched IN system.opennebula.placements %]
 [%      sched.key FILTER upper %] = "[% sched.value %]"
