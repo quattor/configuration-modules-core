@@ -97,3 +97,9 @@ prefix "contents";
     'name', 'Strict-Transport-Security',
     'value', 'max-age=15768000'
     ));
+
+"vhosts/keystone/requestheader" = append(dict(
+    'action', 'set',
+    'name', 'X-MAGIC-SOMETHING',
+    'value', '%{MAGIC}xyz'
+    ));
