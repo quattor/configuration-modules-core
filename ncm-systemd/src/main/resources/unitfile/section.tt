@@ -10,6 +10,8 @@
 [%               END -%]
 [%           CASE long_infinity -%]
 [%-              pair.key %]=[% value == -1 ? 'infinity' : value %]
+[%           CASE percentages -%]
+[%-              pair.key %]=[% value %]%
 [%           CASE comma_list -%]
 [%-              pair.key %]=[% value.join(',') %]
 [%           CASE -%]

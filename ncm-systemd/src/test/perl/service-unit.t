@@ -542,6 +542,12 @@ while (my ($ufstate, $val) = each %$states) {
 $out =~ s/^UnitFileState\s*=.*$/UnitFileState=enabled/m;
 set_desired_output($cmdline, $out);
 
+ok($unit->is_ufstate('user-.slice', $STATE_ENABLED), "user-.slice has ufstate $STATE_ENABLED (any state is ok for template slice");
+ok($unit->is_ufstate('user-.slice', $STATE_DISABLED), "user-.slice has ufstate $STATE_DISABLED (any state is ok for template slice");
+
+# unknown unit user-123.slice will be considered DISABLED
+ok($unit->is_ufstate('user-123.slice', $STATE_DISABLED), "unkown user-123.slice has $STATE_DISABLED (any state is not ok for slice");
+ok(!$unit->is_ufstate('user-123.slice', $STATE_ENABLED), "user-123.slice does not have ufstate $STATE_ENABLED (any state is not ok for actual slice");
 
 =pod
 
