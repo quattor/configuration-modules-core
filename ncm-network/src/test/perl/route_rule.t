@@ -112,6 +112,7 @@ Readonly my $ETH0_ROUTE => <<EOF;
 something arbitrary
 default via 4.3.2.3 dev eth0 table outside
 1.2.3.9/32 via 4.3.2.9 dev eth0 onlink table outside
+blackhole 1.2.3.9/32
 EOF
 
 Readonly my $ETH0_ROUTE6 => <<EOF;
