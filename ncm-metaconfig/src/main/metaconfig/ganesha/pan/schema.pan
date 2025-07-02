@@ -2,9 +2,9 @@ declaration template metaconfig/ganesha/schema;
 
 # the defaults are based on the GPFS FSAL
 
-type ganesha_nfs_protocol = long with SELF == 2 || SELF == 3 || SELF == 4;
-type ganesha_transport_protocol = string with SELF == 'TCP' || SELF == 'UDP';
-type ganesha_sec_type = string with SELF == 'sys' || SELF == 'krb5' || SELF == 'krb5i' || SELF == 'krb5p';
+type ganesha_nfs_protocol = long(2..4);
+type ganesha_transport_protocol = choice('TCP', 'UDP');
+type ganesha_sec_type = choice('sys', 'krb5', 'krb5i', 'krb5p');
 
 type ganesha_export_client = {
     "Root_Access" ? string[] # Grant root access to thoses nodes, networks and @netgroups. A hostname can contain wildcards (*?).
@@ -86,7 +86,7 @@ type ganesha_filesystem = {
 } = dict();
 
 type ganesha_GPFS = {
-  # no GPFS specific options
+    # no GPFS specific options
 } = dict();
 
 type ganesha_cacheinode_hash = {
@@ -197,7 +197,7 @@ type ganesha_nfs_core_param = {
 
     "MaxRPCSendBufferSize" ? long(0..) = 32768 # The size of each RPC send buffer in bytes and effectively the maximum send size.
     "MaxRPCRecvBufferSize" ? long(0..) = 32768 # The size of each RPC receive buffer in bytes and effectively the maximum receive size.
-    "NFS_Protocols" ? ganesha_nfs_protocol[] = list(3,4) # List of NFS Protocol Versions that should be supported
+    "NFS_Protocols" ? ganesha_nfs_protocol[] = list(3, 4) # List of NFS Protocol Versions that should be supported
 } = dict();
 
 type ganesha_nfs_dupreq_hash = {
