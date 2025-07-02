@@ -24,7 +24,6 @@ use Text::Glob qw(match_glob);
 use constant REPOS_DIR           => "/etc/yum.repos.d";
 use constant REPOS_TREE          => "/software/repositories";
 use constant PKGS_TREE           => "/software/packages";
-use constant GROUPS_TREE         => "/software/groups/names";
 use constant CMP_TREE            => "/software/components/spma";
 use constant YUM_PACKAGE_LIST    => "/etc/yum/pluginconf.d/versionlock.list";
 use constant YUM_CONF_FILE       => "/etc/yum.conf";
@@ -325,16 +324,6 @@ sub Configure
         }
     }
 
-    my $groups = defined($config->getElement(GROUPS_TREE)) ? $config->getElement(GROUPS_TREE)->getTree() : [];
-    # RHEL7 needs converting groups
-    if ($os_major eq '7' && @$groups) {
-        ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command(["yum groups mark convert " . YUM_PLUGIN_OPTS], "converting groups", 1);
-        if ($cmd_exit) {
-            $self->error("Failed to do group conversion on RHEL7.");
-            return 0;
-        }
-    }
-
     # Get list of packages installed on system before any package modifications.
     my $preinstalled = $self->get_installed_rpms();
     return 1 if !defined($preinstalled);
@@ -448,7 +437,6 @@ sub Configure
     $self->execute_command(["mkdir -p " . $yum_test_chroot . "/var/cache"],                 "setting up YUM test chroot",    1);
     $self->execute_command(["ln -s /var/cache/yum " . $yum_test_chroot . "/var/cache/yum"], "setting YUM test chroot cache", 1);
     my $yum_install_test_command = "yum install " . YUM_PLUGIN_OPTS . " -C --installroot=" . $yum_test_chroot;
-    if (@$groups)             { $yum_install_test_command .= " @" . join   (" @",   sort @$groups); }
     if (@$wanted_pkgs_locked) { $yum_install_test_command .= " " . join    (" ",    sort @$wanted_pkgs_locked); }
     if (@$wanted_pkgs)        { $yum_install_test_command .= " " . join    (" ",    sort @$wanted_pkgs); }
     ($cmd_exit, $cmd_out, $cmd_err) = $self->execute_command([$yum_install_test_command], "performing YUM chroot install test", 1, "/dev/null", "verbose", 1);
