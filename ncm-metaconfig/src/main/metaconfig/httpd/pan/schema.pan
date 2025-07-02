@@ -15,11 +15,12 @@ type httpd_ciphersuite = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE
     "DHE-RSA-AES128-SHA256", "DHE-RSA-AES128-SHA", "DHE-RSA-AES256-SHA256", "DHE-RSA-AES256-SHA",
     "ECDHE-ECDSA-DES-CBC3-SHA", "ECDHE-RSA-DES-CBC3-SHA", "EDH-RSA-DES-CBC3-SHA", "AES128-GCM-SHA256",
     "AES256-GCM-SHA384", "AES128-SHA256", "AES256-SHA256", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA", "!RC4",
-    "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS");
+    "!LOW", "!aNULL", "!eNULL", "!MD5", "!EXP", "!3DES", "!IDEA", "!SEED", "!CAMELLIA", "!DSS"
+);
 
 # These are the settings for old clients, see https://access.redhat.com/articles/1467293 for stricter values.
 type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3)$')
-    || error("Use a modern cipher suite, for Pete's sake! see https://access.redhat.com/articles/1467293");
+|| error("Use a modern cipher suite, for Pete's sake! see https://access.redhat.com/articles/1467293");
 
 # only allow -(bad ciphers) and +(good ciphers) where good ciphers are from https://access.redhat.com/articles/1467293
 # minues rc4, since the Bar Mitzvah attack
@@ -30,7 +31,8 @@ type httpd_nss_cipherstring = string with match(SELF, '^(-(rsa_3des_sha|rsa_des_
     'ecdhe_ecdsa_aes_128_sha_256|ecdhe_ecdsa_aes_256_gcm_sha_384|ecdhe_ecdsa_aes_256_sha|ecdhe_ecdsa_aes_256_sha_384|' +
     'ecdhe_rsa_aes_128_gcm_sha_256|ecdhe_rsa_aes_128_sha|ecdhe_rsa_aes_128_sha_256|ecdhe_rsa_aes_256_gcm_sha_384|' +
     'ecdhe_rsa_aes_256_sha|ecdhe_rsa_aes_256_sha_384|ecdh_rsa_aes_128_sha|ecdh_rsa_aes_256_sha|' +
-    'rsa_aes_128_gcm_sha_256|rsa_aes_128_sha|rsa_aes_256_gcm_sha_384|rsa_aes_256_sha))$');
+    'rsa_aes_128_gcm_sha_256|rsa_aes_128_sha|rsa_aes_256_gcm_sha_384|rsa_aes_256_sha))$'
+);
 
 type httpd_protocols = choice("h2", "h2c", "http/1.1");
 
@@ -47,7 +49,8 @@ type httpd_option_plusminus_none = string[] with {
         pm = match(opt, '^(\+|-)');
         if (to_long(plusminus) != to_long(pm)) {
             error('Either all options must start with + or -, or no option may: got %s compared with first %s',
-                opt, SELF[0]);
+                opt, SELF[0]
+            );
         };
     };
     true;
@@ -121,7 +124,8 @@ type httpd_oidc = {
 } with {
     if (!exists(SELF['providermetadataurl'])) {
         provs = list('issuer', 'authorizationendpoint', 'tokenendpoint',
-                        'tokenendpointauth', 'userinfoendpoint', 'jwksuri');
+            'tokenendpointauth', 'userinfoendpoint', 'jwksuri'
+        );
         foreach (i; prov; provs) {
             if (!exists(SELF["provider" + prov])) {
                 error("oidc attribute provider%s must be configured when providermetadataurl is absent", prov);
@@ -248,7 +252,8 @@ type httpd_nss_vhost = {
     "protocol" : httpd_nss_protocol[] = list("TLSv1.0", "TLSv1.1", "TLSv1.2")
     "ciphersuite" : httpd_nss_cipherstring[] = list('+rsa_aes_128_sha', '+rsa_aes_256_sha', '+ecdhe_rsa_aes_256_sha',
         '+ecdhe_rsa_aes_128_sha', '+ecdh_rsa_aes_256_sha', '+ecdh_rsa_aes_128_sha', '+ecdhe_ecdsa_aes_256_sha',
-        '+ecdhe_ecdsa_aes_128_sha', '+ecdh_ecdsa_aes_256_sha', '+ecdh_ecdsa_aes_128_sha')
+        '+ecdhe_ecdsa_aes_128_sha', '+ecdh_ecdsa_aes_256_sha', '+ecdh_ecdsa_aes_128_sha'
+    )
 
     "nickname" : string
     "eccnickname" ? string
@@ -299,7 +304,8 @@ type httpd_authz = {
 };
 
 type httpd_limit_value = string with match(SELF, '^GET|POST|PUT|DELETE|CONNECT|OPTIONS|PATCH|PROPFIND|PROPPATCH|' +
-    'MKCOL|COPY|MOVE|LOCK|UNLOCK$');
+    'MKCOL|COPY|MOVE|LOCK|UNLOCK$'
+);
 
 type httpd_limit = {
     "name" : httpd_limit_value[]
