@@ -178,7 +178,7 @@ type ldap_global = {
 
 
 type ldap_database_string = string with match(SELF,
-    "^(bdb|config|dnssrv|hdb|ldap|ldif|meta|monitor|null|passwd|perl|relay|shell|sql)$"
+    "^(bdb|config|dnssrv|hdb|ldap|ldif|mdb|meta|monitor|null|passwd|perl|relay|shell|sql)$"
 ) || error("Unknown LDAP database type. Check sladpd.conf man page");
 
 type ldap_ops = string with match(SELF,
@@ -290,6 +290,7 @@ type ldap_database = {
     "updatedn" ? string
     "updateref" ? type_absoluteURI
     "backend_specific" ? string[]{}
+    "maxsize" ? long # only for mdb
 };
 
 type component_openldap = {

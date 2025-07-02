@@ -443,12 +443,20 @@ sub legacy_setup
     $self->verbose("Running ", __PACKAGE__, " in legacy mode");
 
     my ($database, $suffix, $rootdn, $rootpw, $directory, $loglevel,
-        $argsfile, $pidfile, $base, $ldap_config);
+        $argsfile, $pidfile, $base, $ldap_config, $maxsize);
 
     # get values if elements exist
     if ($config->elementExists("$base/database")) {
         $database = $config->getValue("$base/database");
         print $fh "database $database\n";
+    }
+
+    # if database type is mdb, we may have to set maxsize parameter
+    if ($database eq 'mdb') {
+        if ($config->elementExists("$base/maxsize")) {
+            my $maxsize = $config->getValue("$base/maxsize");
+            print $fh "maxsize $maxsize\n";
+        }
     }
 
     if ($config->elementExists("$base/suffix")) {
