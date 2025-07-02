@@ -198,6 +198,7 @@ type haproxy_service_server_params = {
     'check' ? boolean
     @{different health check port}
     'port' ? type_port
+    'cookie' ? string
 };
 
 type haproxy_service_bind_params = {
@@ -252,6 +253,7 @@ type haproxy_service_backend = {
     'reqrep' ? haproxy_service_reqrep[]
     'http-request' ? string[]
     'acl' ? dict()
+    'cookie' ? string
 };
 
 @documentation {
