@@ -271,8 +271,18 @@ type httpd_nss_vhost = {
 type httpd_ssl_vhost = {
     include httpd_ssl_global
     include httpd_ssl_nss_vhost
-    "protocol" : httpd_sslprotocol[] = list("TLSv1")
-    "ciphersuite" : httpd_ciphersuite[] = list("TLSv1")
+    "protocol" : httpd_sslprotocol[] = list("-all", "+TLSv1.2", "+TLSv1.3")
+    "ciphersuite" : httpd_ciphersuite[] = list(
+        "ECDHE-ECDSA-AES128-GCM-SHA256",
+        "ECDHE-RSA-AES128-GCM-SHA256",
+        "ECDHE-ECDSA-AES256-GCM-SHA384",
+        "ECDHE-RSA-AES256-GCM-SHA384",
+        "ECDHE-ECDSA-CHACHA20-POLY1305",
+        "ECDHE-RSA-CHACHA20-POLY1305",
+        "DHE-RSA-AES128-GCM-SHA256",
+        "DHE-RSA-AES256-GCM-SHA384",
+        "DHE-RSA-CHACHA20-POLY1305"
+    )
     "honorcipherorder" ? string with match(SELF, '^(on|off)$')
     "compression" ? boolean
     "sessiontickets" ? boolean
