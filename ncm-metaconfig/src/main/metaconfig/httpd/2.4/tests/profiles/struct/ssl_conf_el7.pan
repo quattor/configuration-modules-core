@@ -36,9 +36,19 @@ structure template struct/ssl_conf_el7;
 
 "vhosts/base/ssl/engine" = true;
 # list("all", "-SSLv2") not allowed
-"vhosts/base/ssl/protocol" =  list("TLSv1");
+"vhosts/base/ssl/protocol" =  list("-all", "+TLSv1.2", "+TLSv1.3");
 # list("ALL", "!ADH", "!EXPORT", "!SSLv2", "RC4", "RSA", "+HIGH", "+MEDIUM", "+LOW")
-"vhosts/base/ssl/ciphersuite" = list("TLSv1");
+"vhosts/base/ssl/ciphersuite" = list(
+    "ECDHE-ECDSA-AES128-GCM-SHA256",
+    "ECDHE-RSA-AES128-GCM-SHA256",
+    "ECDHE-ECDSA-AES256-GCM-SHA384",
+    "ECDHE-RSA-AES256-GCM-SHA384",
+    "ECDHE-ECDSA-CHACHA20-POLY1305",
+    "ECDHE-RSA-CHACHA20-POLY1305",
+    "DHE-RSA-AES128-GCM-SHA256",
+    "DHE-RSA-AES256-GCM-SHA384",
+    "DHE-RSA-CHACHA20-POLY1305"
+);
 "vhosts/base/ssl/certificatefile" = "/etc/pki/tls/certs/localhost.crt";
 "vhosts/base/ssl/certificatekeyfile" = "/etc/pki/tls/private/localhost.key";
 
