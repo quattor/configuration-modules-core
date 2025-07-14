@@ -881,6 +881,10 @@ CONTEXT = [
     TOKEN = "YES"
 ]
 CPU = "4"
+VCPU = "4"
+CPU_MODEL = [
+    MODEL = "Broadwell-noTSX-IBRS"
+]
 DESCRIPTION = "KVM Virtual Machine node630.cubone.os"
 DISK = [
     IMAGE = "node630.cubone.os_vda",
@@ -906,8 +910,7 @@ OS = [
     BOOT = "nic0,disk0"
 ]
 RAW = [
-    DATA = "<vcpu>4</vcpu><cpu mode='host-passthrough'>
-    <topology sockets='2' cores='2' threads='1'/></cpu>
+    DATA = "
     <memoryBacking>
     <nosharepages/>
     <hugepages/>
