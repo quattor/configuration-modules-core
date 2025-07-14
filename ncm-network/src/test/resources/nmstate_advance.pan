@@ -26,6 +26,8 @@ prefix "/system/network/interfaces/eth0";
 "route/2" = dict("address", "1.2.3.6", "netmask", "255.0.0.0", "gateway", "4.3.2.1");
 "route/3" = dict("address", "1.2.3.7", "prefix", 16, "gateway", "4.3.2.2");
 "route/4" = dict("address", "default", "gateway", "4.3.2.3", "table", "outside");
+"route/5" = dict("address", "default", "gateway", "4.3.2.3", "table", "outside",
+"cwnd", 100, "initcwnd", 50, "initrwnd", 40);
 
 "rule/0" = dict("to", "1.2.3.4/24", "not", true, "table", "space");
 
