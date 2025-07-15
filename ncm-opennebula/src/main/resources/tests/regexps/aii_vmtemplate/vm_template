@@ -55,6 +55,7 @@ multiline
 ^\]$
 ^MEMORY\s?=\s?"4096"$
 ^OS\s?=\s?\[$
+^\s{4}MACHINE\s?=\s?"pc-q35-rhel9.4.0",$
 ^\s{4}BOOT\s?=\s?""$
 ^\]$
 ^RAW\s?=\s?\[$
