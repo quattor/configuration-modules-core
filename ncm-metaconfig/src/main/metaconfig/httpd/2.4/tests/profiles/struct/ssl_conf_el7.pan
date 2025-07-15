@@ -20,7 +20,8 @@ structure template struct/ssl_conf_el7;
 
 "vhosts/base" = create("struct/default_vhost",
     "documentroot", "/var/www/cgi-bin",
-    "port", 443);
+    "port", 443
+);
 
 
 "vhosts/base/log/error" = "logs/ssl_error_log";
