@@ -67,6 +67,9 @@ TYPE = "[% system.opennebula.graphics %]"
 MEMORY = "[% memory %]"
 OS = [
 [%     FILTER indent -%]
+[%        IF system.opennebula.machine.defined -%]
+MACHINE = "[% system.opennebula.machine %]",
+[%        END -%]
 BOOT = "[% system.opennebula.boot.join(',') %]"
 [%    END -%]
 ]

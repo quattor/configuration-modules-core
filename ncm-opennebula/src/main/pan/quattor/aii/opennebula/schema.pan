@@ -354,4 +354,10 @@ type opennebula_vmtemplate = {
     Available modes are stored in the host information and obtained through monitor (onehost show <id>).
     }
     "cpu_model" : string = "host-passthrough"
+    @{Libvirt machine type.
+    Check libvirt hyp capabilities for the list of available machine types (KVM_MACHINES list from "onehost show <id>").
+    Required to use the new KVM machine types for RHEL>=9 (like q35 82Q35 chipset) with PCI passthrough:
+    https://github.com/OpenNebula/one/issues/6492
+    }
+    "machine" ? string
 } = dict();
