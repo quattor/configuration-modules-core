@@ -49,7 +49,7 @@ use strict;
 use base 'NCM::Component';
 
 our $EC = LC::Exception::Context->new->will_store_all;
-our $NoActionSupported = 1;
+our $NoActionSupported = 0;
 
 use LC::Check;
 use LC::File;
