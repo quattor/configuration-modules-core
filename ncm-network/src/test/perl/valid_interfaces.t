@@ -20,27 +20,36 @@ my @valid_ifs = qw(eth0 seth1 em2 em2_2
     enxAABBCCDDEEFF);
 
 foreach my $valid (@valid_ifs) {
-    foreach my $type (qw(ifcfg route)) {
-        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid"), [$valid, $valid],
-                  "valid interface $valid from $type");
-        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid.123"), [$valid, "$valid.123"],
-                  "valid interface $valid from $type with vlan");
-        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid:alias"), [$valid, "$valid:alias"],
-                  "valid interface $valid from $type with alias");
-        is_deeply($cmp->is_valid_interface("$basedir/$type-$valid.456:myalias"), [$valid, "$valid.456:myalias"],
-                  "valid interface $valid from $type with vlan and alias");
-        is_deeply($cmp->is_valid_interface("$basedir/$type-${valid}_whatever.456:myalias"), 
-                  [$valid =~ m/^(.*)_\d+$/ ? $1 : $valid, "${valid}_whatever.456:myalias"],
-                  "valid interface $valid from $type with suffix, vlan and alias");
+    foreach my $type (qw(ifcfg route route6)) {
+        is_deeply(
+            $cmp->is_valid_interface("$basedir/$type-$valid"), [$valid, $valid],
+            "valid interface $valid from $type"
+        );
+        is_deeply(
+            $cmp->is_valid_interface("$basedir/$type-$valid.123"), [$valid, "$valid.123"],
+            "valid interface $valid from $type with vlan"
+        );
+        is_deeply(
+            $cmp->is_valid_interface("$basedir/$type-$valid:alias"), [$valid, "$valid:alias"],
+            "valid interface $valid from $type with alias"
+        );
+        is_deeply(
+            $cmp->is_valid_interface("$basedir/$type-$valid.456:myalias"), [$valid, "$valid.456:myalias"],
+            "valid interface $valid from $type with vlan and alias"
+        );
+        is_deeply(
+            $cmp->is_valid_interface("$basedir/$type-${valid}_whatever.456:myalias"),
+            [$valid =~ m/^(.*)_\d+$/ ? $1 : $valid, "${valid}_whatever.456:myalias"],
+            "valid interface $valid from $type with suffix, vlan and alias"
+        );
     };
 };
 
-my @invalid_ifs = ('madeup', # arbitrary name
-    'eth', # no number
-    'enop1', # onboard with pci
-    'enp2', # pci without slot
-    'enxAABBCCDDEEF', # too short MAC
-    'enxAABBCCDDEEFFF', # too long mac
+my @invalid_ifs = (
+    'contains/slash',
+    'too-many-characters',
+    'multiple::colons',
+    'space in_name',
 );
 foreach my $invalid (@invalid_ifs) {
     ok(!defined($cmp->is_valid_interface("$basedir/ifcfg-$invalid")), "invalid interface $invalid");
