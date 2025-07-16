@@ -1,4 +1,4 @@
-Base test for ssl.conf EL6 config 
+Base test for ssl.conf EL6 config
 ---
 multiline
 /etc/httpd/conf.d/ssl.conf
@@ -19,10 +19,10 @@ multiline
 ^\s{4}sslcacertificatefile /etc/ca_file$
 ^\s{4}sslcertificatefile /etc/pki/tls/certs/localhost.crt$
 ^\s{4}sslcertificatekeyfile /etc/pki/tls/private/localhost.key$
-^\s{4}sslciphersuite TLSv1$
+^\s{4}sslciphersuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305$
 ^\s{4}sslengine on$
 ^\s{4}ssloptions \-OptRenegotiate \+StrictRequire \+StdEnvVars$
-^\s{4}sslprotocol TLSv1$
+^\s{4}sslprotocol -all \+TLSv1\.2 \+TLSv1\.3$
 ^\s{4}setenvif User-Agent "\.\*MSIE\.\*" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0$
 ^\s{4}loglevel warn$
 ^\s{4}errorlog logs/ssl_error_log$
