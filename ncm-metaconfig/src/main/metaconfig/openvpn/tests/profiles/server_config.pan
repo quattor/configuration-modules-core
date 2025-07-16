@@ -28,5 +28,5 @@ prefix "/software/components/metaconfig/services/{/etc/openvpn/server.conf}/cont
 "push" = list(
     "route 11.2.1.0 255.255.255.0",
     "route 10.3.1.0 255.255.255.0",
-    "route 9.1.1.0 255.255.255.0"
-    );
+    "route 9.1.1.0 255.255.255.0",
+);
