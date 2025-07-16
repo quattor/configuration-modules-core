@@ -38,6 +38,12 @@ type network_route = {
     "table" ? network_valid_routing_table
     @{pretend that the nexthop is directly attached to this link}
     "onlink" ? boolean
+    @{congestion window size}
+    "cwnd" ? long(10..)
+    @{Initial congestion window size, applied to all sockets for the given targets.}
+    "initcwnd" ? long(10..)
+    @{Advertised receive window, applied to all sockets for the given targets.}
+    "initrwnd" ? long(10..)
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
 } with network_valid_route(SELF);
