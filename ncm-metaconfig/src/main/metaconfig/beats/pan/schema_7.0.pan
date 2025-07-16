@@ -180,7 +180,7 @@ type beats_filebeat_input_multiline = {
     Configure a input (source of certain class of data, can come multiple paths)
 }
 type beats_filebeat_input = {
-    'paths' : absolute_file_path[]
+    'paths' ? absolute_file_path[]
     'encoding' ? choice(
         'big5',
         'euc-jp',
