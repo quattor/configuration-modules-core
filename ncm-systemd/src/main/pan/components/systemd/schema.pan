@@ -253,7 +253,7 @@ type ${project.artifactId}_unitfile_config_systemd_resource_control = {
     'CPUWeight' ? ${project.artifactId}_weights
     'StartupCPUWeight' ? ${project.artifactId}_weights
     'StartupCPUShares' ? long(2..262144)
-    'CPUQuota' ? long(0..100)  # percentages
+    'CPUQuota' ? long(0..)  # percentages, > 100 means more than one CPU
     'MemoryAccounting' ? boolean
     'MemoryLimit' ? ${project.artifactId}_absolute_or_relative_size
     'MemoryMin' ? ${project.artifactId}_absolute_or_relative_size
