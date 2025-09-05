@@ -62,6 +62,13 @@ routes:
     next-hop-address: 4.3.2.3
     next-hop-interface: eth0
     table-id: '3'
+  - cwnd: 100
+    destination: 0.0.0.0/0
+    initcwnd: 50
+    initrwnd: 40
+    next-hop-address: 4.3.2.3
+    next-hop-interface: eth0
+    table-id: '3'
 EOF
 
 Readonly my $VLAN_YML => <<EOF;
