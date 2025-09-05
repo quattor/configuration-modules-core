@@ -1,5 +1,6 @@
 [%- # all Limit except NICE (schema doesn't allow NICE)
     long_infinity = ['LimitAS', 'LimitCORE', 'LimitCPU', 'LimitDATA', 'LimitFSIZE', 'LimitLOCKS', 'LimitMEMLOCK', 'LimitMSGQUEUE', 'LimitNOFILE', 'LimitNPROC', 'LimitRSS', 'LimitRTPRIO', 'LimitRTTIME' 'LimitSIGPENDING', 'LimitSTACK'];
     list_of_lines = ['BlockIODeviceWeight', 'BlockIOReadBandwidth', 'BlockIOWriteBandwidth', 'CPUAffinity', 'DeviceAllow', 'Environment', 'EnvironmentFile', 'ExecStart', 'ExecStartPre', 'ExecStartPost', 'ExecReload', 'ExecStop', 'ExecStopPost', 'ListenStream', 'ListenDatagram', 'ListenSequentialPacket', 'OnCalendar'];
+    percentages = ['CPUQuota'];
 -%]
 [% INCLUDE 'systemd/unitfile/section.tt' data=data -%]
