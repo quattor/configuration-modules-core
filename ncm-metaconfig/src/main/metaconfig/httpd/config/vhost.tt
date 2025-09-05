@@ -15,7 +15,8 @@ limitrequestbody [% vhost.limitrequestbody %]
 protocols [% vhost.protocols.join(' ') %]
 [% END -%]
 [%- to_process = ['ssl', 'nss', 'env', 'aliases', 'rewrite', 'redirect',
-                  'perl', 'wsgi', 'log', 'rails', 'browsermatch', 'passenger', 'oidc', 'header'] -%]
+                  'perl', 'wsgi', 'log', 'rails', 'browsermatch', 'passenger',
+                  'oidc', 'header', 'requestheader'] -%]
 [%- FOREACH p IN  to_process -%]
 [%-      IF vhost.exists(p) -%]
 [%          INCLUDE "metaconfig/httpd/config/${p}.tt" desc=vhost.$p %]
