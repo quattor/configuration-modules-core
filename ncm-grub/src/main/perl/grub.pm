@@ -7,6 +7,7 @@ use CAF::FileWriter;
 use CAF::Process;
 use EDG::WP4::CCM::Path qw(unescape);
 
+use File::Temp qw(tempdir);
 use Readonly;
 use parent qw(NCM::Component CAF::Path);
 our $EC = LC::Exception::Context->new->will_store_all;
@@ -803,6 +804,8 @@ sub default_options
 
     my ($current, $currargs) = $self->get_current_arguments($default);
 
+    my @default_options;
+
     # If we want full control of the arguments:
     if ($fullcontrol) {
         # Check if the arguments we want to add are the same we have
@@ -846,12 +849,12 @@ sub default_options
                 $arguments->{remove} = {};
             };
 
-            my @options = $self->grubby_arguments_options($arguments);
-            if (@options) {
-                if ($self->grubby(['--update-kernel', $default, @options], success => 1)) {
-                    $self->info("fullcontrol set args with '@options' for default kernel $default");
+            @default_options = $self->grubby_arguments_options($arguments);
+            if (@default_options) {
+                if ($self->grubby(['--update-kernel', $default, @default_options], success => 1)) {
+                    $self->info("fullcontrol set args with '@default_options' for default kernel $default");
                 } else {
-                    $self->error("fullcontrol cannot set args with '@options' for default kernel $default");
+                    $self->error("fullcontrol cannot set args with '@default_options' for default kernel $default");
                     return;
                 }
             } else {
@@ -860,16 +863,30 @@ sub default_options
         }
     } else {
         # If we want no full control of the arguments
-        my @options = $self->grubby_arguments_options($arguments);
-        if (@options) {
-            if ($self->grubby(['--update-kernel', $default, @options], success => 1)) {
-                $self->info("set args with '@options' for default kernel $default");
+        @default_options = $self->grubby_arguments_options($arguments);
+        if (@default_options) {
+            if ($self->grubby(['--update-kernel', $default, @default_options], success => 1)) {
+                $self->info("set args with '@default_options' for default kernel $default");
             } else {
-                $self->error("cannot set args with '@options' for default kernel $default");
+                $self->error("cannot set args with '@default_options' for default kernel $default");
                 return;
             }
         } else {
             $self->verbose("No kernel arguments set");
+        }
+    }
+
+    if ($tree->{for_next}) {
+        # Set default options for "next" kernel that will be installed with e.g. new rpm.
+        # This involves updating /etc/default/grub and /etc/kernel/cmdline
+        # As there is no direct way in grubby to only update these files,
+        # we use hack to pass ALL kernels and point to empty bootloader dir
+        my $bls_tmpdir = tempdir("ncm-grub-bls-XXXXXX", TMPDIR => 1, CLEANUP => 1);
+        if ($self->grubby(['--bls-directory', $bls_tmpdir, '--update-kernel', 'ALL', @default_options], success => 1)) {
+            $self->info("set args with '@default_options' for next kernel");
+        } else {
+            $self->error("cannot set args with '@default_options' for next kernel");
+            return;
         }
     }
 
