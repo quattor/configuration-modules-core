@@ -40,8 +40,8 @@ prefix "/software/components/metaconfig/services/{/etc/openvpn/server.conf}/cont
 "push" = list(
     "route 11.2.1.0 255.255.255.0",
     "route 10.3.1.0 255.255.255.0",
-    "route 9.1.1.0 255.255.255.0"
-    );
+    "route 9.1.1.0 255.255.255.0",
+);
 "script-security" = 3;
 "server" = "10.10.0.0 255.255.0.0";
 "server-bridge" = "10.8.0.4 255.255.255.0 10.8.0.128 10.8.0.254";
