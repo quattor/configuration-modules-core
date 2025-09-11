@@ -614,12 +614,21 @@ type httpd_directory = {
 
 type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';
 
-type httpd_header = {
+type httpd_header_base = {
     "name" : string
-    "action" : choice('add', 'append', 'echo', 'edit', 'edit*', 'merge', 'set', 'setifempty', 'unset', 'note')
     "value" : string
     "quotes" : string = '"'
     "always" ? boolean
+};
+
+type httpd_header = {
+    include httpd_header_base
+    "action" : choice('add', 'append', 'echo', 'edit', 'edit*', 'merge', 'set', 'setifempty', 'unset', 'note')
+};
+
+type httpd_requestheader = {
+    include httpd_header_base
+    "action" : choice('add', 'append', 'edit', 'edit*', 'merge', 'set', 'setifempty', 'unset')
 };
 
 type httpd_serveralias = string with match(SELF, '^[\w.*]+$');  # serveralias supports wildcards
@@ -648,6 +657,7 @@ type httpd_vhost = {
     "browsermatch" ? httpd_browsermatch[]
     "passenger" ? httpd_passenger_vhost
     "header" ? httpd_header[]
+    "requestheader" ? httpd_requestheader[]
     "protocols" ? httpd_protocols[]
 };
 
