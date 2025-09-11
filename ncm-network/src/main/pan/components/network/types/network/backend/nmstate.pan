@@ -5,16 +5,29 @@ declaration template components/network/types/network/backend/nmstate;
 @documentation{
     NetworkManager device configuration for drop in config file.
 }
+
+type structure_nm_main_config = {
+    @{Set the DNS processing mode for NetworkManager}
+    "dns" : choice("default", "dnsmasq", "none", "systemd-resolved")
+    @{Lists system settings plugin names}
+    "plugins" ? choice('keyfile', 'ifcfg-rh')
+    @{append a value to a previously-set list-valued}
+    "plugins+" ? choice('keyfile', 'ifcfg-rh')
+    @{remove a value to a previously-set list-valued}
+    "plugins-" ? choice('keyfile', 'ifcfg-rh')
+};
+
 type structure_nm_device_config = {
     "keep-configuration" ? choice("yes", "no")
 };
 
 type structure_network_backend_specific = {
-    @{let NetworkManager manage the dns}
-    "manage_dns" : boolean = false
     @{let ncm-network cleanup inactive connections}
     "clean_inactive_conn" : boolean = true
+    @{NetworkManager configuration settings for device section}
     "device_config" ? structure_nm_device_config
+    @{NetworkManager configuration settings for main section}
+    "main_config" : structure_nm_main_config
 };
 
 type structure_network_rule_backend_specific = {
