@@ -113,7 +113,7 @@ prefix "/metaconfig/contents/main/test";
 "Enable_RQUOTA" = true;
 "MNT_Port" = 0;
 "MNT_Program" = 100005;
-"Manage_Gids_Expiration" = 30*60;
+"Manage_Gids_Expiration" = 30 * 60;
 "MaxRPCRecvBufferSize" = 1048576;
 "MaxRPCSendBufferSize" = 1048576;
 "NFS_Port" = 2049;
