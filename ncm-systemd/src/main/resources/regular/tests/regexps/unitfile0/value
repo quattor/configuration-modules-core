@@ -31,6 +31,7 @@ contentspath=/unitfile/0
 ^BlockIODeviceWeight=/tmp 50$
 ^CPUAffinity=$
 ^CPUAffinity=1 2 3 4$
+^CPUQuota=150%$
 ^Environment="VAR1-1=val1-1 val1-1b" "VAR1-2=val1-2" $
 ^Environment="VAR2-1=val2-1" "VAR2-2=val2-2 val2-2b" $
 ^EnvironmentFile=/envfile/1$
