@@ -8,6 +8,9 @@ type structure_network_backend_specific = {
 type structure_network_rule_backend_specific = {
 };
 
+type structure_network_route_backend_specific = {
+};
+
 function network_valid_route = {
     if (exists(SELF['prefix']) && exists(SELF['netmask'])) {
         error("Use either prefix or netmask as route");
