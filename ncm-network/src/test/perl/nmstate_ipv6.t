@@ -30,11 +30,11 @@ interfaces:
     enabled: true
   ipv6:
     address:
-    - ip: 2001:678:123:E012:0:0:0:45
+    - ip: 2001:678:123:e012:0:0:0:45
       prefix-length: 64
-    - ip: 2001:678:123:E012:0:0:0:46
+    - ip: 2001:678:123:e012:0:0:0:46
       prefix-length: 64
-    - ip: 2001:678:123:E012:0:0:0:47
+    - ip: 2001:678:123:e012:0:0:0:47
       prefix-length: 64
     enabled: true
   name: eth0

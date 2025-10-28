@@ -195,7 +195,7 @@ sub make_nm_ip_route
                     $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
                     $rt{destination} = $dest_addr->cidr;
                 } else {
-                    # if no netmask defined for a route, assume its single ip
+                    # if no netmask defined for a route, assume it is a single ip
                     $rt{destination} = $route->{address}."/32";
                 }
             } elsif ($rt_version eq 6) {
@@ -204,7 +204,7 @@ sub make_nm_ip_route
                     $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{prefix});
                     $rt{destination} = $dest_addr->cidr;
                 } else {
-                    # if no netmask defined for a route, assume its single ip
+                    # if no netmask defined for a route, assume it is a single ip
                     $rt{destination} = $route->{address}."/128";
                 }
             } else {
@@ -618,12 +618,13 @@ sub generate_nmstate_config
     push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
     if (defined($iface->{route})) {
         $self->verbose("policy route found, nmstate will manage it");
-        my $route = $iface->{route};
+        my $route4 = $iface->{route};
         # make_nm_ip_route() can handle IPv4 and IPv6 routes, so re-merge what process_network() seperated
         my $route6 = $iface->{route6};
-        if (defined($route6)) {
-            push(@$route, @$route6);
-        }
+        #if (defined($route6)) {
+        #    push(@$route, @$route6);
+        my @route = (@route4, @route6);
+        #}
         my $policyroutes = $self->make_nm_ip_route($name, $route, $routing_table);
         push @$routes, @{$policyroutes};
     }
