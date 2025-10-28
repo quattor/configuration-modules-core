@@ -19,3 +19,8 @@ prefix '/software/components/metaconfig/services/{/etc/chrony.conf}/contents';
 'driftfile' = '/var/lib/chrony/drift';
 'keyfile' = '/etc/chrony.keys';
 
+'leapsecmode' = 'slew';
+'maxslewrate' = 1000.0;
+'smoothtime/max_freq' = 400.0;
+'smoothtime/max_wander' = 0.001;
+'smoothtime/leaponly' = true;
