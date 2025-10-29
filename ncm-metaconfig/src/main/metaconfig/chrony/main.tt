@@ -8,6 +8,8 @@
 [%              pair.value.join("\n") %]
 [%          CASE ['makestep'] -%]
 makestep [%     pair.value.threshold %] [% pair.value.limit %]
+[%          CASE ['smoothtime'] -%]
+smoothtime [%     pair.value.max_freq %] [% pair.value.max_wander %] [% pair.value.leaponly ? 'leaponly' : '' %]
 [%          CASE ['network'] -%]
 [%              FOREACH entry IN pair.value -%]
 [%                  entry.action %] [% entry.host %]
