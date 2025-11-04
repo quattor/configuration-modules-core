@@ -610,6 +610,7 @@ type httpd_directory = {
     "davrods" ? httpd_davrods
     "files" ? httpd_file[]
     "expires" ? httpd_expires
+    "casscope" ? string_trimmed
 };
 
 type httpd_vhost_ip = string with is_ip(SELF) || SELF == '*';
