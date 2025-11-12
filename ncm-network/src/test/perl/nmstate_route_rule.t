@@ -54,6 +54,8 @@ routes:
   - destination: 0.0.0.0/0
     next-hop-address: 4.3.2.254
     next-hop-interface: eth0
+  - destination: 1.2.3.9/32
+    route-type: blackhole
 EOF
 
 is($cmp->Configure($cfg), 1, "Component runs correctly with a test profile");

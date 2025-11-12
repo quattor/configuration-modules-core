@@ -190,9 +190,16 @@ sub make_nm_ip_route
                 $rt{destination} = $route->{address}."/32";
              }
         }
+
         $rt{'table-id'} = "$routing_table_hash->{$route->{table}}" if $route->{table};
-        $rt{'next-hop-interface'} = $device;
-        $rt{'next-hop-address'} = $route->{gateway} if $route->{gateway};
+
+        if ($route->{type}) {
+            $rt{'route-type'} = $route->{type};
+        } else {
+            $rt{'next-hop-interface'} = $device;
+            $rt{'next-hop-address'} = $route->{gateway} if $route->{gateway};
+        }
+
         $rt{'cwnd'} = int($route->{cwnd}) if $route->{cwnd};
         $rt{'initcwnd'} = int($route->{initcwnd}) if $route->{initcwnd};
         $rt{'initrwnd'} = int($route->{initrwnd}) if $route->{initrwnd};

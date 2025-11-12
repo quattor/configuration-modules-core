@@ -41,4 +41,6 @@ type network_route = {
     "onlink" ? boolean
     @{route add command options to use (cannot be combined with other options)}
     "command" ? string with !match(SELF, '[;]')
+    @{route types}  # only subset, i.e. the nmstate allowed route types
+    "type" ? choice('blackhole', 'unreachable', 'prohibit')
 } with network_valid_route(SELF);
