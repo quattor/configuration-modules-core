@@ -1,5 +1,23 @@
 OpenNebula forecast test
 ---
 ---
-
-
+^host:$
+^\s{2}db_retention:\s{1}\d+$
+^\s{2}forecast:$
+^\s{4}enabled:\s{1}.+$
+^\s{4}lookback:\s{1}\d+$
+^\s{4}period:\s{1}\d+$
+^\s{2}forecast_far:$
+^\s{4}enabled:\s{1}.+$
+^\s{4}lookback:\s{1}\d+$
+^\s{4}period:\s{1}\d+$
+^virtualmachine:$
+^\s{2}db_retention:\s{1}\d+$
+^\s{2}forecast:$
+^\s{4}enabled:\s{1}.+$
+^\s{4}lookback:\s{1}\d+$
+^\s{4}period:\s{1}\d+$
+^\s{2}forecast_far:$
+^\s{4}enabled:\s{1}.+$
+^\s{4}lookback:\s{1}\d+$
+^\s{4}period:\s{1}\d+$
