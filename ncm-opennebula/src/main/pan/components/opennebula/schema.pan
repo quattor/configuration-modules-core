@@ -1101,10 +1101,10 @@ type opennebula_forecast_values = {
     @{Forecast service is disabled by default}
     "enabled" : boolean = false
     @{Number of minutes}
-    "period" : long = 5
+    "period" ? long(1..) = 5
     @{The look-back windows in minutes to use for the predictions}
-    "lookback" : long = 180
-} = dict();
+    "lookback" ? long(1..) = 180
+};
 
 @documentation{
 Type that sets OpenNebula forecast service
@@ -1112,10 +1112,10 @@ common options.
 }
 type opennebula_forecast_options = {
     @{Number of weeks}
-    "db_retention" : long = 4
+    "db_retention" ? long(1..) = 4
     "forecast" : opennebula_forecast_values
     "forecast_far" : opennebula_forecast_values
-} = dict();
+};
 
 @documentation{
 Type that sets OpenNebula forecast.conf file:
@@ -1124,7 +1124,7 @@ https://docs.opennebula.io/7.0/product/cloud_system_administration/resource_moni
 type opennebula_forecast = {
     "host" : opennebula_forecast_options
     "virtualmachine" : opennebula_forecast_options
-} = dict();
+};
 
 @documentation{
 Type that sets the OpenNebula
