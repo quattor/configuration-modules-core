@@ -6,7 +6,7 @@ bind "/metaconfig/contents" = opennebula_forecast;
 
 "/metaconfig/module" = "yaml";
 
-prefix "/metaconfig/contents/";
+prefix "/metaconfig/contents";
 "host" = dict(
     "db_retention", 4,
     "forecast", dict(
