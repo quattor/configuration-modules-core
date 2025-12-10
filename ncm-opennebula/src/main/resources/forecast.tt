@@ -1,3 +1,0 @@
-[% FOR pair IN forecast.pairs -%]
-[%    pair.key %]:[% pair.value %]
-[% END -%]

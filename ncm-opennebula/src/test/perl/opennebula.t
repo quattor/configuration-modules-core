@@ -103,4 +103,10 @@ isa_ok($pci_conf, "CAF::FileWriter", "pci_conf CAF::FileWriter instance");
 like("$pci_conf", qr{^:filter:$}m, "pci_conf has expected content");
 $pci_conf->close();
 
+# forecast conf file
+my $forecast_conf = get_file($NCM::Component::OpenNebula::Server::FORECAST_CONF_FILE);
+isa_ok($forecast_conf, "CAF::FileWriter", "forecast_conf CAF::FileWriter instance");
+like("$forecast_conf", qr{^---$}m, "forecast_conf has expected content");
+$forecast_conf->close();
+
 done_testing();

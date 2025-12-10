@@ -19,6 +19,7 @@ Readonly our $ONEADMINGRP => (getpwnam("oneadmin"))[3];
 Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $VNM_CONF_FILE => "/var/lib/one/remotes/vnm/OpenNebulaNetwork.conf";
 Readonly our $PCI_CONF_FILE => "/var/lib/one/remotes/etc/im/kvm-probes.d/pci.conf";
+Readonly our $FORECAST_CONF_FILE => "/var/lib/one/remotes/etc/im/kvm-probes.d/forecast.conf";
 
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
@@ -290,7 +291,18 @@ sub set_one_server
         if (exists $tree->{pci}) {
         $self->set_one_service_conf($tree->{pci}, "pci", $PCI_CONF_FILE);
     }
-
+    # Set Forecast conf
+    if (exists $tree->{forecast}) {
+        # Forecast uses yaml conf files instead of regular OpenNebula ones
+        $self->debug(5, "Render element for forecast with module yaml");
+        my $tpl = EDG::WP4::CCM::TextRender->new("yaml", $tree->{forecast}, log => $self);
+        my $fh = $tpl->filewriter($FORECAST_CONF_FILE);
+        if (!$fh) {
+            $self->error("Could not write forecast config file $FORECAST_CONF_FILE: $tpl->{fail}");
+            return;
+        };
+        my $update = $fh->close();
+    }
     return 1;
 }
 
