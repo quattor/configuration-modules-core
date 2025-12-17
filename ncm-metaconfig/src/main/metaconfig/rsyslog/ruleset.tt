@@ -13,7 +13,12 @@ name="[% name %]"
 [%-                  CASE 'prifile' -%]
 [%-                      INCLUDE 'metaconfig/rsyslog/prifile.tt' files=action.values.0 %]
 [%-                  CASE -%]
-[%-                      INCLUDE 'metaconfig/rsyslog/action.tt' type=action.keys.0 action=action.values.0 %]
+[%-                      IF ruleset.action.condition.defined %]
+    if ([%- ruleset.action.condition.value %]) then {
+[%-                         INCLUDE 'metaconfig/rsyslog/action.tt' type=action.keys.0 action=action.values.0 %]
+    }
+[%-                      ELSE %]
+[%-                         INCLUDE 'metaconfig/rsyslog/action.tt' type=action.keys.0 action=action.values.0 %]
 [%              END %]
 [%-          END %]
 [%-      ELSE %]
