@@ -8,9 +8,9 @@ declaration template metaconfig/named/schema;
 include 'pan/types';
 
 type named_acl_name = string with {
-    exists("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/" + SELF) ||
+    exists(format("/software/components/metaconfig/services/{/etc/named.conf}/contents/acls/%s", SELF)) ||
     match(SELF, "^(none|localhost|any|localnets)$") ||
-    error("ACL with name " + SELF + " is not defined");
+    error("ACL with name %s is not defined", SELF);
 };
 
 type named_source = {
@@ -97,8 +97,8 @@ type named_zone = {
 };
 
 type named_channel_name = string with {
-    exists ("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/" + SELF) ||
-    error (SELF + " doesn't refer to a logging channel");
+    exists(format("/software/components/metaconfig/services/{/etc/named.conf}/contents/logging/channels/%s", SELF)) ||
+    error("%s doesn't refer to a logging channel", SELF);
 };
 
 @{
