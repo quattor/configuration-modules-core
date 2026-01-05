@@ -183,7 +183,6 @@ type beats_filebeat_input_multiline = {
     'match' ? choice('after', 'before')
     'max_lines' ? long(0..)
     'timeout' ? long(0..)
-    'max_lines' ? long(0..)
     'close_inactive' ? string_trimmed
     'close_eof' ? boolean
 };
