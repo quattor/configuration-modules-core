@@ -1083,6 +1083,50 @@ type opennebula_untouchables = {
 };
 
 @documentation{
+Type that set OpenNebula forecast
+values and database retention times.
+
+Storage Considerations
+Forecast database size depends on retention and monitoring frequency:
+
+Host database: ~2.5 MB per Host (4-week retention, 2-minute intervals)
+VM database: ~6.5 MB per VM (2-week retention, 30-second intervals)
+To optimize storage:
+
+Adjust retention based on available capacity.
+Monitor /var/tmp/one_db/ usage.
+Tailor settings to workload cycles (daily, weekly, monthly).
+}
+type opennebula_forecast_values = {
+    @{Forecast service is disabled by default}
+    "enabled" : boolean = false
+    @{Number of minutes}
+    "period" ? long(1..) = 5
+    @{The look-back windows in minutes to use for the predictions}
+    "lookback" ? long(1..) = 180
+};
+
+@documentation{
+Type that sets OpenNebula forecast service
+common options.
+}
+type opennebula_forecast_options = {
+    @{Number of weeks}
+    "db_retention" ? long(1..) = 4
+    "forecast" : opennebula_forecast_values
+    "forecast_far" : opennebula_forecast_values
+};
+
+@documentation{
+Type that sets OpenNebula forecast.conf file:
+https://docs.opennebula.io/7.0/product/cloud_system_administration/resource_monitoring/forecast
+}
+type opennebula_forecast = {
+    "host" : opennebula_forecast_options
+    "virtualmachine" : opennebula_forecast_options
+};
+
+@documentation{
 Type that sets the OpenNebula
 pci.conf file
 }
@@ -1171,6 +1215,8 @@ type component_opennebula = {
     'oneflow' ? opennebula_oneflow
     'kvmrc' ? opennebula_kvmrc
     'sched' ? opennebula_sched
+    @{set resource usage forecast service}
+    'forecast' ? opennebula_forecast
     @{set pci pt filter configuration}
     'pci' ? opennebula_pci
     @{set vnm remote configuration}
