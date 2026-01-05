@@ -178,7 +178,8 @@ type beats_service = {
     Handle logmessages spread over multiple lines
 }
 type beats_filebeat_input_multiline = {
-    'pattern' ? string #string type to consider for potential whitespaced pattern
+    @{ Regular expression to match, may contain leading and/or trailing white space }
+    'pattern' ? string
     'negate' ? boolean
     'match' ? choice('after', 'before')
     'max_lines' ? long(0..)
