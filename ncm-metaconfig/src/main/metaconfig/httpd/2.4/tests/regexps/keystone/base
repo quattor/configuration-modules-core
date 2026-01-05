@@ -33,6 +33,7 @@ Base test for keystone wsgi config
 ^    errorlogformat "%\{cu\}t %M" 
 ^    customlog /var/log/httpd/keystone_access.log combined
 ^    header add Strict-Transport-Security "max-age=15768000"
+^    requestheader set X-MAGIC-SOMETHING "%\{MAGIC\}xyz"
 ^    <directory /usr/bin>
 ^        require all granted
 ^    </directory>
