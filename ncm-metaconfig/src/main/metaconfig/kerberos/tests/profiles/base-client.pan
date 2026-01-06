@@ -9,7 +9,8 @@ prefix "/metaconfig/contents";
     'KDC.REALM', dict(
         "kdc", 'KDC.SERVER',
         "admin_server", 'KDC.SERVER'
-        ));
+    ),
+);
 "domain_realms" = dict('DEFAULT_DOMAIN', 'KDC.REALM');
 
 # verify schema

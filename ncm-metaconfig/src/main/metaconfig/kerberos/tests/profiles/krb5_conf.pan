@@ -10,5 +10,6 @@ prefix "/software/components/metaconfig/services/{/etc/krb5.conf}/contents";
     'KDC.REALM', dict(
         "kdc", 'KDC.SERVER',
         "admin_server", 'KDC.SERVER'
-        ));
+    ),
+);
 "domain_realms" = dict('DEFAULT_DOMAIN', 'KDC.REALM');
