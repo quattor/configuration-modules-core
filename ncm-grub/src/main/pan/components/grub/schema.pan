@@ -96,6 +96,8 @@ type grub_component = {
     @{pxeboot first: set the PXE boot device as first device. Only
       for supported platforms (e.g. UEFI)}
     'pxeboot' ? boolean
+    @{Set arguments of default kernel also for next kernel(s) (to be picked up outside ncm-grub)}
+    'for_next' ? boolean
 } with {
     if (exists(SELF['args']) && exists(SELF['arguments'])) {
         error("Only one of args or arguments can be set for the default kernel boot arguments");
