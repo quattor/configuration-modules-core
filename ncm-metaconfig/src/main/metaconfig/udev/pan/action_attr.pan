@@ -9,6 +9,5 @@ prefix "/software/components/metaconfig/services/{/etc/udev/rules.d/50-attrs.rul
 "group" = "root";
 "module" = "udev/action_attr";
 
-bind "/software/components/metaconfig/services/{/etc/udev/rules.d/50-attrs.rules}/contents/action_attrs" =
-    udev_action_attrs;
+bind "/software/components/metaconfig/services/{/etc/udev/rules.d/50-attrs.rules}/contents/action_attrs" = udev_action_attrs;
 
