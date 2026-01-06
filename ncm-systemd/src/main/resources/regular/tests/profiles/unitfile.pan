@@ -61,6 +61,7 @@ bind "/unitfile" = systemd_unitfile_config[];
         'BlockIODeviceWeight', list(list('/var', '100'), list('/tmp', '50')),
         'ExecStartPre', list('/usr/bin/true', '-/bin/false'),
         'ExecStopPost', '/usr/bin/true',
+        'CPUQuota', 150,
     ),
     'socket', dict(
         'ExecStartPre', list('/some/path arg1', '-/some/other/path arg2'),

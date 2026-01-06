@@ -1461,6 +1461,14 @@ sub is_ufstate
         return 0;
     }
 
+    # slices have sort-of template units for the hierarchy (e.g. user-.slice). However, these
+    # units don't have proper state (as opposed to the e.g. abc@.service template units; those are static)
+    elsif ($unit =~ m/-\.$TYPE_SLICE$/) {
+        $self->info("$msg is a slice hierarchy template unit. ",
+                    "Not going to force the state to $state and assume this is ok.");
+        return 1;
+    }
+
     # the rest
     else {
         $self->debug(1, "$msg not the wanted state $state.");
