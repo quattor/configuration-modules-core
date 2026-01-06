@@ -20,6 +20,7 @@ Base test for keystone wsgi config
 ^    wsgiapplicationgroup %\{GLOBAL\}
 ^    wsgipassauthorization on
 ^    wsgiprocessgroup keystone-admin
+^    casscope /
 ^</location>
 ^<virtualhost    \*:5000>
 ^    hostnamelookups off

@@ -85,6 +85,7 @@ prefix "contents";
 
     data['name'] = "/identity_admin";
     data['wsgi']['processgroup'] = "keystone-admin";
+    data["casscope"] = "/";
     append(data);
 
     SELF;
