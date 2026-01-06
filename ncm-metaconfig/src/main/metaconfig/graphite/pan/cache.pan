@@ -14,11 +14,11 @@ prefix "/software/components/metaconfig/services/{/etc/carbon/storage-schemas.co
     "name", "carbon",
     "pattern" , '^carbon\.',
     "retentions", list("60:90d"),
-    );
+);
 
 # last rule, change the index!!
 "main/1" = dict(
     "name", "default",
     "pattern" , ".*",
     "retentions", list("60s:7d", "1h:90d"),
-    );
+);
