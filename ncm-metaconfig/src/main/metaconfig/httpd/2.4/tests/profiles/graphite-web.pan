@@ -14,11 +14,11 @@ variable HOSTNAME = 'myhost';
 variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents/vhosts/graphiteweb" = {
-    base=create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
+    base = create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
 
-    pubvhost=create('struct/public_vhost');
+    pubvhost = create('struct/public_vhost');
 
-    foreach(idx;val;list('certificatefile', 'certificatekeyfile', 'cacertificatefile')) {
+    foreach(idx; val; list('certificatefile', 'certificatekeyfile', 'cacertificatefile')) {
         base['vhosts']['base']['ssl'][val] = pubvhost['ssl'][val];
     };
 
@@ -46,12 +46,12 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
     append(dict(
         "url", "/media/",
         "destination", "/usr/lib/python2.6/site-packages/django/contrib/admin/media/",
-        ));
+    ));
     append(dict(
         "url", "/",
         "destination", "/usr/share/graphite/graphite-web.wsgi",
         "type", "wsgiscript",
-        ));
+    ));
 };
 
 
@@ -60,42 +60,42 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web
         "name", "/content/",
         "handler", dict(
             "set", "None",
-            ),
-        ));
+        ),
+    ));
     append(dict(
         "name", "/media/",
         "handler", dict(
             "set", "None",
-            ),
-        ));
+        ),
+    ));
     append(dict(
         "name", "/",
         "access", dict( # by default, block all
             "deny", list("all"),
             "satisfy", "Any",
             "order", list("allow", "deny"),
-            ),
+        ),
         "limit", dict( # do not allow PUT and DELETE of ES data via kibana interface
             "name", list("PUT", "DELETE"),
             "access", dict(
                 "order", list("allow", "deny"),
                 "deny", list("all"),
-                ),
             ),
+        ),
         "gssapi", dict(
             "sslonly", true,
             "credstore", list(
                 "keytab:/etc/httpd.keytab",
                 "ccache:FILE:/var/run/httpd/krb5ccache",
-                ),
+            ),
             "delegccachedir", "/var/run/httpd/clientcaches",
             "uses4u2proxy", true,
             "nameattributes", dict(
                 "json", "",
                 "RADIUS_NAME", "urn:ietf:params:gss:radius-attribute_1",
-                ),
             ),
-        ));
+        ),
+    ));
 };
 
 "wsgi/importscript" = dict(

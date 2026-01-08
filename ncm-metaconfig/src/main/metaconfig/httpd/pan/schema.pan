@@ -21,8 +21,10 @@ type httpd_ciphersuite = choice("TLSv1", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE
 );
 
 # These are the settings for old clients, see https://access.redhat.com/articles/1467293 for stricter values.
-type httpd_nss_protocol = string with match(SELF, '^(TLSv1\.[012]|SSLv3)$')
-|| error("Use a modern cipher suite, for Pete's sake! see https://access.redhat.com/articles/1467293");
+type httpd_nss_protocol = string with {
+    match(SELF, '^(TLSv1\.[012]|SSLv3)$') ||
+    error("Use a modern cipher suite, for Pete's sake! see https://access.redhat.com/articles/1467293");
+};
 
 # only allow -(bad ciphers) and +(good ciphers) where good ciphers are from https://access.redhat.com/articles/1467293
 # minues rc4, since the Bar Mitzvah attack
@@ -125,8 +127,13 @@ type httpd_oidc = {
     "statemaxnumberofcookies" ? httpd_oidc_state_cookies
 } with {
     if (!exists(SELF['providermetadataurl'])) {
-        provs = list('issuer', 'authorizationendpoint', 'tokenendpoint',
-            'tokenendpointauth', 'userinfoendpoint', 'jwksuri'
+        provs = list(
+            'issuer',
+            'authorizationendpoint',
+            'tokenendpoint',
+            'tokenendpointauth',
+            'userinfoendpoint',
+            'jwksuri',
         );
         foreach (i; prov; provs) {
             if (!exists(SELF["provider" + prov])) {
@@ -252,9 +259,17 @@ type httpd_nss_vhost = {
     include httpd_ssl_nss_vhost
 
     "protocol" : httpd_nss_protocol[] = list("TLSv1.0", "TLSv1.1", "TLSv1.2")
-    "ciphersuite" : httpd_nss_cipherstring[] = list('+rsa_aes_128_sha', '+rsa_aes_256_sha', '+ecdhe_rsa_aes_256_sha',
-        '+ecdhe_rsa_aes_128_sha', '+ecdh_rsa_aes_256_sha', '+ecdh_rsa_aes_128_sha', '+ecdhe_ecdsa_aes_256_sha',
-        '+ecdhe_ecdsa_aes_128_sha', '+ecdh_ecdsa_aes_256_sha', '+ecdh_ecdsa_aes_128_sha'
+    "ciphersuite" : httpd_nss_cipherstring[] = list(
+        '+rsa_aes_128_sha',
+        '+rsa_aes_256_sha',
+        '+ecdhe_rsa_aes_256_sha',
+        '+ecdhe_rsa_aes_128_sha',
+        '+ecdh_rsa_aes_256_sha',
+        '+ecdh_rsa_aes_128_sha',
+        '+ecdhe_ecdsa_aes_256_sha',
+        '+ecdhe_ecdsa_aes_128_sha',
+        '+ecdh_ecdsa_aes_256_sha',
+        '+ecdh_ecdsa_aes_128_sha',
     )
 
     "nickname" : string

@@ -22,13 +22,13 @@ structure template struct/php_conf;
         "modules", list(dict(
             "name", "php5_module",
             "path", "modules/libphp5.so",
-            )),
-        ),
+        )),
+    ),
     dict(
         "name", "worker.c",
         "modules", list(dict(
             "name", "php5_module",
             "path", "modules/libphp5-zts.so",
-            )),
-        ),
+        )),
+    ),
 );

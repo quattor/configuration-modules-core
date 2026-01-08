@@ -20,11 +20,11 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/c
     "status", 310,
     "path", "/some/path",
     "url", "https://somewhere.else",
-    );
+);
 "django/redirect/1" = dict(
     "status", 404,
     "path", "/some/other/path",
-    );
+);
 "django/directories" = {
     l = dict(
         "name", "/var/www/django/static",
@@ -59,10 +59,13 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/c
             "access", dict(
                 "allowoverride", list("None"),
                 "order", list("allow", "deny"),
-                "allow", list("all")),
-                "authz", list(dict("all", "granted")),
-            )),
-        ));
+                "allow", list("all"),
+            ),
+            "authz", list(
+                dict("all", "granted"),
+            ),
+        )),
+    ));
 };
 
 prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/wsgi.conf}/contents/vhosts/django";
