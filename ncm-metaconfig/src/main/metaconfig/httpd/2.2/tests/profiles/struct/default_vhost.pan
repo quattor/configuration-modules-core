@@ -18,7 +18,7 @@ structure template struct/default_vhost;
 "log/level" = "warn";
 "log/error" = format("logs/%s_%s_error_log", value("servername"), value("port"));
 "log/transfer" = format("logs/%s_%s_access_log", value("servername"), value("port"));
-"log/custom"=append(dict(
+"log/custom" = append(dict(
     "location", format("logs/%s_%s_request_log", value("servername"), value("port")),
     "name", "ssl_combined",
 ));

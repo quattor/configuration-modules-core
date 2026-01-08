@@ -62,7 +62,8 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunston
     'name', "ssl_combined",
 ));
 
-prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunstone.conf}/contents/vhosts/sunstone/directories/0";
+prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_sunstone.conf}";
+prefix "contents/vhosts/sunstone/directories/0";
 "name" = SUNSTONE_PUBLIC_DIR;
 'auth/require' = dict("type", "valid-user");
 'auth/name' = "Sunstone Kerberos Login";

@@ -71,7 +71,8 @@ prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_profile
     'name', "ssl_combined",
 ));
 
-prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_profiles.conf}/contents/vhosts/profiles/directories/0";
+prefix "/software/components/metaconfig/services/{/etc/httpd/conf.d/krb5_profiles.conf}";
+prefix "contents/vhosts/profiles/directories/0";
 "name" = "/var/www/https/profiles";
 "rewrite/rules/0/conditions/0" = dict(
     "test", "${ACLmap:%{REMOTE_HOST}|NO}",

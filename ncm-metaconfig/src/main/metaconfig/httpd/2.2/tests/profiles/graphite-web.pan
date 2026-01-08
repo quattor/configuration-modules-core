@@ -14,11 +14,11 @@ variable HOSTNAME = 'myhost';
 variable DB_IP = dict(HOSTNAME, '1.2.3.4');
 
 "/software/components/metaconfig/services/{/etc/httpd/conf.d/graphite-web.conf}/contents/vhosts/graphiteweb" = {
-    base=create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
+    base = create(format('struct/ssl_conf_%s', HTTPD_OS_FLAVOUR));
 
-    pubvhost=create('struct/public_vhost');
+    pubvhost = create('struct/public_vhost');
 
-    foreach(idx;val;list('certificatefile', 'certificatekeyfile', 'cacertificatefile')) {
+    foreach(idx; val; list('certificatefile', 'certificatekeyfile', 'cacertificatefile')) {
         base['vhosts']['base']['ssl'][val] = pubvhost['ssl'][val];
     };
 
