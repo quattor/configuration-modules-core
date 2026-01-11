@@ -170,6 +170,8 @@ sub make_nm_ip_rule
 sub make_nm_ip_route
 {
     my ($self, $device, $routes, $routing_table_hash) = @_;
+    use Data::Dumper;
+    print Dumper($device, $routes);
     my @rt_entry;
     foreach my $route (@$routes) {
         if ($route->{command}){
@@ -183,13 +185,31 @@ sub make_nm_ip_route
             $self->debug(3, "Route destination is 'default', rewriting to '0.0.0.0/0'");
             $rt{destination} = '0.0.0.0/0';
         } else {
-             if ($route->{netmask}){
-                 my $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
-                 $rt{destination} = $dest_addr->cidr;
-             } else {
-                # if no netmask defined for a route, assume its single ip
-                $rt{destination} = $route->{address}."/32";
-             }
+            my $rt_address = NetAddr::IP->new($route->{address});
+            $self->debug(5, "Route destination is '$rt_address'");
+            my $rt_version = $rt_address->version();
+            my $dest_addr;
+            if ($rt_version eq 4) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv4 address");
+                if ($route->{netmask}) {
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{netmask});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume it is a single ip
+                    $rt{destination} = $route->{address}."/32";
+                }
+            } elsif ($rt_version eq 6) {
+                $self->debug(3, "Route destination '$rt_address' is an IPv6 address");
+                if ($route->{prefix}){
+                    $dest_addr = NetAddr::IP->new($route->{address}."/".$route->{prefix});
+                    $rt{destination} = $dest_addr->cidr;
+                } else {
+                    # if no netmask defined for a route, assume it is a single ip
+                    $rt{destination} = $route->{address}."/128";
+                }
+            } else {
+                $self->error("Unable to determine family of destination address '".$route->{address}."' in route");
+            }
         }
 
         $rt{'table-id'} = "$routing_table_hash->{$route->{table}}" if $route->{table};
@@ -509,7 +529,7 @@ sub generate_nmstate_config
                     $self->verbose("alias ip (ipv4) addr defined for $name, configuring additional ips");
                     push @$all_ip, @{$self->generate_alias_ips($iface->{aliases})};
                 }
-            $ifaceconfig->{ipv4}->{address} = $all_ip;
+                $ifaceconfig->{ipv4}->{address} = $all_ip;
                 $ifaceconfig->{ipv4}->{dhcp} = $YFALSE;
                 $ifaceconfig->{ipv4}->{enabled} = $YTRUE;
             }
@@ -598,7 +618,13 @@ sub generate_nmstate_config
     push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
     if (defined($iface->{route})) {
         $self->verbose("policy route found, nmstate will manage it");
-        my $route = $iface->{route};
+        my $route4 = $iface->{route};
+        # make_nm_ip_route() can handle IPv4 and IPv6 routes, so re-merge what process_network() seperated
+        my $route6 = $iface->{route6};
+        #if (defined($route6)) {
+        #    push(@$route, @$route6);
+        my @route = (@route4, @route6);
+        #}
         my $policyroutes = $self->make_nm_ip_route($name, $route, $routing_table);
         push @$routes, @{$policyroutes};
     }
