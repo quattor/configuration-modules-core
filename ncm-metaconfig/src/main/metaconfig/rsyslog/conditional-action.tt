@@ -1,0 +1,5 @@
+if [% action.condition -%] then {
+[% FILTER indent %]
+[%-       INCLUDE 'metaconfig/rsyslog/action.tt' type=type action=action -%]
+[% END %]
+}[% -%]

@@ -21,6 +21,8 @@ type rsyslog_action_common = {
     'name' ? string_non_whitespace
     @{action options}
     'options' ? rsyslog_action_options
+    @{the expression evaluated to dermine whether to run the action}
+    'condition' ? string
 };
 
 @{output file common module and action parameters}
@@ -134,7 +136,7 @@ type rsyslog_action_czmq = {
     'template' ? string
 };
 
-@{Writes emergency messages to (alll) users}
+@{Writes emergency messages to (all) users}
 type rsyslog_action_usrmsg = {
     @{Use '*' for all users}
     'users' ? string
