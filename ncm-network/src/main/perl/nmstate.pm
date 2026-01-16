@@ -96,7 +96,7 @@ sub nm_create_device_config_dropin
         };
 
         $self->verbose("setting device configuration dropin");
-    
+
         my $fh = CAF::FileWriter->new($NM_DEVICE_DROPIN_CFG_FILE, mode => oct(444), log => $self);
         print $fh join("\n", @data, '');
         if ($fh->close()) {
@@ -118,7 +118,7 @@ sub nm_create_main_config_dropin
         };
 
         $self->verbose("setting NetworkManager main configuration dropin");
-    
+
         my $fh = CAF::FileWriter->new($NM_MAIN_DROPIN_CFG_FILE, mode => oct(444), log => $self);
         print $fh join("\n", @data, '');
         if ($fh->close()) {
@@ -978,7 +978,7 @@ sub Configure
     } else {
         $self->cleanup($NM_DEVICE_DROPIN_CFG_FILE);
     }
-    
+
     my $dnsconfig = $self->generate_nm_resolver_config($nwtree, $manage_dns);
     $exifiles->{$NM_RESOLV_YML} = $self->nmstate_file_dump($NM_RESOLV_YML, $dnsconfig);
     # nmstate files are applied uinsg nmstate apply via this component. We don't want nmstate svc to manage it.
