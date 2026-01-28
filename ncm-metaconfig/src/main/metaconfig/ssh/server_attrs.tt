@@ -1,5 +1,5 @@
 [% # different forms of list handling, default for list type is space separated
-    commalist = ['Ciphers', 'HostKeyAlgorithms', 'HostbasedAcceptedKeyTypes', 'KexAlgorithms', 'MACs', 'PubkeyAcceptedKeyTypes' ];
+    commalist = ['Ciphers', 'HostKeyAlgorithms', 'HostbasedAcceptedKeyTypes', 'Include', 'KexAlgorithms', 'MACs', 'PubkeyAcceptedKeyTypes' ];
     multilinelist = ['HostKey', 'ListenAddress', 'Port' ]
     -%]
 [%- FOREACH pair IN data.pairs -%]
