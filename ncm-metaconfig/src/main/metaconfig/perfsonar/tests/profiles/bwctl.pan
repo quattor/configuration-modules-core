@@ -31,7 +31,7 @@ prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/con
     "allow_udp", true,
     "allow_tcp", true,
     "allow_open_mode", true
-    );
+);
 "limit/jail" = dict(
     "bandwidth", 1,
     "duration", 1,
@@ -39,15 +39,15 @@ prefix "/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/con
     "allow_tcp", false,
     "allow_open_mode", false,
     "parent", "root"
-    );
+);
 "limit/firstlimit" = dict(
     "parent", "root",
     "bandwidth", 900
-    );
+);
 "limit/otherlimit" = dict(
     "parent", "root",
     "bandwidth", 1000
-    );
+);
 "assign/0/network" = "default";
 "assign/0/restrictions" = "jail";
 "assign/1/network" = "172.173.0.0/16";
