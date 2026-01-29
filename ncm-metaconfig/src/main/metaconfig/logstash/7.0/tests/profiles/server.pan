@@ -48,7 +48,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
-        )),
+    )),
     "plugins", list(dict("mutate", dict(
         "split", dict("tags", ", "),
     ))),
@@ -60,53 +60,55 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'syslog'",
-        )),
+    )),
     "plugins", list(
         dict("grok", dict(
             "match", list(dict(
                 "name", "message",
                 "pattern", SYSLOG_GROK_PATTERNS,
-                )),
+            )),
             "patterns_dir", list("/usr/share/grok"),
             "add_field", dict(
                 "received_at", "%{@timestamp}",
                 "received_from", "%{@source_host}",
-                ),
+            ),
             "tag_on_failure", list('sometag'),
             "overwrite", list('somefield'),
             "target", "somespace",
             "timeout_scope", "event",
             "timeout_millis", 1000,
-            )),
+        )),
         dict("kv", dict(
             "source", "KEY_EQ_VALUEDATA",
-            )),
+        )),
         dict("geoip", dict(
             "source", "fwsrc",
             "fields", list("country_name", "city_name"),
-            )),
+        )),
         dict("date", dict(
             "match", dict(
                 "name", "syslog_timestamp",
                 "pattern", list("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ"),
-                ),
-            )),
+            ),
+        )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(dict(
                 "left", "'_grokparsefailure'",
                 "test", "not in",
                 "right", "[tags]",
-                ))),
+            ))),
             "replace", list(
                 dict(
                     "name", "@source_host",
-                    "pattern", "%{syslog_hostname}"),
+                    "pattern", "%{syslog_hostname}",
+                ),
                 dict(
                     "name", "@message",
-                    "pattern", "%{syslog_message}"),
+                    "pattern", "%{syslog_message}",
                 ),
+            ),
             "strip", list("@message"),
-            )),
+        )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(
                 dict(
@@ -117,15 +119,15 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 dict(
                     "join", "and",
                     "left", "[jube_id]",
-                ))),
+                ),
+            )),
             "convert", dict(
-                    "success", "boolean",
-                )
-            ),
-        ),
+                "success", "boolean",
+            )
+        )),
         dict("mutate", dict(
             "remove_field", list("syslog_hostname", "syslog_message", "syslog_timestamp"),
-            )),
+        )),
         dict("bytes2human", dict(
             "convert", dict(
                 "volumedata", "bytes",
@@ -135,26 +137,26 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 "objrecovthr", "bytes",
                 "actwrite", "bytes",
                 "actread", "bytes",
-                ),
-            )),
+            ),
+        )),
         dict("mutate", dict(
             "_conditional", dict("expr", list(dict(
                 "left", "[program]",
                 "test", "==",
                 "right", "\"jube\"",
-                ))),
+            ))),
             "update", dict(escape("[@metadata][target_index]"), "longterm-%{+YYYY}"),
-            )),
-        ),
-    )
-);
+        )),
+    ),
+));
 
 "filter/plugins" = append(dict(
-        "mutate", dict(
-            "add_field", dict(
-                escape("[@metadata][target_index]"), "logstash-%{+YYYY.MM.dd}"
-            ),
-        )));
+    "mutate", dict(
+        "add_field", dict(
+            escape("[@metadata][target_index]"), "logstash-%{+YYYY.MM.dd}"
+        ),
+    ),
+));
 
 
 "filter/conditionals" = append(dict(
@@ -163,13 +165,13 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[program]",
         "test", "==",
         "right", "'gpfsbeat'",
-        )),
+    )),
     "plugins", list(
         dict("mutate", dict(
             "update", dict(escape("[@metadata][target_index]"), "longterm-%{+YYYY}"),
         )),
     ),
-    ));
+));
 
 # reset the output, to remove the GELF output
 "output" = dict("plugins", list(dict(
@@ -177,7 +179,5 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "hosts", list("localhost:9200"),
         "template_overwrite", true,
         "index", "%{[@metadata][target_index]}",
-        ),
+    ),
 )));
-
-
