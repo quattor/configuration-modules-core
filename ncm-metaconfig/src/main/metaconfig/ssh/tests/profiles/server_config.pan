@@ -14,6 +14,7 @@ prefix "/software/components/metaconfig/services/{/etc/ssh/sshd_config}/contents
 "main/Ciphers" = list("aes128-ctr", "aes192-ctr", "aes256-ctr");
 "main/PasswordAuthentication" = false;
 "main/Subsystem" = dict("sftp", "internal-sftp");
+"main/Include" = list("sshd_config.d/*.conf");
 
 "Match/0/criteria" = dict(
     "User", list("testuser2"),
