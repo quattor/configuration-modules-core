@@ -4,6 +4,7 @@ Base test for ssh server config
 ---
 ^AddressFamily\sany$
 ^Ciphers\saes128-ctr,aes192-ctr,aes256-ctr$
+^Include\ssshd_config\.d/\*\.conf$
 ^PasswordAuthentication\sno$
 ^Match\sAddress\s192.168.0.0/16,!192.168.10.0/24\sUser\stestuser2$
 ^\s{4}PasswordAuthentication\syes$
