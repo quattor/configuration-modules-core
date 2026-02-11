@@ -197,6 +197,7 @@ type sshd_config_match_opts = {
     'HostbasedAcceptedKeyTypes' ? temp_ssh_hostkeyalgorithms[]
     'HostbasedAuthentication' ? boolean
     'HostbasedUsesNameFromPacketOnly' ? boolean
+    'Include' ? string[]
     'IPQoS' ? string[] with length(SELF) == 1 || length(SELF) == 2
     'KbdInteractiveAuthentication' ? boolean
     'KerberosAuthentication' ? boolean
