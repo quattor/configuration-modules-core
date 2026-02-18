@@ -16,29 +16,105 @@ type hwloc_location = string with match(SELF, '^[\w:.]+$');
 @documentation{
     syslog facility to use when logging to syslog
 }
-type syslog_facility = string with match(SELF,
-    '^(kern|user|mail|daemon|auth|syslog|lpr|news|uucp|cron|authpriv|ftp|local[0-7])$'
+type syslog_facility = choice(
+    'auth',
+    'authpriv',
+    'cron',
+    'daemon',
+    'ftp',
+    'kern',
+    'local0',
+    'local1',
+    'local2',
+    'local3',
+    'local4',
+    'local5',
+    'local6',
+    'local7',
+    'lpr',
+    'news',
+    'mail',
+    'syslog',
+    'user',
+    'uucp'
 );
 
 @documentation{
     syslog level to use when logging to syslog or the kernel log buffer
 }
-type syslog_level = string with match(SELF, '^(emerg|alert|crit|err|warning|notice|info|debug)$');
+type syslog_level = choice('emerg', 'alert', 'crit', 'err', 'warning', 'notice', 'info', 'debug');
 
 type ${project.artifactId}_skip = {
     "service" : boolean = false
 } = dict();
 
-type ${project.artifactId}_unit_architecture = string with match(SELF,
-    '^(native|x86(-64)?|ppc(64)?(-le)?|ia64|parisc(64)?|s390x?|sparc(64)?)' +
-    '|mips(-le)?|alpha|arm(64)?(-be)?|sh(64)?|m86k|tilegx|cris$'
+type ${project.artifactId}_unit_architecture = choice(
+    'x86',
+    'x86-64',
+    'ppc',
+    'ppc-le',
+    'ppc64',
+    'ppc64-le',
+    'ia64',
+    'parisc',
+    'parisc64',
+    's390',
+    's390x',
+    'sparc',
+    'sparc64',
+    'mips',
+    'mips-le',
+    'mips64',
+    'mips64-le',
+    'alpha',
+    'arm',
+    'arm-be',
+    'arm64',
+    'arm64-be',
+    'sh',
+    'sh64',
+    'm68k',
+    'tilegx',
+    'cris',
+    'arc',
+    'arc-be',
+    'native'
 );
 
-type ${project.artifactId}_unit_security = string with match(SELF, '^!?(selinux|apparmor|ima|smack|audit)$');
+type ${project.artifactId}_unit_security = string with match(SELF,
+    '^!?(selinux|apparmor|tomoyo|smack|ima|audit|uefi-secureboot|tpm2|cvm|measured-uki)$'
+);
 
-type ${project.artifactId}_unit_virtualization = string with match(SELF,
-    '^(0|1|vm|container|qemu|kvm|zvm|vmware|microsoft|oracle|xen' +
-    '|bochs|uml|openvz|lxc(-libvirt)?|systemd-nspawn|docker)$'
+type ${project.artifactId}_unit_virtualization = choice(
+    '0',
+    '1',
+    'qemu',
+    'kvm',
+    'amazon',
+    'zvm',
+    'vmware',
+    'microsoft',
+    'oracle',
+    'powervm',
+    'xen',
+    'bochs',
+    'uml',
+    'bhyve',
+    'qnx',
+    'apple',
+    'sre',
+    'openvz',
+    'lxc',
+    'lxc-libvirt',
+    'systemd-nspawn',
+    'docker',
+    'podman',
+    'rkt',
+    'wsl',
+    'proot',
+    'pouch',
+    'acrn',
+    'private-users'
 );
 
 # TODO: https://github.com/quattor/configuration-modules-core/issues/646:
@@ -88,7 +164,7 @@ type ${project.artifactId}_unitfile_config_unit_condition = {
     'FirstBoot' ? boolean
     'Host' ? string[] # TODO: make custom type for hostname or machineid
     'KernelCommandLine' ? string[]
-    'NeedsUpdate' ? string with match(SELF, '^!?/(var|etc)')
+    'NeedsUpdate' ? choice('/var/', '/etc/', '!/var/', '!/etc/')
     'PathExistsGlob' ? string[]
     'PathExists' ? string[]
     'PathIsDirectory' ? string[]
@@ -122,8 +198,14 @@ type ${project.artifactId}_unitfile_config_unit = {
     'JoinsNamespaceOf' ? ${project.artifactId}_valid_unit[]
     'NetClass' ? string
     'OnFailure' ? string[]
-    'OnFailureJobMode' ? string with match(SELF,
-        '^(fail|replace(-irreversibly)?|isolate|flush|ignore-(dependencies|requirements))$'
+    'OnFailureJobMode' ? choice(
+        'fail',
+        'replace',
+        'replace-irreversibly',
+        'isolate',
+        'flush',
+        'ignore-dependencies',
+        'ignore-requirements'
     )
     'PartOf' ? ${project.artifactId}_valid_unit[]
     'PropagatesReloadTo' ? string[]
@@ -152,8 +234,20 @@ type ${project.artifactId}_unitfile_config_install = {
     'WantedBy' ? ${project.artifactId}_valid_unit[]
 };
 
-type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr =  string with match(SELF,
-    '^(inherit|null|tty|journal|syslog|kmsg|journal+console|syslog+console|kmsg+console|socket)$'
+type ${project.artifactId}_unitfile_config_systemd_exec_stdouterr = choice(
+    'inherit',
+    'null',
+    'tty',
+    'journal',
+    'syslog', # Deprecated
+    'kmsg',
+    'journal+console',
+    'kmsg+console',
+    'file:path',
+    'append:path',
+    'truncate:path',
+    'socket',
+    'fd:name'
 );
 
 @documentation{
@@ -162,9 +256,32 @@ http://www.freedesktop.org/software/systemd/man/systemd.kill.html
 valid for [Service], [Socket], [Mount], or [Swap] sections
 }
 type ${project.artifactId}_unitfile_config_systemd_kill = {
-    'KillMode' ? string with match(SELF, '^(control-group|process|mixed|none)$')
-    'KillSignal' ? string with match(SELF,
-        '^SIG(HUP|INT|QUIT|ILL|ABRT|FPE|KILL|SEGV|PIPE|ALRM|TERM|USR[12]|CHLD|CONT|STOP|T(STP|TIN|TOU))$'
+    'KillMode' ? choice(
+        'control-group',
+        'mixed',
+        'process',
+        'none'
+    )
+    'KillSignal' ? choice(
+        'SIGABRT',
+        'SIGALRM',
+        'SIGCHLD',
+        'SIGCONT',
+        'SIGFPE',
+        'SIGHUP',
+        'SIGILL',
+        'SIGINT',
+        'SIGKILL',
+        'SIGPIPE',
+        'SIGQUIT',
+        'SIGSEGV',
+        'SIGSTOP',
+        'SIGTERM',
+        'SIGTSTP',
+        'SIGTTIN',
+        'SIGTTOU',
+        'SIGUSR1',
+        'SIGUSR2'
     )
     'SendSIGHUP' ? boolean
     'SendSIGKILL' ? boolean
@@ -181,13 +298,22 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'ConfigurationDirectoryMode' ? type_octal_mode
     'ConfigurationDirectory' ? ${project.artifactId}_relative_directory[]
     'CPUAffinity' ? long[][] # start with empty list to reset
-    'CPUSchedulingPolicy' ? string with match(SELF, '^(other|batch|idle|fifo|rr)$')
+    'CPUSchedulingPolicy' ? choice('other', 'batch', 'idle', 'fifo', 'rr')
     'CPUSchedulingPriority' ? long(1..99) # 99 = highest
     'CPUSchedulingResetOnFork' ? boolean
     'Environment' ? string{}[] # start with empty list
     'EnvironmentFile' ? string[] # overrides variables defined in Environment
     'Group' ? defined_group
-    'IOSchedulingClass' ? string with match(SELF, '^([0-3]|none|realtime|best-effort|idle)$')
+    'IOSchedulingClass' ? choice(
+        '0', # Deprecated
+        '1', # Deprecated
+        '2', # Deprecated
+        '3', # Deprecated
+        'none', # Deprecated
+        'realtime',
+        'best-effort',
+        'idle'
+    )
     'IOSchedulingPriority' ? long(0..7) # 0 = highest
     'LimitAS' ? long(-1..) # The maximum size of the process's virtual memory (address space) in bytes.
     'LimitCORE' ? long(-1..) # Maximum size of a core file
@@ -216,7 +342,7 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'RuntimeDirectoryPreserve' ? choice('yes', 'no', 'restart')
     'RuntimeDirectory' ? ${project.artifactId}_relative_directory[]
     'StandardError' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
-    'StandardInput' ? string with match(SELF, '^(null|tty(-(force|fail))?|socket)$')
+    'StandardInput' ? choice('null', 'tty', 'tty-force', 'tty-fail', 'socket')
     'StandardOutput' ? ${project.artifactId}_unitfile_config_systemd_exec_stdouterr
     'StateDirectoryMode' ? type_octal_mode
     'StateDirectory' ? ${project.artifactId}_relative_directory[]
@@ -234,12 +360,12 @@ type ${project.artifactId}_unitfile_config_systemd_exec = {
     'WorkingDirectory' ? string
 };
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[] with {
-    length(SELF) == 2 && match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$')
+type ${project.artifactId}_unitfile_config_systemd_resource_control_devicelist = string[2] with {
+    match(SELF[0], '^(char-|block-|/dev/)') && match(SELF[1], '^[rwm]{1,3}$')
 };
 
-type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[] with {
-    length(SELF) == 2 && match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$')
+type ${project.artifactId}_unitfile_config_systemd_resource_control_block_weight = string[2] with {
+    match(SELF[0], '^/') && match(SELF[1], '^[0-9]+$')
 };
 
 @documentation{
@@ -299,11 +425,11 @@ type ${project.artifactId}_unitfile_config_service = {
     'ExecStopPost' ? transitional_string_or_list_of_strings
     'GuessMainPID' ? boolean
     'NonBlocking' ? boolean
-    'NotifyAccess' ? string with match(SELF, '^(none|main|all)$')
-    'PIDFile' ? string with match(SELF, '^/')
+    'NotifyAccess' ? choice('none', 'main', 'all')
+    'PIDFile' ? absolute_file_path
     'PermissionsStartOnly' ? boolean
     'RemainAfterExit' ? boolean
-    'Restart' ? string with match(SELF, '^(no|on-(success|failure|abnormal|watchdog|abort)|always)$')
+    'Restart' ? choice('no', 'on-success', 'on-failure', 'on-abnormal', 'on-watchdog', 'on-abort', 'always')
     'RestartForceExitStatus' ? long[]
     'RestartPreventExitStatus' ? long[]
     'RestartSec' ? long(0..) # TODO default is 100ms, which can't be expressed like this
@@ -313,7 +439,7 @@ type ${project.artifactId}_unitfile_config_service = {
     'TimeoutSec' ? long(0..)
     'TimeoutStartSec' ? long(0..)
     'TimeoutStopSec' ? long(0..)
-    'Type' ? string with match(SELF, '^(simple|forking|oneshot|dbus|notify|idle)$')
+    'Type' ? choice('simple', 'forking', 'oneshot', 'dbus', 'notify', 'idle')
     'WatchdogSec' ? long(0..)
 } with {
     if(exists(SELF['Type']) && (SELF['Type'] == 'dbus') && (! exists(SELF['BusName']))) {
@@ -336,7 +462,7 @@ type ${project.artifactId}_unitfile_config_socket = {
     'ListenFIFO' ? absolute_file_path
     'ListenSpecial' ? absolute_file_path
     'ListenNetlink' ? string
-    'ListenMessageQueue' ? string with match(SELF, '^/')
+    'ListenMessageQueue' ? absolute_file_path
     'ListenUSBFunction' ? string
     'SocketProtocol' ? choice('udplite', 'sctp')
     'BindIPv6Only' ? choice('default', 'both', 'ipv6-only')
@@ -525,14 +651,14 @@ type ${project.artifactId}_unitfile = {
 #   234 -> multi-user
 #   5 -> graphical
 # for now limit the targets
-type ${project.artifactId}_target = string with match(SELF, "^(default|poweroff|rescue|multi-user|graphical|reboot)$");
+type ${project.artifactId}_target = choice('default', 'poweroff', 'rescue', 'multi-user', 'graphical', 'reboot');
 
 type ${project.artifactId}_unit_type = {
     "name" ? string # shortnames are ok; fullnames require matching type
     "targets" : ${project.artifactId}_target[] = list("multi-user")
     "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice', 'path') = 'service'
     "startstop" : boolean = true
-    "state" : string = 'enabled' with match(SELF, '^(enabled|disabled|masked)$')
+    "state" : choice('enabled', 'disabled', 'masked') = 'enabled'
     @{unitfile configuration}
     "file" ? ${project.artifactId}_unitfile
 };
@@ -541,7 +667,7 @@ type ${project.artifactId}_component = {
     include structure_component
     "skip" : ${project.artifactId}_skip
     @{what to do with unconfigured units: ignore, enabled, disabled, on (enabled+start), off (disabled+stop; advanced option)}
-    "unconfigured" : string = 'ignore' with match (SELF, '^(ignore|enabled|disabled|on|off)$') # harmless default
+    "unconfigured" : choice('ignore', 'enabled', 'disabled', 'on', 'off') = 'ignore' # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
     "unit" ? ${project.artifactId}_unit_type{}
 } with {
