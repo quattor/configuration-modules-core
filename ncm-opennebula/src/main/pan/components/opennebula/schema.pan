@@ -12,6 +12,7 @@ include 'quattor/aii/opennebula/schema';
 include 'components/opennebula/common';
 include 'components/opennebula/monitord';
 include 'components/opennebula/sched';
+include 'components/opennebula/fireedge';
 
 type opennebula_federation = {
     "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
@@ -1217,6 +1218,8 @@ type component_opennebula = {
     'sched' ? opennebula_sched
     @{set resource usage forecast service}
     'forecast' ? opennebula_forecast
+    @{set FireEdge dashboard service}
+    'fireedge' ? opennebula_fireedge
     @{set pci pt filter configuration}
     'pci' ? opennebula_pci
     @{set vnm remote configuration}

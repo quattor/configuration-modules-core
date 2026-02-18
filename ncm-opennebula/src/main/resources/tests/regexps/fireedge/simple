@@ -1,0 +1,24 @@
+OpenNebula fireedge test
+---
+---
+^api_timeout:\s{1}.+$
+^auth:\s{1}.+$
+^cors:\s{1}.+$
+^debug_level:\s{1}.+$
+^default_zone:$
+^\s{2}endpoint:\s{1}.+$
+^\s{2}id:\s{1}.+$
+^\s{2}name:\s{1}.+$
+^guacd:$
+^\s{2}host:\s{1}.+$
+^\s{2}port:\s{1}.+$
+^host:\s{1}.+$
+^log:\s{1}.+$
+^minimum_opennebula_expiration:\s{1}.+$
+^one_xmlrpc:\s{1}.+$
+^oneflow_server:\s{1}.+$
+^port:\s{1}.+$
+^session_expiration:\s{1}.+$
+^session_remember_expiration:\s{1}.+$
+^subscriber_endpoint:\s{1}.+$
+^truncate_max_length:\s{1}.+$

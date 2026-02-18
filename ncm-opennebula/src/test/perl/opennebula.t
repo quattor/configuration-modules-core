@@ -109,4 +109,10 @@ isa_ok($forecast_conf, "CAF::FileWriter", "forecast_conf CAF::FileWriter instanc
 like("$forecast_conf", qr{^---$}m, "forecast_conf has expected content");
 $forecast_conf->close();
 
+# FireEdge conf file
+my $fireedge_conf = get_file($NCM::Component::OpenNebula::Server::FIREEDGE_CONF_FILE);
+isa_ok($fireedge_conf, "CAF::FileWriter", "fireedge_conf CAF::FileWriter instance");
+like("$fireedge_conf", qr{^---$}m, "fireedge_conf has expected content");
+$fireedge_conf->close();
+
 done_testing();

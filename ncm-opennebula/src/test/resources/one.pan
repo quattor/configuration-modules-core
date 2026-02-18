@@ -99,6 +99,11 @@ prefix "/software/components/opennebula/forecast";
     ),
 );
 
+prefix "/software/components/opennebula/fireedge";
+"host" = "0.0.0.0";
+"port" = 2929;
+"one_xmlrpc" = "https://myhost/RPC2";
+
 prefix "/software/components/opennebula";
 
 "clusters" = dict(

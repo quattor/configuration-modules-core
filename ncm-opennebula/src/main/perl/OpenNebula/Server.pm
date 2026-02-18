@@ -20,9 +20,19 @@ Readonly our $KVMRC_CONF_FILE => "/var/lib/one/remotes/vmm/kvm/kvmrc";
 Readonly our $VNM_CONF_FILE => "/var/lib/one/remotes/vnm/OpenNebulaNetwork.conf";
 Readonly our $PCI_CONF_FILE => "/var/lib/one/remotes/etc/im/kvm-probes.d/pci.conf";
 Readonly our $FORECAST_CONF_FILE => "/var/lib/one/remotes/etc/im/kvm-probes.d/forecast.conf";
+Readonly our $FIREEDGE_CONF_FILE => "/etc/one/fireedge-server.conf";
 
 Readonly::Array our @SERVERADMIN_AUTH_FILE => qw(sunstone_auth oneflow_auth
                                                  onegate_auth occi_auth ec2_auth);
+
+Readonly::Hash our %OPENNEBULA_SERVICE_MAP => (
+    oned       => 'opennebula',
+    monitord   => 'opennebula',
+    sched      => 'opennebula-scheduler',
+    sunstone   => 'opennebula-sunstone',
+    oneflow    => 'opennebula-flow',
+    fireedge   => 'opennebula-fireedge',
+);
 
 =head1 NAME
 
@@ -42,20 +52,20 @@ Restarts C<OpenNebula> service after any configuration change.
 
 sub restart_opennebula_service {
     my ($self, $service) = @_;
-    my $srv;
-    if ($service eq "oned" or $service eq "monitord") {
-        $srv = CAF::Service->new(['opennebula'], log => $self);
-    } elsif ($service eq "sched") {
-        $srv = CAF::Service->new(['opennebula-scheduler'], log => $self);
-    } elsif ($service eq "sunstone") {
-        $srv = CAF::Service->new(['opennebula-sunstone'], log => $self);
-    } elsif ($service eq "oneflow") {
-        $srv = CAF::Service->new(['opennebula-flow'], log => $self);
-    } elsif ($service eq "kvmrc" or $service eq "vnm_conf" or $service eq "pci") {
+
+    my %sync_required = map { $_ => 1 } qw(kvmrc vnm_conf pci);
+
+    # If service requires host sync only
+    if ($sync_required{$service}) {
         $self->info("Updated $service file. onehost sync is required.");
         $self->sync_opennebula_hosts();
     }
-    $srv->restart() if defined($srv);
+
+    # If service maps to a system service
+    if (my $system_service = $OPENNEBULA_SERVICE_MAP{$service}) {
+        my $srv = CAF::Service->new([$system_service], log => $self);
+        $srv->restart();
+    }
 }
 
 =item detect_opennebula_version
@@ -147,6 +157,26 @@ sub set_one_service_conf
     $opts{group} = $cfggrp if ($cfggrp);
     my $fh = $oned_templ->filewriter($config_file, %opts);
     my $status = $self->is_conf_file_modified($fh, $config_file, $service, $oned_templ);
+
+    return $status;
+}
+
+=item set_one_yaml_conf
+
+Sets C<OpenNebula> configuration files but using yaml,
+Some C<OpenNebula> services use yaml configuration
+files since version 7.x.
+
+=cut
+
+sub set_one_yaml_conf
+{
+    my ($self, $data, $service, $config_file) = @_;
+
+    $self->debug(5, "Render element for $service with module yaml");
+    my $tpl = EDG::WP4::CCM::TextRender->new("yaml", $data, log => $self);
+    my $fh = $tpl->filewriter($config_file);
+    my $status = $self->is_conf_file_modified($fh, $config_file, $service, $data);
 
     return $status;
 }
@@ -293,15 +323,11 @@ sub set_one_server
     }
     # Set Forecast conf
     if (exists $tree->{forecast}) {
-        # Forecast uses yaml conf files instead of regular OpenNebula ones
-        $self->debug(5, "Render element for forecast with module yaml");
-        my $tpl = EDG::WP4::CCM::TextRender->new("yaml", $tree->{forecast}, log => $self);
-        my $fh = $tpl->filewriter($FORECAST_CONF_FILE);
-        if (!$fh) {
-            $self->error("Could not write forecast config file $FORECAST_CONF_FILE: $tpl->{fail}");
-            return;
-        };
-        my $update = $fh->close();
+        $self->set_one_yaml_conf($tree->{forecast}, "forecast", $FORECAST_CONF_FILE);
+    }
+    # Set FireEdge dashboard configuration
+    if (exists $tree->{fireedge}) {
+        $self->set_one_yaml_conf($tree->{fireedge}, "fireedge", $FIREEDGE_CONF_FILE);
     }
     return 1;
 }
