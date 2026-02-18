@@ -91,6 +91,7 @@ type prometheus_scrape_config = {
     'target_limit' ? long(0..)
     'file_sd_configs' ? prometheus_file_sd_config[]
     'relabel_configs' ? prometheus_relabel_config[]
+    'metric_relabel_configs' ? prometheus_relabel_config[]
 };
 
 type prometheus_basic_auth = {
