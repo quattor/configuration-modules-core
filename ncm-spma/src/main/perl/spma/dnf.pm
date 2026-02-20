@@ -318,6 +318,12 @@ sub Configure
             $attr = "excludepkgs" if $attr eq 'exclude';  # Sigh...
             print $fh "$attr=$val\n";
         }
+        # configure ssl settings if defined in protocols
+        foreach my $proto_attr (qw(verify cacert clientkey clientcert)) {
+            next unless defined $prots->{$proto_attr};
+            my $val = $prots->{$proto_attr};
+            print $fh "ssl$proto_attr=$val\n";
+        }
         $fh->close();
     }
     # set module stream configs
