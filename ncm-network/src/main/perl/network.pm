@@ -213,6 +213,7 @@ sub backup_dir
     return $self->IFCFG_DIR . "/$BACKUP_DIR_SUFFIX";
 }
 
+Readonly::Hash my %ALLOWED_ACTIONS => { restart => 1, reload => 1, stop_sleep_start => 1 };
 
 # wrapper around -x for easy unittesting
 # is not part of CAF::Path
@@ -2036,6 +2037,34 @@ sub routing_table
     } else {
         # nothing needs to be done upon change, returned for unittesting
         return $fh->close();
+
+# Prepare and take the action for all daemons as defined in hash-reference C<$daemons>.
+# Does not return anything.
+sub _process_service_actions
+{
+    my ($self, $daemons) = @_;
+    my $actions = {};
+    my @daemon_action = ();
+
+    foreach my $daemon (sort keys %{$daemons || {}}) {
+        push(@daemon_action, $daemon, $daemons->{$daemon});
+    }
+
+    while (my ($daemon,$action) = splice(@daemon_action, 0, 2)) {
+        if (exists($ALLOWED_ACTIONS{$action})) {
+            $actions->{$action} ||= {};
+            $actions->{$action}->{$daemon} = 1;
+        } else {
+            $self->error("Not a CAF::Service allowed action $action for daemon $daemon in profile (component/schema mismatch?).");
+        }
+    }
+
+    foreach my $action (sort keys %$actions) {
+        my @daemons = sort keys %{$actions->{$action}};
+        $self->info("Executing action $action on services: ", join(', ', @daemons));
+        my $srv = CAF::Service->new(\@daemons, log => $self);
+        # CAF::Service does all the logging we need
+        $srv->$action();
     }
 }
 
@@ -2322,6 +2351,12 @@ sub Configure
             };
         }
     };
+
+    # If the configuration was changed, process any requested daemon actions
+    if ($config_changed) {
+        $self->debug(5, "Configuration changed, processing daemon actions.");
+        $self->_process_service_actions($comp_tree->{daemons});
+    }
 
     return 1;
 }
