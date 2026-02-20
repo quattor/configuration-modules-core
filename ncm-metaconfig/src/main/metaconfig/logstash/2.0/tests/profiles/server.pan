@@ -41,7 +41,7 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'remotegelf'",
-        )),
+    )),
     "plugins", list(dict("mutate", dict(
         "split", dict("tags", ", "),
     ))),
@@ -53,24 +53,24 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "left", "[type]",
         "test", "==",
         "right", "'syslog'",
-        )),
+    )),
     "plugins", list(
         dict("grok", dict(
             "match", list(dict(
                 "name", "message",
                 "pattern", list("%{RSYSLOGCUSTOM}", "%{OTHERPATTERN}"),
-                )),
+            )),
             "patterns_dir", list("/usr/share/grok"),
             "add_field", dict(
                 "received_at", "%{@timestamp}",
                 "received_from", "%{@source_host}",
-                ),
-            )),
+            ),
+        )),
         dict("kv", dict(
             "default_keys", dict(
                 "key1", "value1",
                 "key2", "value2",
-                ),
+            ),
             "exclude_keys", list("key1e", "key2e"),
             "include_keys", list("key1i", "key2i"),
             "prefix", "myprefix",
@@ -79,31 +79,33 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
             "trim", "mytrim",
             "trimkey", "mytrimkey",
             "value_split", "myvaluesplit",
-            )),
+        )),
         dict("date", dict(
             "match", dict(
                 "name", "syslog_timestamp",
                 "pattern", list("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZ", "yyyy-MM-dd'T'HH:mm:ssZZ"),
-                ),
-            )),
+            ),
+        )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(dict(
                 "left", "'_grokparsefailure'",
                 "test", "not in",
                 "right", "[tags]",
-                ))),
+            ))),
             "replace", list(
                 dict(
                     "name", "@source_host",
-                    "pattern", "%{syslog_hostname}"),
+                    "pattern", "%{syslog_hostname}",
+                ),
                 dict(
                     "name", "@message",
-                    "pattern", "%{syslog_message}"),
+                    "pattern", "%{syslog_message}",
                 ),
-            )),
+            ),
+        )),
         dict("mutate", dict(
             "remove_field", list("syslog_hostname", "syslog_message", "syslog_timestamp"),
-            )),
+        )),
         dict("mutate", dict(
             "_conditional", dict('expr', list(
                 dict(
@@ -114,32 +116,33 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
                 dict(
                     "join", "and",
                     "left", "[jube_id]",
-                ))),
-            "convert", dict(
-                "success", "boolean"
                 ),
             )),
+            "convert", dict(
+                "success", "boolean"
+            ),
+        )),
         dict("mutate", dict(
             "add_field", dict(
                 escape("[@metadata][target_index]"), "longterm-%{+YYYY.MM.dd}",
-                ),
-            )),
+            ),
+        )),
         dict("mutate", dict(
             "_conditional", dict("expr", list(dict(
                 "left", "[program]",
                 "test", "==",
                 "right", "\"jube\"",
-                ))),
+            ))),
             "update", dict(
                 escape("[@metadata][target_index]"), "longterm-%{+YYYY.Q}",
-                ),
-            )),
+            ),
+        )),
         dict("bytes2human", dict(
             "convert", dict(
                 "field1", "bytes",
                 "field2", "bytes",
-                ),
-            )),
+            ),
+        )),
     ),
 ));
 
@@ -150,5 +153,5 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "hosts", list("localhost.localdomain:9200"),
         "workers", 4,
         "template_overwrite", true,
-        ),
+    ),
 )));
