@@ -338,7 +338,8 @@ type postgresql_component = {
     @{Name of the service to start postgresql.
       This should allow you to start multiple postgres instances on the same machine.}
     "pg_script_name" ? string
-    "pg_version" ? string
+    @{Version of postgresql being managed, required in order to call correct binaries.}
+    "pg_version" : string_trimmed
     @{Legacy: full text of the postgresql.conf file}
     "postgresql_conf" ? string
     @{role name with ROLE ALTER SQL command. Roles are only added and updated, never removed.}
