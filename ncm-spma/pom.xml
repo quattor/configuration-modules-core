@@ -207,6 +207,25 @@
                 </resources>
               </configuration>
             </execution>
+            <execution>
+              <id>filter-share-spma-yumdnf</id>
+              <phase>process-sources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.directory}/share/quattor/spma/yumdnf</outputDirectory>
+                <resources>
+                  <resource>
+                    <directory>src/main/resources/yumdnf</directory>
+                    <includes>
+                      <include>*.py</include>
+                    </includes>
+                    <filtering>false</filtering>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
           </executions>
         </plugin>
         <plugin>
@@ -268,7 +287,47 @@
                   </source>
                 </sources>
               </mapping>
+              <mapping>
+                <directory>/usr/share/quattor/spma/yumdnf</directory>
+                <directoryIncluded>false</directoryIncluded>
+                <sources>
+                  <source>
+                    <location>${project.build.directory}/share/quattor/spma/yumdnf</location>
+                    <includes>
+                      <include>*.py</include>
+                    </includes>
+                  </source>
+                </sources>
+              </mapping>
             </mappings>
+            <postinstallScriptlet>
+              <script>
+if [ -x /usr/bin/dnf ]; then
+    # from dnf.const.PLUGINPATH
+    pylib=$(/usr/libexec/platform-python -c 'import distutils.sysconfig;print(distutils.sysconfig.get_python_lib())')
+    plugin="$pylib/dnf-plugins/spmaleaves.py"
+    if [ ! -f $plugin ]; then
+        ln -s /usr/share/quattor/spma/yumdnf/spmaleaves.py $plugin
+    fi
+fi
+              </script>
+            </postinstallScriptlet>
+            <preremoveScriptlet>
+              <script>
+if [ $1 == 0 ]; then
+    if [ -x /usr/bin/dnf ]; then
+        # from dnf.const.PLUGINPATH
+        pylib=$(/usr/libexec/platform-python -c 'import distutils.sysconfig;print(distutils.sysconfig.get_python_lib())')
+        plugin="$pylib/dnf-plugins/spmaleaves.py"
+        if [ -f $plugin ]; then
+            rm -f $plugin
+            rm -f "$pylib"/dnf-plugins/__pycache__/spmaleaves.*.pyc
+        fi
+    fi
+fi
+              </script>
+            </preremoveScriptlet>
+
           </configuration>
         </plugin>
       </plugins>

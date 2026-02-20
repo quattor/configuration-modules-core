@@ -4,9 +4,11 @@ use warnings;
 package NCM::Component::spma::yumdnf;
 
 use NCM::Component::spma::yum;
+use Set::Scalar;
 push our @ISA , qw(NCM::Component::spma::yum);
 
 use constant YUM_CONF_FILE => "/etc/dnf/dnf.conf";
+use constant YUM_CONF_CLEANUP_ON_REMOVE_VALUE => 0;
 
 use constant DNF_MODULES_DIR => "/etc/dnf/modules.d";
 
@@ -21,6 +23,42 @@ use constant REPO_WHATREQS => qw(repoquery -C --recursive --qf %{NAME}\n%{NAME};
 use constant REPO_INCLUDE => 0;
 
 use constant MODULES_TREE => "/software/modules";
+
+# package-cleanup --leaves really does not what it says. it doesn't even do orphans
+use constant LEAF_PACKAGES => [qw(dnf spmaleaves)];
+
+# return packages to remove
+#   candidates are (non-trivial) values from the leaves selection command (name;arch format)
+#      spmaleaves returns "strongly connected components" instead of individual packges
+#      so candidates might also be in the scc name1;arch1::name2;arch2 format
+#   wanted is list of packages that spma should install (name and also name;arch format)
+sub _pkg_rem_calc
+{
+    my ($self, $candidates, $wanted) = @_;
+
+    my $false_positives = Set::Scalar->new();
+    foreach my $scc (@$candidates) {
+        foreach my $pkg (split/::/, $scc) {
+            my $name = (split(/;/, $pkg))[0];
+            if ($wanted->has($pkg) || $wanted->has($name)) {
+                # the whole scc is flagged as soon as one component is wanted
+                $false_positives->insert($scc);
+            }
+        }
+    }
+
+    my $scc_remove = $candidates - $false_positives;
+
+    # Unpack the scc entries
+    my $remove = Set::Scalar->new();
+    foreach my $scc (@$scc_remove) {
+        foreach my $pkg (split/::/, $scc) {
+            $remove->insert($pkg);
+        };
+    }
+
+    return $remove;
+};
 
 
 # Completes any pending transactions
