@@ -15,8 +15,8 @@ input \{$
 ^\s{4}\}$
 ^\s{4}lumberjack \{$
 ^\s{8}type => "lumberjack"$
-^\s{8}ssl_certificate => "/software/components/ccm/cert_file"$
-^\s{8}ssl_key => "/software/components/ccm/key_file"$
+^\s{8}ssl_certificate => "/etc/pki/tls/cert.pem"$
+^\s{8}ssl_key => "/etc/pki/tls/key.pem"$
 ^\s{8}port => 5043$
 ^\s{4}\}$
 ^\}$ ### COUNT 3

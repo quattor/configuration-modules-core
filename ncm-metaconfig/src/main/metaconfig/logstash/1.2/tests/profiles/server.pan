@@ -22,8 +22,8 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
 "input/plugins" = append(dict("lumberjack", dict(
     "type", "lumberjack",
     "port", 5043,
-    "ssl_certificate", "/software/components/ccm/cert_file",
-    "ssl_key", "/software/components/ccm/key_file",
+    "ssl_certificate", "/etc/pki/tls/cert.pem",
+    "ssl_key", "/etc/pki/tls/key.pem",
 )));
 
 
@@ -113,4 +113,3 @@ prefix "/software/components/metaconfig/services/{/etc/logstash/conf.d/logstash.
         "port", list(9300, 9305),
     ),
 )));
-
