@@ -1,4 +1,4 @@
 
 
 
-set_desired_output('/usr/bin/ceph -f json --version', $clusterdata::CEPH_VERSION);
+set_desired_output('/usr/sbin/cephadm shell ceph -f json --version', $clusterdata::CEPH_VERSION);
