@@ -75,7 +75,8 @@ sub run_command_as_ceph
 sub run_ceph_command
 {
     my ($self, $command, $msg, %opts) = @_;
-    return $self->run_command([qw(/usr/bin/ceph -f json), @$command], $msg, %opts);
+    $opts{nostderr} = 1;
+    return $self->run_command([qw(/usr/sbin/cephadm shell ceph -f json), @$command], $msg, %opts);
 }
 
 # run a command prefixed with ceph-deploy and return the output (no json)

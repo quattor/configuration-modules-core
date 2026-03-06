@@ -20,10 +20,10 @@ ok(!$cl->is_node_healthy(), 'node not healthy');
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING, 'key');
 set_file_contents($osddata::BOOTSTRAP_OSD_KEYRING_SL, 'key');
 ok($cl->is_node_healthy(), 'node healthy');
-ok(get_command('/usr/bin/ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
+ok(get_command('/usr/sbin/cephadm shell ceph -f json status --id bootstrap-osd'), 'ran cluster health command');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
-set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
+set_desired_output('/usr/sbin/cephadm shell ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
 cmp_deeply($cl->get_deployed_osds(), \%osddata::OSD_DEPLOYED, 'Deployed OSD fetched');
 #diag explain $cl->get_deployed_osds();
 
