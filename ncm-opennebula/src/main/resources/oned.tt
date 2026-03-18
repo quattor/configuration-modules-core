@@ -1,6 +1,6 @@
 [%- oned_section = ['db', 'log', 'federation', 'datastore_mad', 'tm_mad', 'hm_mad',
                     'auth_mad', 'default_cost', 'vnc_ports', 'vlan_ids', 'vxlan_ids',
-                    'market_mad', 'raft', 'hook_log_conf'] -%]
+                    'market_mad', 'raft', 'hook_log_conf', 'raft_leader_hook', 'raft_follower_hook'] -%]
 [%- booleans = ['datastore_capacity_check', 'compare_binary'] -%]
 [%- digits = ['monitoring_interval', 'monitoring_threads', 'monitoring_interval_datastore',
               'monitoring_interval_market', 'monitoring_interval_db_update',
