@@ -15,6 +15,12 @@ prefix "/metaconfig/contents/oned";
     "passwd", "my-fancy-pass",
     "db_name", "opennebula",
 );
+"raft_leader_hook" = dict(
+    "arguments", "leader ens1 10.0.0.2/24",
+);
+"raft_follower_hook" = dict(
+    "arguments", "follower ens1 10.0.0.2/24",
+);
 "log" = dict(
     "system", "syslog",
     "debug_level", 3,
