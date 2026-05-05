@@ -111,6 +111,8 @@ type network_interface_type = choice(
     network interface
 }
 type network_interface = {
+    @{Set to true to skip managing this interface. Defaults to false.}
+    "ignore" ? boolean
     "ip" ? type_ip
     "gateway" ? type_ip
     "netmask" ? type_ip

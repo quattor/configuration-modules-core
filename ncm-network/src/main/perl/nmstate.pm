@@ -929,6 +929,10 @@ sub Configure
     my $nmifaces = {};
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
+        if ($iface->{ignore}) {
+            $self->verbose("Skipping interface $ifacename: ignore is set to true");
+            next;
+        }
         my ($nm_cfg, $nm_iface) = generate_nmstate_config($self, $ifacename, $net, $ipv6, $nwtree->{routing_table}, $dgw);
         $nmifaces->{$ifacename} = $nm_iface;
         my $file_name = $self->iface_filename($ifacename);

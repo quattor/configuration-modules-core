@@ -2092,6 +2092,10 @@ sub Configure
     # ifcfg- / route[6]- files
     foreach my $ifacename (sort keys %$ifaces) {
         my $iface = $ifaces->{$ifacename};
+        if ($iface->{ignore}) {
+            $self->verbose("Skipping interface $ifacename: ignore is set to true");
+            next;
+        }
         my $text = $self->make_ifcfg($ifacename, $iface, $ipv6);
 
         my $file_name = $self->iface_filename($ifacename);
