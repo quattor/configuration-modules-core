@@ -260,6 +260,22 @@ sub get_bonded_eth
     return \@data;
 }
 
+# group all interfaces that are ports of a linux bridge together
+# i.e. interfaces with bridge=$bridge_name
+# - port in nmstate config file for linux-bridge
+sub get_bridge_ports
+{
+    my ($self, $bridge_name, $interfaces) = @_;
+    my @data =  ();
+    foreach my $name (sort keys %$interfaces) {
+        my $iface = $interfaces->{$name};
+        if ( $iface->{bridge} ){
+            push @data, $name if $iface->{bridge} eq $bridge_name;
+        }
+    }
+    return \@data;
+}
+
 # writes the nmstate yml file, using yaml module.
 sub nmstate_file_dump
 {
@@ -504,6 +520,36 @@ sub generate_nmstate_config
         }
     }
 
+    # Linux bridge: collect ports (interfaces with bridge=$name) and
+    # generate linux-bridge nmstate config.  This mirrors the bond logic
+    # above but for native Linux bridges.
+    my $bridge_ports = get_bridge_ports($self, $name, $net->{interfaces});
+    if ($lctype eq 'bridge' || @$bridge_ports) {
+        $can_ignore_bootproto ||= 1;
+        $ifaceconfig->{type} = "linux-bridge";
+        $ifaceconfig->{state} = "up";
+        if (@$bridge_ports) {
+            $ifaceconfig->{bridge}->{port} = [ map { {name => $_} } @$bridge_ports ];
+        }
+        # Bridge options from Pan schema: stp (boolean) and delay (integer)
+        my $stp_enabled = $iface->{stp} ? 1 : 0;
+        $ifaceconfig->{bridge}->{options}->{stp}->{enabled} = $stp_enabled ? $YTRUE : $YFALSE;
+        # forward-delay only valid in range [2,30]; only set when STP is on
+        if ($stp_enabled && defined $iface->{delay} && $iface->{delay} >= 2) {
+            $ifaceconfig->{bridge}->{options}->{stp}->{'forward-delay'} = $iface->{delay};
+        }
+    }
+    # Bridge port: interface with bridge=<bridge_name> is a port of a
+    # linux bridge.  It should be up with no IP (the IP lives on the
+    # bridge).  Skip the bootproto logic so it does not get set to down.
+    if ($iface->{bridge} && !$lctype) {
+        $can_ignore_bootproto ||= 1;
+        $ifaceconfig->{type} ||= "ethernet";
+        $ifaceconfig->{state} = "up";
+        $ifaceconfig->{ipv4}->{enabled} = $YFALSE;
+        $ifaceconfig->{ipv6}->{enabled} = $YFALSE;
+    }
+
     if ($eth_bootproto eq 'static') {
         $ifaceconfig->{state} = "up";
         if ($is_ip || $iface->{ipv6addr}) {
@@ -572,8 +618,12 @@ sub generate_nmstate_config
     }
 
     # create default route entry.
+    # Skip routes for bridge port interfaces -- the IP and routes belong
+    # on the bridge, not the port.  The port has ipv4 disabled and a
+    # default route here would conflict with the bridge's route.
+    my $is_bridge_port = $iface->{bridge} && !$lctype;
     my %default_rt;
-    if ($default_gw) {
+    if ($default_gw && !$is_bridge_port) {
         # create default gw entry on this interface only if it falls within the subnet boundary.
         # otherwise this interface is not the default gw interface.
         # next-hop-interface is mandatory in nmstate therefore we need interface to create default route entry.
@@ -610,30 +660,33 @@ sub generate_nmstate_config
     #     next-hop-address:
     #     next-hop-interface:
     #  and so on.
+    # Bridge ports carry no IP, so they must not own any routes or rules.
     my $routes = [];
-    push @$routes, @{$self->make_nm_route_absent($name)};
-    push @$routes, \%default_rt if scalar %default_rt;
-    push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
-    if (defined($iface->{route})) {
-        $self->verbose("IPv4 policy route found, nmstate will manage it");
-        my $route4 = $iface->{route};
-        my $policyroutes4 = $self->make_nm_ip_route($name, $route4, $routing_table);
-        push @$routes, @{$policyroutes4};
-    }
-
-    if (defined($iface->{route6})) {
-        $self->verbose("IPv6 policy route found, nmstate will manage it");
-        my $route6 = $iface->{route6};
-        # make_nm_ip_route() can handle IPv4 and IPv6 routes
-        my $policyroutes6 = $self->make_nm_ip_route($name, $route6, $routing_table);
-        push @$routes, @{$policyroutes6};
-    }
-
     my $policy_rule = [];
-    if (defined($iface->{rule})) {
-        my $rule = $iface->{rule};
-        $policy_rule = $self->make_nm_ip_rule($iface, $rule, $routing_table);
-        $self->verbose("policy rule found, nmstate will manage it");
+    if (!$is_bridge_port) { 
+        push @$routes, @{$self->make_nm_route_absent($name)};
+        push @$routes, \%default_rt if scalar %default_rt;
+        push @$routes, \%default_ipv6_rt if scalar %default_ipv6_rt;
+        if (defined($iface->{route})) {
+            $self->verbose("IPv4 policy route found, nmstate will manage it");
+            my $route4 = $iface->{route};
+            my $policyroutes4 = $self->make_nm_ip_route($name, $route4, $routing_table);
+            push @$routes, @{$policyroutes4};
+        }
+
+        if (defined($iface->{route6})) {
+            $self->verbose("IPv6 policy route found, nmstate will manage it");
+            my $route6 = $iface->{route6};
+            # make_nm_ip_route() can handle IPv4 and IPv6 routes
+            my $policyroutes6 = $self->make_nm_ip_route($name, $route6, $routing_table);
+            push @$routes, @{$policyroutes6};
+        }
+
+        if (defined($iface->{rule})) {
+            my $rule = $iface->{rule};
+            $policy_rule = $self->make_nm_ip_rule($iface, $rule, $routing_table);
+            $self->verbose("policy rule found, nmstate will manage it");
+        }
     }
     # return hash construct that will match what nmstate yml needs.
     my $interface->{interfaces} = [$ifaceconfig];
@@ -665,7 +718,6 @@ sub generate_nmstate_config
 
     # TODO: ethtool settings to add in config file? setting via cmd cli working as is.
     # TODO: add aliases ip addresses
-    # TODO: bridge_options
     # TODO: veth, anymore?
 
     return $interface, $ifaceconfig;
@@ -775,6 +827,7 @@ sub nmstate_order
     my $score = {
         bond => 20,  # slaves need to be alive
         "ovs-interface" => 30,  # can only be ports of a bridge, this could probably be 0 as well
+        "linux-bridge" => 35,  # needs ports alive; applied after ethernet/bond ports
         "ovs-bridge" => 40,  # needs ports alive; these can be anything with lower score
     };
 
