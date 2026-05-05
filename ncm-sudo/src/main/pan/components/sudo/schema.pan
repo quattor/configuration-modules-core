@@ -48,7 +48,9 @@ type sudo_default_options = {
     "mail_no_host" ? boolean
     "mail_no_perms" ? boolean
     "tty_tickets" ? boolean
-    "lecture" ? boolean
+    # old boolean behaviour: true means once, false means never
+    "lecture" ? choice('always', 'once', 'never')
+    "lecture_file" ? absolute_file_path
     "authenticate" ? boolean
     "root_sudo" ? boolean
     "log_host" ? boolean
