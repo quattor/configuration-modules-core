@@ -694,7 +694,7 @@ sub packages_to_remove
 
     # The leaf set doesn't contain the header lines, which are just
     # garbage.
-    my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
+    my $leaves = Set::Scalar->new(grep($_ !~ m{^$|\s}, split(/\n/, $out)));
 
     my $candidates = $leaves-$wanted;
 
@@ -907,7 +907,9 @@ sub update_pkgs
         $to_rm = $self->packages_to_remove($wanted);
         defined($to_rm) or return 0;
         $self->spare_dependencies($to_rm, $to_install, $error_is_warn);
-        $tx = $self->schedule(REMOVE, $to_rm);
+        if (scalar(@$to_rm) > 0) {
+            $tx = $self->schedule(REMOVE, $to_rm);
+        }
     }
 
     $tx .= $self->schedule(INSTALL, $to_install);
