@@ -4,8 +4,9 @@ include 'metaconfig/perfsonar/lookup/registration/schema';
 
 bind "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registration_daemon/etc/ls_registration_daemon.conf}/contents" = ls_registration;
 
-prefix "/software/components/metaconfig/services/{/opt/perfsonar_ps/ls_registration_daemon/etc/ls_registration_daemon.conf}";
+prefix "/software/components/metaconfig/services";
 
+prefix "{/opt/perfsonar_ps/ls_registration_daemon/etc/ls_registration_daemon.conf}";
 "module" = "perfsonar/general";
 "owner" = "root";
 "group" = "root";

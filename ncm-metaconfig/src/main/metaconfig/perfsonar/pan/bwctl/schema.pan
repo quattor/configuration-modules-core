@@ -15,8 +15,11 @@ type bwctl_server = {
     "nuttcp_port" : type_port
 };
 
-type bwctl_limitname = string with exists("/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/contents/limit/" + SELF) ||
-    error(SELF + " must be an existing bwctl limit specification (watch out for cyclic references!");
+type bwctl_limitname = string with {
+    exists("/software/components/metaconfig/services/{/etc/bwctld/bwctld.limits}/contents/limit/" + SELF) || error(
+        SELF + " must be an existing bwctl limit specification (watch out for cyclic references!)"
+    );
+};
 
 type bwctl_limit = {
     "parent" ? bwctl_limitname
