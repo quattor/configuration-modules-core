@@ -4,7 +4,7 @@
 
 unique template components/spma/yumng/config;
 
-# Prefix for packages/groups
+# Prefix for packages
 prefix '/software';
 
 # Package to install
@@ -16,7 +16,6 @@ prefix '/software/components/${project.artifactId}';
 'packager' = 'yumng';
 
 'register_change' ?= list(
-    "/software/groups",
     "/software/packages",
     "/software/repositories",
 );
