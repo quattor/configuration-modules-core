@@ -89,9 +89,15 @@ is($cmp->execute_yum_command(\@CMD, $WHY), undef,
    "Yet another error string is detected");
 
 set_desired_err($CMD_LINE, "Transaction encountered a serious error");
-
 is($cmp->execute_yum_command(\@CMD, $WHY), undef,
    "Yet another Yum error is correctly diagnosed");
+
+set_desired_err($CMD_LINE, "Failed to do stuff");
+is($cmp->execute_yum_command(\@CMD, $WHY), undef, "Failed is a Yum error");
+
+set_desired_err($CMD_LINE, "Failed loading plugin huppeldepup");
+is($cmp->execute_yum_command(\@CMD, $WHY), 1,
+   "Failed to load a plugin is not a Yum error");
 
 set_desired_err($CMD_LINE,
                 join(" ", qw{https://foobar.xml: [Errno 14] PYCURL ERROR 22 -

@@ -46,6 +46,7 @@ use constant LARGE_INSTALL => 200;
 use constant NOACTION_TEMPDIR_TEMPLATE => "/tmp/spma-noaction-XXXXX";
 
 use constant YUM_CONF_CLEANUP_ON_REMOVE => "clean_requirements_on_remove";
+use constant YUM_CONF_CLEANUP_ON_REMOVE_VALUE => 1;
 use constant YUM_CONF_OBSOLETES => "obsoletes";
 use constant YUM_CONF_PLUGINCONFPATH => 'pluginconfpath';
 use constant YUM_CONF_REPOSDIR => 'reposdir';
@@ -328,8 +329,8 @@ sub execute_yum_command
 
     $cmd->execute();
     if ($err) {
-	# dnf always reports "Last metadata expiration check" to stderr, even if there's nothing wrong.
-	# If that is the only message, we should not consider it to be a warning, and instead report it as verbose.
+        # dnf always reports "Last metadata expiration check" to stderr, even if there's nothing wrong.
+        # If that is the only message, we should not consider it to be a warning, and instead report it as verbose.
         my $warn_logger = ($err =~ m/\A[\s\n]*Last metadata expiration check.*[\s\n]*\z/m) ? 'verbose': 'warn';
         $self->$warn_logger("$why produced warnings: $err");
     }
@@ -337,7 +338,7 @@ sub execute_yum_command
     if ($? ||
         ($err && $err =~ m{^\s*(
          Error |
-         Failed |
+         Failed (?! (?: \s+ (?: loading \s+ plugin \s+))) |
          (?:Could \s+ not \s+ match) |
          (?:Transaction \s+ encountered .* error) |
          (?:Unknown \s+ group \s+  package \s+ type) |
@@ -675,6 +676,25 @@ sub versionlock
     return 1;
 }
 
+# return package to remove
+#   candidates are (non-trivial) values from the leaves selection command (name;arch format)
+#   wanted is list of packages that spma should install (name and also name;arch format)
+sub _pkg_rem_calc
+{
+    my ($self, $candidates, $wanted) = @_;
+
+    my $false_positives = Set::Scalar->new();
+    foreach my $pkg (@$candidates) {
+        my $name = (split(/;/, $pkg))[0];
+        if ($wanted->has($name)) {
+            $false_positives->insert($pkg);
+        }
+    }
+
+    return $candidates - $false_positives;
+};
+
+
 # Returns the set of packages to remove. A package must be removed if
 # it is a leaf package and is not listed in $wanted, or if its
 # architecture doesn't match the architectures specified in $wanted
@@ -683,7 +703,7 @@ sub packages_to_remove
 {
     my ($self, $wanted) = @_;
 
-    my $out = CAF::Process->new($self->_set_yum_config(LEAF_PACKAGES),
+    my $out = CAF::Process->new($self->_set_yum_config($self->LEAF_PACKAGES),
                                 keeps_state => 1,
                                 log => $self)->output();
 
@@ -696,17 +716,9 @@ sub packages_to_remove
     # garbage.
     my $leaves = Set::Scalar->new(grep($_ !~ m{\s}, split(/\n/, $out)));
 
-    my $candidates = $leaves-$wanted;
+    my $candidates = $leaves - $wanted;
 
-    my $false_positives = Set::Scalar->new();
-    foreach my $pkg (@$candidates) {
-        my $name = (split(/;/, $pkg))[0];
-        if ($wanted->has($name)) {
-            $false_positives->insert($pkg);
-        }
-    }
-
-    return $candidates-$false_positives;
+    return $self->_pkg_rem_calc($candidates, $wanted);
 }
 
 # Queries for packages packages that depend on $rm, and if there is a
@@ -880,7 +892,7 @@ sub update_pkgs
         my $clean_cache_method = ($purge ? 'purge' : 'expire') . "_yum_caches";
         $self->$clean_cache_method() or return 0;
 
-        $self->make_cache($purge) or return 0;
+        $self->make_cache() or return 0;
     };
 
     # Versionlock is determined based on all configured packages
@@ -1128,7 +1140,7 @@ sub configure_yum
 
     # use CONSTANT() to get the value of the constant as key
     my $yum_opts = {
-        YUM_CONF_CLEANUP_ON_REMOVE() => 1,
+        YUM_CONF_CLEANUP_ON_REMOVE() => $self->YUM_CONF_CLEANUP_ON_REMOVE_VALUE(),
         YUM_CONF_OBSOLETES() => $obsoletes,
         YUM_CONF_REPOSDIR() => $repodirs,
         YUM_CONF_PLUGINCONFPATH() => $plugindir,
