@@ -17,7 +17,7 @@ isa_ok($cl, 'NCM::Component::Ceph::Orchestrator', 'got Orchestrator instance');
 ok($cl->deploy_orch_section("mon"), 'deployed orch section mon ok');
 my $fh = get_file('/etc/ceph/orch_mon.yaml');
 is("$fh", $orchdata::MON_YAML, 'mon yaml cfgfile ok');
- ok(get_command('/usr/bin/ceph -f json orch apply -i /etc/ceph/orch_mon.yaml'), 'applied mon config');
+ ok(get_command('/usr/sbin/cephadm shell ceph -f json orch apply -i /etc/ceph/orch_mon.yaml'), 'applied mon config');
 
 ok($cl->deploy_orch_section("mgr"), 'deployed orch section mgr ok');
 $fh = get_file('/etc/ceph/orch_mgr.yaml');
@@ -30,11 +30,11 @@ is("$fh", $orchdata::MDS_YAML, 'mds yaml cfgfile ok');
 ok($cl->deploy_orch_section("osd"), 'deployed orch section osd ok');
 $fh = get_file('/etc/ceph/orch_osd.yaml');
 is("$fh", $orchdata::OSD_YAML, 'osd yaml cfgfile ok');
-ok(get_command('/usr/bin/ceph -f json orch apply -i /etc/ceph/orch_osd.yaml'), 'applied osd config');
+ok(get_command('/usr/sbin/cephadm shell ceph -f json orch apply -i /etc/ceph/orch_osd.yaml'), 'applied osd config');
 
 ok($cl->deploy_orch_section("hosts"), 'deployed orch section hosts ok');
 $fh = get_file('/etc/ceph/orch_hosts.yaml');
 is("$fh", $orchdata::HOSTS_YAML, 'hosts yaml cfgfile ok');
- ok(get_command('/usr/bin/ceph -f json orch apply -i /etc/ceph/orch_hosts.yaml'), 'applied hosts config');
+ ok(get_command('/usr/sbin/cephadm shell ceph -f json orch apply -i /etc/ceph/orch_hosts.yaml'), 'applied hosts config');
 
 done_testing();

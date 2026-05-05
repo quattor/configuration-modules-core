@@ -16,9 +16,9 @@ my $cl = NCM::Component::Ceph::Cluster->new($cfg, $cmp, $cmp->prefix());
 my $clmap = NCM::Component::Ceph::ClusterMap->new($cl);
 isa_ok($clmap, 'NCM::Component::Ceph::ClusterMap', 'got ClusterMap instance');
 
-set_desired_output("/usr/bin/ceph -f json mon dump", $clmapdata::MONJSON);
-set_desired_output("/usr/bin/ceph -f json mgr dump", $clmapdata::MGRJSON);
-set_desired_output("/usr/bin/ceph -f json mds stat", $clmapdata::MDSJSON);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json mon dump", $clmapdata::MONJSON);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json mgr dump", $clmapdata::MGRJSON);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json mds stat", $clmapdata::MDSJSON);
 
 ok($clmap->map_existing(), 'mapping existing daemons');
 

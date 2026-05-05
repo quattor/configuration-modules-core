@@ -15,9 +15,9 @@ my $cmp = NCM::Component::Ceph::Octopus->new('ceph');
 isa_ok($cmp, 'NCM::Component::Ceph::Octopus', 'got ncm-ceph instance');
 
 
-set_desired_output('/usr/bin/ceph -f json --version', $clusterdata::CEPH_VERSION_OCT);
-set_desired_output('/usr/bin/ceph -f json orch host ls', $orchdata::HOSTS_JSON);
-set_desired_output("/usr/bin/ceph -f json config dump",'[]');
+set_desired_output('/usr/sbin/cephadm shell ceph -f json --version', $clusterdata::CEPH_VERSION_OCT);
+set_desired_output('/usr/sbin/cephadm shell ceph -f json orch host ls', $orchdata::HOSTS_JSON);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json config dump",'[]');
 
 ok($cmp->Configure($cfg), 'Ceph component configure ok');
 

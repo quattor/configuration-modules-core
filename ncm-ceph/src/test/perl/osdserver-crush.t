@@ -17,7 +17,7 @@ my $cl = NCM::Component::Ceph::OSDserver->new($cfg, $obj, $cmp->prefix());
 isa_ok($cl, 'NCM::Component::Ceph::OSDserver', 'got OSDserver instance');
 
 set_desired_output($osddata::GET_CEPH_PVS_CMD, $osddata::OSD_PVS_OUT);
-set_desired_output('/usr/bin/ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
+set_desired_output('/usr/sbin/cephadm shell ceph -f json osd dump --id bootstrap-osd',  $osddata::OSD_DUMP);
 
 set_command_status("$osddata::CRUSH set-device-class special osd.24 --name osd.24", 1);
 

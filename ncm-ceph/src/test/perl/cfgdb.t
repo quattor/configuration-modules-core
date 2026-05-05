@@ -16,7 +16,7 @@ my $cfgdb = NCM::Component::Ceph::CfgDb->new($cl);
 isa_ok($cl, 'NCM::Component::Ceph::Cluster', 'got Cluster instance');
 isa_ok($cfgdb, 'NCM::Component::Ceph::CfgDb', 'got CfgDb instance');
 
-set_desired_output("/usr/bin/ceph -f json config dump", $cfgdata::CONFJSON);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json config dump", $cfgdata::CONFJSON);
 $cfgdb->parse_profile_cfg();
 cmp_deeply($cfgdb->{quattor}, \%cfgdata::PROFILE_CFG, 'profile hash correct');
 

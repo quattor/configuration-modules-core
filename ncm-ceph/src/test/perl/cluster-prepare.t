@@ -16,7 +16,7 @@ my $gather1 = "$dpp ceph001.cubone.os";
 my $gather2 = "$dpp ceph002.cubone.os";
 my $gather3 = "$dpp ceph003.cubone.os";
 my @gathers = ($gather1, $gather2, $gather3);
-set_desired_output("/usr/bin/ceph -f json --cluster ceph status", $clusterdata::STATE);
+set_desired_output("/usr/sbin/cephadm shell ceph -f json --cluster ceph status", $clusterdata::STATE);
 
 
 # Totally new cluster
