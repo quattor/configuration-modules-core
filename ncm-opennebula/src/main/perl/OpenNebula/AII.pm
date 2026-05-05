@@ -3,6 +3,7 @@
 use NCM::Component::OpenNebula::Server qw($ONEADMIN_USER);
 use Readonly;
 use EDG::WP4::CCM::TextRender;
+use NCM::Component::ks qw (ksinstall_rpm);
 
 Readonly my $MINIMAL_ONE_VERSION => version->new("5.0.0");
 Readonly my $AII_OPENNEBULA_CONFIG => "/etc/aii/opennebula.conf";
@@ -274,8 +275,9 @@ sub aii_post_reboot
     my ($self, $config, $path) = @_;
     my $tree = $config->getElement($path)->getTree();
 
+    my @rpmlist = ('acpid');
+    ksinstall_rpm($config, @rpmlist);
     print <<EOF;
-yum -c /var/tmp/aii/yum/yum.conf -y install acpid
 service acpid start
 EOF
 }
