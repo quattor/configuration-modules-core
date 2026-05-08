@@ -123,7 +123,7 @@ type opennebula_hook_log_conf = {
 
 type opennebula_auth_mad = {
     "executable" : string = 'one_auth_mad'
-    "authn" : string = 'ssh,x509,ldap,server_cipher,server_x509'
+    "authn" : string = 'ssh,x509,ldap,server_cipher,server_x509,saml'
 } = dict();
 
 type opennebula_tm_mad_conf = {
@@ -132,12 +132,15 @@ type opennebula_tm_mad_conf = {
     "clone_target" : choice('SYSTEM', 'NONE', 'SELF') = "SYSTEM"
     "shared" : boolean = true
     "ds_migrate" ? boolean
-    "driver" ? choice('raw', 'qcow2')
+    "ds_live_migrate" ? boolean
+    "ds_migrate_snap" ? boolean
+    "driver" ? choice('raw', 'qcow2', 'virtiofs')
     "allow_orphans" ? string
     "tm_mad_system" ? string
     "ln_target_ssh" ? string
     "clone_target_ssh" ? string
     "disk_type_ssh" ? string
+    "disk_type" ? choice('filesystem', 'block')
     "ln_target_shared" ? string
     "clone_target_shared" ? string
     "disk_type_shared" ? string
@@ -158,9 +161,14 @@ type opennebula_auth_mad_conf = {
     will be disabled, with the exception of chgrp to one of
     the groups in the list of secondary groups}
     "driver_managed_groups" : boolean = false
+    @{When set to "true" user needs to manage group
+    admin membership manually, when "false" group admin
+    membership is managed by the auth driver}
+    "driver_managed_group_admin" : boolean = false
     @{Limit the maximum token validity, in seconds. Use -1 for
     unlimited maximum, 0 to disable login tokens}
     "max_token_time" : long(-1..) = -1
+    "password_required" ? boolean
 } = dict();
 
 @documentation{
@@ -187,6 +195,7 @@ type opennebula_ds_mad_conf = {
     @{specifies whether the datastore can only manage persistent images}
     "persistent_only" : boolean = false
     "marketplace_actions" ? string
+    "datastore_capacity_check" ? boolean
 } = dict();
 
 @documentation{
@@ -468,6 +477,8 @@ type opennebula_oned = {
     "default_device_prefix" ? opennebula_device_prefix = 'hd'
     "onegate_endpoint" ? string
     "manager_timer" ? long
+    "grpc_port" : type_port = 2634
+    "grpc_listen_address" : type_ipv4 = '0.0.0.0'
     "monitoring_interval" : long = 60
     "monitoring_threads" : long = 50
     @{Time in seconds between each DATASTORE monitoring cycle}
@@ -637,6 +648,25 @@ type opennebula_oned = {
             "disk_type_shared", "FILE",
         ),
         dict("name", "vcenter", "clone_target", "NONE"),
+        dict(
+            "name", "purefa",
+            "clone_target", "SELF",
+            "driver", "raw",
+            "disk_type", "block",
+            "allow_orphans", "yes",
+            "ds_migrate", false,
+            "ds_live_migrate", false,
+            "ds_migrate_snap", false,
+        ),
+        dict(
+            "name", "virtiofs",
+            "clone_target", "NONE",
+            "driver", "virtiofs",
+            "disk_type", "filesystem",
+            "ds_migrate", false,
+            "ds_live_migrate", false,
+            "ds_migrate_snap", false,
+        ),
     )
     "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
         dict(),
@@ -668,6 +698,16 @@ type opennebula_oned = {
             "required_attrs", list('VCENTER_INSTANCE_ID', 'VCENTER_DS_REF', 'VCENTER_DC_REF'),
             "persistent_only", false,
             "marketplace_actions", "export",
+        ),
+        dict(
+            "name", "purefa",
+            "required_attrs", list('PUREFA_HOST', 'PUREFA_API_TOKEN', 'PUREFA_TARGET'),
+            "persistent_only", false,
+        ),
+        dict(
+            "name", "virtiofs",
+            "persistent_only", false,
+            "datastore_capacity_check", false,
         ),
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
@@ -725,6 +765,7 @@ type opennebula_oned = {
         dict(
             "name", "ldap",
             "password_change", true,
+            "password_required", false,
             "driver_managed_groups", true,
             "max_token_time", 86400,
         ),
@@ -735,6 +776,14 @@ type opennebula_oned = {
         dict(
             "name", "server_x509",
             "password_change", false,
+        ),
+        dict(
+            "name", "saml",
+            "password_change", true,
+            "password_required", false,
+            "driver_managed_groups", true,
+            "driver_managed_group_admin", true,
+            "max_token_time", 86400,
         ),
     )
     "vn_mad_conf" : opennebula_vn_mad_conf[] = list(
@@ -875,7 +924,11 @@ type opennebula_oned = {
     )
     "vm_encrypted_attr" : string[] = list("CONTEXT/PASSWORD")
     "vnet_encrypted_attr" : string[] = list("AR/PACKET_TOKEN")
-    "datastore_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
+    "datastore_encrypted_attr" : string[] = list(
+        "PROVISION/PACKET_TOKEN",
+        "NETAPP_PASS",
+        "PUREFA_API_TOKEN",
+    )
     "cluster_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
     "inherit_datastore_attr" : string[] = list(
         "CEPH_HOST",
@@ -904,6 +957,8 @@ type opennebula_oned = {
         "DISK_TYPE",
         "VCENTER_ADAPTER_TYPE",
         "VCENTER_DISK_TYPE",
+        "MOUNT_POINT",
+        "MOUNT_TAG",
     )
     "inherit_vnet_attr" : string[] = list(
         "VLAN_TAGGED_ID",
