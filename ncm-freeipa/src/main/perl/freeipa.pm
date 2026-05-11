@@ -486,7 +486,7 @@ sub _set_ipa_client
         if ($role eq $IPA_ROLE_AII) {
             # AII acts on behalf of a host, but is run by admin on teh AII host.
             # For now, hardcoded. Could be made configurable via config file
-            $principal = $IPA_DEFAULT_AII_PRINCIPAL;
+            $principal = "$IPA_DEFAULT_AII_PRINCIPAL\@$tree->{realm}";
             $keytab = $IPA_DEFAULT_AII_KEYTAB;
             $self->verbose("AII role $IPA_ROLE_AII using predefined principal $principal keytab $keytab")
         } elsif ($role_principal) {
@@ -506,7 +506,13 @@ sub _set_ipa_client
         keytab => $keytab,
         log => $self,
         );
-    return $self->fail("Failed to get kerberos context: $_krb->{fail}") if(! defined($_krb->get_context(usecred => 1)));
+
+    # This always fails on AII and principal servers
+    if (!$role || ($role eq $IPA_ROLE_CLIENT)) {
+        return $self->fail("Failed to get kerberos context: $_krb->{fail}") if(! defined($_krb->get_context(usecred => 1)));
+    } else {
+        $self->info("Failed to get kerberos context: $_krb->{fail}") if(! defined($_krb->get_context(usecred => 1)));
+    };
 
     # set environment to temporary credential cache
     # temporary cache is cleaned-up during destroy of $krb
