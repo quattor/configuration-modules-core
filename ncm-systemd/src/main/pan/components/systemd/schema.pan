@@ -658,6 +658,8 @@ type ${project.artifactId}_unit_type = {
     "targets" : ${project.artifactId}_target[] = list("multi-user")
     "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice', 'path') = 'service'
     "startstop" : boolean = true
+    @{force startstop even if target is not active}
+    "force" ? boolean
     "state" : choice('enabled', 'disabled', 'masked') = 'enabled'
     @{unitfile configuration}
     "file" ? ${project.artifactId}_unitfile
@@ -670,6 +672,8 @@ type ${project.artifactId}_component = {
     "unconfigured" : choice('ignore', 'enabled', 'disabled', 'on', 'off') = 'ignore' # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
     "unit" ? ${project.artifactId}_unit_type{}
+    @{Ignore chkconfig component configuration}
+    "ignore_chkconfig" : boolean = false
 } with {
     if (is_defined(SELF["unit"])) {
         foreach(name; unit; SELF["unit"]) {

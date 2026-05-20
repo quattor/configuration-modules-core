@@ -58,15 +58,15 @@ Test set_unconfigured_default
 
 # Only tests the systemd setting.
 $cmp->{ERROR} = 0;
-is($svc->set_unconfigured_default($cfg), $UNCONFIGURED_IGNORE,
+is($svc->set_unconfigured_default($cfg, 0), $UNCONFIGURED_IGNORE,
     "Set unconfigured to ignore");
 is($cmp->{ERROR}, 0, "No errors logged");
 
 =pod
 
-=head2 gather_configured_services
+=head2 gather_configured_units
 
-Test gather_configured_services
+Test gather_configured_units
 
 =cut
 
@@ -81,7 +81,7 @@ $mockuf->mock("write", sub {
     return 1;
 });
 
-my $gathered_configured_units = $svc->gather_configured_units($cfg);
+my $gathered_configured_units = $svc->gather_configured_units($cfg, 0);
 #diag explain $gathered_configured_units;
 is_deeply($gathered_configured_units, {
     'test_on.service' => {
@@ -179,6 +179,14 @@ ok($gathered_configured_units->{$uf_write[0]->[0]}, "service with file/only=0 is
 ok(! defined($gathered_configured_units->{$uf_write[0]->[1]}),
    "service with file/only=1 is not added to the configured units");
 
+
+my $gathered_configured_units_nochkconfig = $svc->gather_configured_units($cfg, 1);
+diag "no chkconfig", sort keys %$gathered_configured_units_nochkconfig;
+is_deeply([sort keys %$gathered_configured_units_nochkconfig],
+          [qw(othername2.service test2_add.target test2_on.service test_4_no_restart.service test_del.service test_off.service)],
+          "gather configured units from systemd component only",
+    );
+
 =pod
 
 =head2 gather_current_units
@@ -199,7 +207,7 @@ set_output('gen_full_el7_ceph021_systemctl_is_enabled_cups.service_unit-files');
 
 $cfg = get_config_for_profile('service_ceph021');
 
-my $configured = $svc->gather_configured_units($cfg, $UNCONFIGURED_IGNORE);
+my $configured = $svc->gather_configured_units($cfg, 0);
 is_deeply($configured->{'network.service'}, { # sysv, on
     name => "network.service",
     startstop => 1,
@@ -238,6 +246,7 @@ is_deeply($configured->{'rbdmap.service'}, { # sysv, not in chkconfig
     type => $TYPE_SERVICE,
     shortname => "rbdmap",
     possible_missing => 0,
+    force => 1,
 }, "configured rbdmap service for ceph021");
 
 # not installed, and we don't want it running
@@ -380,8 +389,8 @@ is_deeply($states, {
     'unmask' => ['cups.service'],
 }, "State changes to be made");
 is_deeply($acts, {
-    0 => ['missing_disabled.service'],
-    1 => ['netconsole.service', 'network.service', 'rbdmap.service'],
+    0 => [['missing_disabled.service', 0]],
+    1 => [['netconsole.service', 0], ['network.service', 0], ['rbdmap.service', 1]],
 }, "Activations to be made");
 
 
@@ -402,19 +411,29 @@ sub check_uu
     }
 }
 
+sub units_from_acts
+{
+    my $_acts = shift;
+    my @units;
+    foreach my $act (@$_acts) {
+        push(@units, $act->[0]);
+    };
+    return \@units;
+}
+
 foreach my $unconf (@$unconfs) {
     next if $unconf eq $UNCONFIGURED_IGNORE;
     # use unconfigred current value (ie all units, not only relevant ones)
     my ($ustates, $uacts) = $svc->process($configured, $ucurrent, $unconf);
-    diag "ustates uacts $unconf", explain $ustates, explain $uacts;
+    diag "ustates uacts $unconf ", explain $ustates, explain $uacts;
     # check for unconfigured enabled/disabled/running/non-running units
     # check that all others are not modified
     my $same_start = $unconf ne $UNCONFIGURED_ON;
-    check_uu($same_start, $uacts->{1}, $acts->{1}, "start actions for $unconf",
+    check_uu($same_start, units_from_acts($uacts->{1}), units_from_acts($acts->{1}), "start actions for $unconf",
              'syslog.service', 'syslog.target');
 
     my $same_stop = $unconf ne $UNCONFIGURED_OFF;
-    check_uu($same_stop, $uacts->{0}, $acts->{0}, "stop actions for $unconf",
+    check_uu($same_stop, units_from_acts($uacts->{0}), units_from_acts($acts->{0}), "stop actions for $unconf",
              '-.mount', 'timers.target',);
 
     my $same_enabled = $same_start && $unconf ne $UNCONFIGURED_ENABLED;
@@ -480,10 +499,12 @@ ok(command_history_ok([
     "$SYSTEMCTL disable -- missing_disabled.service",
     "$SYSTEMCTL enable -- netconsole.service",
     "$SYSTEMCTL enable -- rbdmap.service",
+    "$SYSTEMCTL start -- rbdmap.service",  # forced
     # 2 activity
 ], [
-    "systemctl stop",
-    "systemctl start",
+    "$SYSTEMCTL stop",
+    "$SYSTEMCTL start -- (?!rbdmap)",
+    "$SYSTEMCTL start -- network.service",
 ]), "no stop/start commands during shutdown");
 
 =pod
@@ -513,7 +534,7 @@ ok(command_history_ok([
     "$SYSTEMCTL stop -- missing_disabled.service",
     "$SYSTEMCTL start -- netconsole.service",
     "$SYSTEMCTL start -- network.service",
-    "$SYSTEMCTL start -- rbdmap.service",
+    "$SYSTEMCTL start -- rbdmap.service",  # forced, but would run start either anyway
 ]), "expected commands for change");
 
 

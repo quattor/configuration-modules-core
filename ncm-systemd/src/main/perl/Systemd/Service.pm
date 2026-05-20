@@ -104,9 +104,13 @@ sub configure
 {
     my ($self, $config) = @_;
 
-    my $unconfigured = $self->set_unconfigured_default($config);
+    my $tree = $config->getTree($self->{BASE});
+    my $ignore_chkconfig = $tree->{ignore_chkconfig} || 0;
+    $self->verbose("Ignore chkconfig $ignore_chkconfig");
 
-    my $configured = $self->gather_configured_units($config);
+    my $unconfigured = $self->set_unconfigured_default($config, $ignore_chkconfig);
+
+    my $configured = $self->gather_configured_units($config, $ignore_chkconfig);
 
     my $current = $self->gather_current_units($configured, $unconfigured);
 
@@ -133,7 +137,7 @@ and legacy C<ncm-chkconfig>.
 
 sub set_unconfigured_default
 {
-    my ($self, $config)= @_;
+    my ($self, $config, $ignore_chkconfig) = @_;
 
     # The default w.r.t. handling unconfigured units.
     my $unconfigured_default = $UNCONFIGURED_IGNORE;
@@ -150,13 +154,15 @@ sub set_unconfigured_default
         ignore => $UNCONFIGURED_IGNORE,
     };
 
-    # TODO add code to select.
+    # Always assume chkconfig is other.
     my $pref = 'unit';
     my $other = 'chkconfig';
 
     my $found;
-    if($config->elementExists($path->{$pref})) {
+    if ($config->elementExists($path->{$pref})) {
         $found = $pref;
+    } elsif ($ignore_chkconfig) {
+        $self->verbose("Ignoring chkconfig component configuration for unconfigured default");
     } elsif ($config->elementExists($path->{$other})) {
         $found = $other;
     } else {
@@ -234,7 +240,7 @@ sub _get_tree
 
 sub gather_configured_units
 {
-    my ($self, $config) = @_;
+    my ($self, $config, $ignore_chkconfig) = @_;
 
     my $chkconfig = {
         path => "$LEGACY_BASE/service",
@@ -248,16 +254,21 @@ sub gather_configured_units
         type => 'unit',
     };
 
-    # TODO: add code to select which one is preferred.
+    # Always assume chkconfig is other.
     my $pref = $unit;
     my $other = $chkconfig;
 
     my $units = {};
 
     # Gather the other units first (if any)
-    my $tree = $self->_get_tree($config, $other);
-    if ($tree) {
-        $units = $other->{instance}->configured_units($tree);
+    my $tree;
+    if ($ignore_chkconfig) {
+        $self->verbose("Ignoring chkconfig component configuration to gather configured units");
+    } else {
+        $tree = $self->_get_tree($config, $other);
+        if ($tree) {
+            $units = $other->{instance}->configured_units($tree);
+        }
     }
 
     # Update with preferred units (if any)
@@ -510,8 +521,9 @@ sub process
             };
         }
         if ($addact) {
-            push(@{$acts->{$expected_act}}, $unit);
-            $msg .= ($expected_act ? '' : 'de') . "activation";
+            my $force = $detail->{force} || 0;
+            $msg .= ($expected_act ? '' : 'de') . "activation force=$force";
+            push(@{$acts->{$expected_act}}, [$unit, $force]);
         }
         $self->verbose($msg ? "process: unit $unit scheduled for $msg" :
                               "process: nothing to do for unit $unit");
@@ -562,7 +574,8 @@ sub process
                 my $current_act = $self->{unit}->is_active($unit);
                 my $addact = ! (defined($current_act) && ($act eq $current_act));
                 if ($addact) {
-                    push(@{$acts->{$act}}, $unit);
+                    # never force for unconfigured units
+                    push(@{$acts->{$act}}, [$unit, 0]);
                     $msg .= ($act ? ' ' : ' de') . "activation";
                 }
             }
@@ -623,18 +636,35 @@ sub change
     # services which are already queued to be stopped may cause deadlocks.
     # Trying to start services which were just stopped may lead to unexpected
     # behavior and data loss.
+    my $change = 0;
     if ($multi_user_active eq 'active') {
-        # TODO: same TODOs as with states
-        foreach my $act (sort keys %$acts) {
-            my @units = @{$acts->{$act}};
-
-            # TODO: process units wrt dependencies?
-            if (@units) {
-                systemctl_command_units($self, $change_activation->{$act}, @units);
-            }
-        }
+        $change = 1;
     } else {
-        $self->info("$TARGET_MULTIUSER.target is not active, not starting or stopping any services.");
+        $self->info("$TARGET_MULTIUSER.target is not active (found is-active $multi_user_active), ",
+                    "not starting or stopping any services unless forced.");
+    }
+    # TODO: same TODOs as with states
+    foreach my $act (sort keys %$acts) {
+        my @units;
+        foreach my $unit_force (@{$acts->{$act}}) {
+            my $unit = $unit_force->[0];
+            my $force = $unit_force->[1];
+
+            my $add_unit = $change;
+            if (!$add_unit && $force) {
+                $add_unit = 1;
+                $self->info("$TARGET_MULTIUSER.target is not active, but found $unit forced. Will change activation.")
+            };
+
+            if ($add_unit) {
+                push(@units, $unit);
+            };
+        };
+
+        # TODO: process units wrt dependencies?
+        if (@units) {
+            systemctl_command_units($self, $change_activation->{$act}, @units);
+        }
     }
 
 }
