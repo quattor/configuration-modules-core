@@ -658,6 +658,8 @@ type ${project.artifactId}_unit_type = {
     "targets" : ${project.artifactId}_target[] = list("multi-user")
     "type" : choice('service', 'target', 'sysv', 'socket', 'mount', 'automount', 'timer', 'slice', 'path') = 'service'
     "startstop" : boolean = true
+    @{force startstop even if target is not active}
+    "force" ? boolean
     "state" : choice('enabled', 'disabled', 'masked') = 'enabled'
     @{unitfile configuration}
     "file" ? ${project.artifactId}_unitfile

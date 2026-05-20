@@ -510,8 +510,9 @@ sub process
             };
         }
         if ($addact) {
-            push(@{$acts->{$expected_act}}, $unit);
-            $msg .= ($expected_act ? '' : 'de') . "activation";
+            my $force = $detail->{force} || 0;
+            $msg .= ($expected_act ? '' : 'de') . "activation force=$force";
+            push(@{$acts->{$expected_act}}, [$unit, $force]);
         }
         $self->verbose($msg ? "process: unit $unit scheduled for $msg" :
                               "process: nothing to do for unit $unit");
@@ -562,7 +563,8 @@ sub process
                 my $current_act = $self->{unit}->is_active($unit);
                 my $addact = ! (defined($current_act) && ($act eq $current_act));
                 if ($addact) {
-                    push(@{$acts->{$act}}, $unit);
+                    # never force for unconfigured units
+                    push(@{$acts->{$act}}, [$unit, 0]);
                     $msg .= ($act ? ' ' : ' de') . "activation";
                 }
             }
@@ -623,18 +625,35 @@ sub change
     # services which are already queued to be stopped may cause deadlocks.
     # Trying to start services which were just stopped may lead to unexpected
     # behavior and data loss.
+    my $change = 0;
     if ($multi_user_active eq 'active') {
-        # TODO: same TODOs as with states
-        foreach my $act (sort keys %$acts) {
-            my @units = @{$acts->{$act}};
-
-            # TODO: process units wrt dependencies?
-            if (@units) {
-                systemctl_command_units($self, $change_activation->{$act}, @units);
-            }
-        }
+        $change = 1;
     } else {
-        $self->info("$TARGET_MULTIUSER.target is not active, not starting or stopping any services.");
+        $self->info("$TARGET_MULTIUSER.target is not active (found is-active $multi_user_active), ",
+                    "not starting or stopping any services unless forced.");
+    }
+    # TODO: same TODOs as with states
+    foreach my $act (sort keys %$acts) {
+        my @units;
+        foreach my $unit_force (@{$acts->{$act}}) {
+            my $unit = $unit_force->[0];
+            my $force = $unit_force->[1];
+
+            my $add_unit = $change;
+            if (!$add_unit && $force) {
+                $add_unit = 1;
+                $self->info("$TARGET_MULTIUSER.target is not active, but found $unit forced. Will change activation.")
+            };
+
+            if ($add_unit) {
+                push(@units, $unit);
+            };
+        };
+
+        # TODO: process units wrt dependencies?
+        if (@units) {
+            systemctl_command_units($self, $change_activation->{$act}, @units);
+        }
     }
 
 }
