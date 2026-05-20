@@ -104,9 +104,13 @@ sub configure
 {
     my ($self, $config) = @_;
 
-    my $unconfigured = $self->set_unconfigured_default($config);
+    my $tree = $config->getTree($self->{BASE});
+    my $ignore_chkconfig = $tree->{ignore_chkconfig} || 0;
+    $self->verbose("Ignore chkconfig $ignore_chkconfig");
 
-    my $configured = $self->gather_configured_units($config);
+    my $unconfigured = $self->set_unconfigured_default($config, $ignore_chkconfig);
+
+    my $configured = $self->gather_configured_units($config, $ignore_chkconfig);
 
     my $current = $self->gather_current_units($configured, $unconfigured);
 
@@ -133,7 +137,7 @@ and legacy C<ncm-chkconfig>.
 
 sub set_unconfigured_default
 {
-    my ($self, $config)= @_;
+    my ($self, $config, $ignore_chkconfig) = @_;
 
     # The default w.r.t. handling unconfigured units.
     my $unconfigured_default = $UNCONFIGURED_IGNORE;
@@ -150,13 +154,15 @@ sub set_unconfigured_default
         ignore => $UNCONFIGURED_IGNORE,
     };
 
-    # TODO add code to select.
+    # Always assume chkconfig is other.
     my $pref = 'unit';
     my $other = 'chkconfig';
 
     my $found;
-    if($config->elementExists($path->{$pref})) {
+    if ($config->elementExists($path->{$pref})) {
         $found = $pref;
+    } elsif ($ignore_chkconfig) {
+        $self->verbose("Ignoring chkconfig component configuration for unconfigured default");
     } elsif ($config->elementExists($path->{$other})) {
         $found = $other;
     } else {
@@ -234,7 +240,7 @@ sub _get_tree
 
 sub gather_configured_units
 {
-    my ($self, $config) = @_;
+    my ($self, $config, $ignore_chkconfig) = @_;
 
     my $chkconfig = {
         path => "$LEGACY_BASE/service",
@@ -248,16 +254,21 @@ sub gather_configured_units
         type => 'unit',
     };
 
-    # TODO: add code to select which one is preferred.
+    # Always assume chkconfig is other.
     my $pref = $unit;
     my $other = $chkconfig;
 
     my $units = {};
 
     # Gather the other units first (if any)
-    my $tree = $self->_get_tree($config, $other);
-    if ($tree) {
-        $units = $other->{instance}->configured_units($tree);
+    my $tree;
+    if ($ignore_chkconfig) {
+        $self->verbose("Ignoring chkconfig component configuration to gather configured units");
+    } else {
+        $tree = $self->_get_tree($config, $other);
+        if ($tree) {
+            $units = $other->{instance}->configured_units($tree);
+        }
     }
 
     # Update with preferred units (if any)

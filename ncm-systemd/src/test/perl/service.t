@@ -58,15 +58,15 @@ Test set_unconfigured_default
 
 # Only tests the systemd setting.
 $cmp->{ERROR} = 0;
-is($svc->set_unconfigured_default($cfg), $UNCONFIGURED_IGNORE,
+is($svc->set_unconfigured_default($cfg, 0), $UNCONFIGURED_IGNORE,
     "Set unconfigured to ignore");
 is($cmp->{ERROR}, 0, "No errors logged");
 
 =pod
 
-=head2 gather_configured_services
+=head2 gather_configured_units
 
-Test gather_configured_services
+Test gather_configured_units
 
 =cut
 
@@ -81,7 +81,7 @@ $mockuf->mock("write", sub {
     return 1;
 });
 
-my $gathered_configured_units = $svc->gather_configured_units($cfg);
+my $gathered_configured_units = $svc->gather_configured_units($cfg, 0);
 #diag explain $gathered_configured_units;
 is_deeply($gathered_configured_units, {
     'test_on.service' => {
@@ -179,6 +179,14 @@ ok($gathered_configured_units->{$uf_write[0]->[0]}, "service with file/only=0 is
 ok(! defined($gathered_configured_units->{$uf_write[0]->[1]}),
    "service with file/only=1 is not added to the configured units");
 
+
+my $gathered_configured_units_nochkconfig = $svc->gather_configured_units($cfg, 1);
+diag "no chkconfig", sort keys %$gathered_configured_units_nochkconfig;
+is_deeply([sort keys %$gathered_configured_units_nochkconfig],
+          [qw(othername2.service test2_add.target test2_on.service test_4_no_restart.service test_del.service test_off.service)],
+          "gather configured units from systemd component only",
+    );
+
 =pod
 
 =head2 gather_current_units
@@ -199,7 +207,7 @@ set_output('gen_full_el7_ceph021_systemctl_is_enabled_cups.service_unit-files');
 
 $cfg = get_config_for_profile('service_ceph021');
 
-my $configured = $svc->gather_configured_units($cfg, $UNCONFIGURED_IGNORE);
+my $configured = $svc->gather_configured_units($cfg, 0);
 is_deeply($configured->{'network.service'}, { # sysv, on
     name => "network.service",
     startstop => 1,

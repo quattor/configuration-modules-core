@@ -672,6 +672,8 @@ type ${project.artifactId}_component = {
     "unconfigured" : choice('ignore', 'enabled', 'disabled', 'on', 'off') = 'ignore' # harmless default
     # escaped full unitnames are allowed (or use shortnames and type)
     "unit" ? ${project.artifactId}_unit_type{}
+    @{Ignore chkconfig component configuration}
+    "ignore_chkconfig" : boolean = false
 } with {
     if (is_defined(SELF["unit"])) {
         foreach(name; unit; SELF["unit"]) {
