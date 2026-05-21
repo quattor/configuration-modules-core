@@ -88,6 +88,16 @@ prefix "/system/network/interfaces/eth4";
 "aliases/dba/ip" = "4.3.2.12";
 "aliases/dba/netmask" = "255.255.255.0";
 
+# create altnames interfaces
+"/hardware/cards/nic/eth5/hwaddr" = "6e:a5:1b:55:77:0e";
+prefix "/system/network/interfaces/eth5";
+"altnames" = list(dict(
+    "name", "myalt01",
+));
+"ip" = "4.3.2.11";
+"netmask" = "255.255.255.0";
+"broadcast" = "4.3.2.255";
+
 # ovs construction
 "/system/network/interfaces/bond1" = dict(
     "driver", "bonding",

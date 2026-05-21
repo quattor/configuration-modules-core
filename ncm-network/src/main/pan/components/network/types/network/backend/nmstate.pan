@@ -52,6 +52,25 @@ type structure_network_route_backend_specific = {
     "initrwnd" ? long(10..)
 };
 
+@documentation{
+    nmstate alternative interface name entry.
+}
+type structure_nmstate_altname = {
+    @{Alternative name value.}
+    "name" : string
+};
+
+@documentation{
+    network interface settings specific to nmstate backend
+}
+type network_interface_backend_specific = {
+    @{Alternative interface names.
+        These values are used by the nmstate backend to generate interface alt-names entries.
+        Virtual interfaces only supported since rhel 9.8 (and rhel 10.2).
+        }
+    "altnames" ? structure_nmstate_altname[]
+};
+
 function network_valid_route = {
     if (exists(SELF['command'])) {
         if (length(SELF) != 1) error("Cannot use command and any of the other attributes as route");

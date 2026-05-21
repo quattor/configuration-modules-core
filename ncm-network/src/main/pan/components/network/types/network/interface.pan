@@ -174,6 +174,7 @@ type network_interface = {
     "ipv6addr_secondaries" ? type_network_name[]
     "ipv6init" ? boolean
 
+    include network_interface_backend_specific
     include network_interface_ethtool
     include network_interface_ovs
     include network_interface_tunnel
