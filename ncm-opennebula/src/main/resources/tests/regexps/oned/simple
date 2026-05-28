@@ -71,6 +71,10 @@ multiline
 ^INHERIT_DATASTORE_ATTR\s?=\s?".+"\s*$
 ^INHERIT_IMAGE_ATTR\s?=\s?".+"\s*$
 ^INHERIT_VNET_ATTR\s?=\s?".+"\s*$
+^IPAM_MAD\s?=\s?\[$
+^\s*arguments\s?=\s*".+",\s*$
+^\s*executable\s?=\s*".+"\s*$
+^\]$
 ^LISTEN_ADDRESS\s?=\s?".+"\s*$
 ^LOG\s?=\s?\[$
 ^\s*debug_level\s?=\s*\d+,\s*$
@@ -100,6 +104,12 @@ multiline
 ^\s*log_purge_timeout\s?=\s*\d+,\s*$
 ^\s*log_retention\s?=\s*\d+,\s*$
 ^\s*xmlrpc_timeout_ms\s?=\s*\d+\s*$
+^RAFT_FOLLOWER_HOOK\s?=\s?\[$
+^\s*arguments\s?=\s*".+",\s*$
+^\s*command\s?=\s*".+"\s*$
+^RAFT_LEADER_HOOK\s?=\s?\[$
+^\s*arguments\s?=\s*".+",\s*$
+^\s*command\s?=\s*".+"\s*$
 ^SCRIPTS_REMOTE_DIR\s?=\s?".+"\s*$
 ^SESSION_EXPIRATION_TIME\s?=\s*\d+\s*$
 ^TM_MAD\s?=\s?\[$

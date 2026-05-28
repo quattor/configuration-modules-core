@@ -45,6 +45,8 @@ type opennebula_probes_period = {
     @{When monitor probes have been stopped more than sync_vm_state
     seconds, send a complete VM report}
     "sync_state_vm" : long(1..) = 180
+    @{Time in seconds to send VM command execution result}
+    "exec_vm" : long(1..) = 5
 } = dict();
 
 @documentation{

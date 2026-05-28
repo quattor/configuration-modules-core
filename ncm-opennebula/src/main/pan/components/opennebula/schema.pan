@@ -14,16 +14,42 @@ include 'components/opennebula/monitord';
 include 'components/opennebula/sched';
 include 'components/opennebula/fireedge';
 
+@documentation{
+Federation & HA configuration attributes.
+Control the federation attributes of oned. Operation in a federated setup
+requires a special DB configuration.
+See:
+https://docs.opennebula.io/7.0/product/control_plane_configuration/high_availability/frontend_ha
+}
 type opennebula_federation = {
-    "mode" : string = 'STANDALONE' with match (SELF, '^(STANDALONE|MASTER|SLAVE)$')
-    "zone_id" : long = 0
+    @{MODE: Operation mode of this oned.
+        STANDALONE no federated.This is the default operational mode
+        MASTER     this oned is the master zone of the federation
+        SLAVE      this oned is a slave zone
+    }
+    "mode" : choice('STANDALONE', 'MASTER', 'SLAVE') = 'STANDALONE'
+    @{The zone ID as returned by onezone command}
+    "zone_id" : long(0..) = 0
+    @{The xml-rpc endpoint of the master oned, e.g:
+        http://master.one.org:2633/RPC2
+    Empty by default without federation setup.}
     "master_oned" : string = ''
+    @{ID identifying this server in the zone as returned by the
+    onezone server-add command. This ID controls the HA configuration of
+    OpenNebula:
+        -1 (default) OpenNebula will operate in "solo" mode no HA
+        <id> Operate in HA (leader election and state replication)
+    }
     "server_id" : long(-1..) = -1
 } = dict();
 
 @documentation{
 Since 5.12.x Opennebula uses the Raft algorithm.
-It can be tuned by several parameters in the configuration file
+It can be tuned by several parameters in the configuration file.
+
+NOTE: Timeout tunning depends on the latency of the servers (network and load)
+as well as the max downtime tolerated by the system. Timeouts needs to be
+greater than 10ms.
 }
 type opennebula_raft = {
     @{Number of DB log records that will be deleted on each purge}
@@ -44,6 +70,21 @@ type opennebula_raft = {
     "xmlrpc_timeout_ms" : long(0..) = 1000
 } = dict();
 
+@documentation{
+Executed when a server transits from follower->leader
+or from leader->follower.
+The purpose of this hook is to configure the Virtual IP.
+}
+type opennebula_raft_hook = {
+    @{raft/vip.sh is a fully working script, this should not be changed}
+    "command" : string = 'raft/vip.sh'
+    @{Arguments: leader/follower interface ip_cidr [interface ip_cidr ...]
+    For example, as follower:
+        "follower ens1 10.0.0.2/24"
+    or for a leader hook:
+        "leader ens1 10.0.0.2/24"}
+    "arguments" : string
+} = dict();
 
 type opennebula_vm_mad_kvm = {
     include opennebula_vm
@@ -56,6 +97,11 @@ type opennebula_vm_mad_xen = {
 type opennebula_vm_mad = {
     "kvm" : opennebula_vm_mad_kvm
     "xen" ? opennebula_vm_mad_xen
+} = dict();
+
+type opennebula_ipam_mad = {
+    "executable" : string = 'one_ipam'
+    "arguments" : string = '-t 1 -i dummy,aws,equinix,vultr'
 } = dict();
 
 type opennebula_tm_mad = {
@@ -82,7 +128,7 @@ type opennebula_hook_log_conf = {
 
 type opennebula_auth_mad = {
     "executable" : string = 'one_auth_mad'
-    "authn" : string = 'ssh,x509,ldap,server_cipher,server_x509'
+    "authn" : string = 'ssh,x509,ldap,server_cipher,server_x509,saml'
 } = dict();
 
 type opennebula_tm_mad_conf = {
@@ -91,12 +137,15 @@ type opennebula_tm_mad_conf = {
     "clone_target" : choice('SYSTEM', 'NONE', 'SELF') = "SYSTEM"
     "shared" : boolean = true
     "ds_migrate" ? boolean
-    "driver" ? choice('raw', 'qcow2')
+    "ds_live_migrate" ? boolean
+    "ds_migrate_snap" ? boolean
+    "driver" ? choice('raw', 'qcow2', 'virtiofs')
     "allow_orphans" ? string
     "tm_mad_system" ? string
     "ln_target_ssh" ? string
     "clone_target_ssh" ? string
     "disk_type_ssh" ? string
+    "disk_type" ? choice('filesystem', 'block')
     "ln_target_shared" ? string
     "clone_target_shared" ? string
     "disk_type_shared" ? string
@@ -117,9 +166,14 @@ type opennebula_auth_mad_conf = {
     will be disabled, with the exception of chgrp to one of
     the groups in the list of secondary groups}
     "driver_managed_groups" : boolean = false
+    @{When set to "true" user needs to manage group
+    admin membership manually, when "false" group admin
+    membership is managed by the auth driver}
+    "driver_managed_group_admin" : boolean = false
     @{Limit the maximum token validity, in seconds. Use -1 for
     unlimited maximum, 0 to disable login tokens}
     "max_token_time" : long(-1..) = -1
+    "password_required" ? boolean
 } = dict();
 
 @documentation{
@@ -146,6 +200,7 @@ type opennebula_ds_mad_conf = {
     @{specifies whether the datastore can only manage persistent images}
     "persistent_only" : boolean = false
     "marketplace_actions" ? string
+    "datastore_capacity_check" ? boolean
 } = dict();
 
 @documentation{
@@ -354,6 +409,9 @@ type opennebula_user = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
+    @{The driver that will be used to authenticate the user.
+    core is always used by default if you do not define any driver.}
+    "driver" ? choice('core', 'ssh', 'x509', 'server_cipher', 'server_x509', 'saml', 'public')
 } = dict();
 
 @documentation{
@@ -427,6 +485,8 @@ type opennebula_oned = {
     "default_device_prefix" ? opennebula_device_prefix = 'hd'
     "onegate_endpoint" ? string
     "manager_timer" ? long
+    "grpc_port" : type_port = 2634
+    "grpc_listen_address" : type_ipv4 = '0.0.0.0'
     "monitoring_interval" : long = 60
     "monitoring_threads" : long = 50
     @{Time in seconds between each DATASTORE monitoring cycle}
@@ -502,6 +562,8 @@ type opennebula_oned = {
     "log" : opennebula_log
     "federation" : opennebula_federation
     "raft" : opennebula_raft
+    "raft_leader_hook" ? opennebula_raft_hook
+    "raft_follower_hook" ? opennebula_raft_hook
     "port" : type_port = 2633
     "vnc_base_port" : long = 5900
     "network_size" : long = 254
@@ -528,6 +590,7 @@ type opennebula_oned = {
             "threads", 8,
         ),
     )
+    "ipam_mad" : opennebula_ipam_mad
     "vm_mad" : opennebula_vm_mad
     "tm_mad" : opennebula_tm_mad
     "datastore_mad" : opennebula_datastore_mad
@@ -594,6 +657,25 @@ type opennebula_oned = {
             "disk_type_shared", "FILE",
         ),
         dict("name", "vcenter", "clone_target", "NONE"),
+        dict(
+            "name", "purefa",
+            "clone_target", "SELF",
+            "driver", "raw",
+            "disk_type", "block",
+            "allow_orphans", "yes",
+            "ds_migrate", false,
+            "ds_live_migrate", false,
+            "ds_migrate_snap", false,
+        ),
+        dict(
+            "name", "virtiofs",
+            "clone_target", "NONE",
+            "driver", "virtiofs",
+            "disk_type", "filesystem",
+            "ds_migrate", false,
+            "ds_live_migrate", false,
+            "ds_migrate_snap", false,
+        ),
     )
     "ds_mad_conf" : opennebula_ds_mad_conf[] = list(
         dict(),
@@ -625,6 +707,16 @@ type opennebula_oned = {
             "required_attrs", list('VCENTER_INSTANCE_ID', 'VCENTER_DS_REF', 'VCENTER_DC_REF'),
             "persistent_only", false,
             "marketplace_actions", "export",
+        ),
+        dict(
+            "name", "purefa",
+            "required_attrs", list('PUREFA_HOST', 'PUREFA_API_TOKEN', 'PUREFA_TARGET'),
+            "persistent_only", false,
+        ),
+        dict(
+            "name", "virtiofs",
+            "persistent_only", false,
+            "datastore_capacity_check", false,
         ),
     )
     "market_mad_conf" : opennebula_market_mad_conf[] = list(
@@ -682,6 +774,7 @@ type opennebula_oned = {
         dict(
             "name", "ldap",
             "password_change", true,
+            "password_required", false,
             "driver_managed_groups", true,
             "max_token_time", 86400,
         ),
@@ -692,6 +785,14 @@ type opennebula_oned = {
         dict(
             "name", "server_x509",
             "password_change", false,
+        ),
+        dict(
+            "name", "saml",
+            "password_change", true,
+            "password_required", false,
+            "driver_managed_groups", true,
+            "driver_managed_group_admin", true,
+            "max_token_time", 86400,
         ),
     )
     "vn_mad_conf" : opennebula_vn_mad_conf[] = list(
@@ -832,7 +933,11 @@ type opennebula_oned = {
     )
     "vm_encrypted_attr" : string[] = list("CONTEXT/PASSWORD")
     "vnet_encrypted_attr" : string[] = list("AR/PACKET_TOKEN")
-    "datastore_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
+    "datastore_encrypted_attr" : string[] = list(
+        "PROVISION/PACKET_TOKEN",
+        "NETAPP_PASS",
+        "PUREFA_API_TOKEN",
+    )
     "cluster_encrypted_attr" : string[] = list("PROVISION/PACKET_TOKEN")
     "inherit_datastore_attr" : string[] = list(
         "CEPH_HOST",
@@ -861,6 +966,8 @@ type opennebula_oned = {
         "DISK_TYPE",
         "VCENTER_ADAPTER_TYPE",
         "VCENTER_DISK_TYPE",
+        "MOUNT_POINT",
+        "MOUNT_TAG",
     )
     "inherit_vnet_attr" : string[] = list(
         "VLAN_TAGGED_ID",
