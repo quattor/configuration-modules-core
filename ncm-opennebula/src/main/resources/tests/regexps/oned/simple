@@ -71,6 +71,10 @@ multiline
 ^INHERIT_DATASTORE_ATTR\s?=\s?".+"\s*$
 ^INHERIT_IMAGE_ATTR\s?=\s?".+"\s*$
 ^INHERIT_VNET_ATTR\s?=\s?".+"\s*$
+^IPAM_MAD\s?=\s?\[$
+^\s*arguments\s?=\s*".+",\s*$
+^\s*executable\s?=\s*".+"\s*$
+^\]$
 ^LISTEN_ADDRESS\s?=\s?".+"\s*$
 ^LOG\s?=\s?\[$
 ^\s*debug_level\s?=\s*\d+,\s*$

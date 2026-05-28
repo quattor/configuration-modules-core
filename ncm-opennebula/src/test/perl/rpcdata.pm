@@ -32,7 +32,7 @@ $cmds{rpc_create_newuser}{params} = ["lsimngar", "my_fancy_pass", "core"];
 $cmds{rpc_create_newuser}{method} = "one.user.allocate";
 $cmds{rpc_create_newuser}{out} = 3;
 
-$cmds{rpc_create_newuser2}{params} = ["stdweird", "another_fancy_pass", "core"];
+$cmds{rpc_create_newuser2}{params} = ["stdweird", "another_fancy_pass", "public"];
 $cmds{rpc_create_newuser2}{method} = "one.user.allocate";
 $cmds{rpc_create_newuser2}{out} = 4;
 
@@ -67,7 +67,7 @@ EOF
 $cmds{rpc_list_user2}{params} = [4];
 $cmds{rpc_list_user2}{method} = "one.user.info";
 $cmds{rpc_list_user2}{out} = <<'EOF';
-<USER><ID>4</ID><GID>1</GID><GROUPS><ID>1</ID></GROUPS><GNAME>users</GNAME><NAME>stdweird</NAME><PASSWORD>954f663ba92466ccdc74a605f975904f59682dbc</PASSWORD><AUTH_DRIVER>core</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><TOKEN_PASSWORD><![CDATA[4a782c2aec2b95bf97701d4a57f7cc9032d7331b]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
+<USER><ID>4</ID><GID>1</GID><GROUPS><ID>1</ID></GROUPS><GNAME>users</GNAME><NAME>stdweird</NAME><PASSWORD>954f663ba92466ccdc74a605f975904f59682dbc</PASSWORD><AUTH_DRIVER>public</AUTH_DRIVER><ENABLED>1</ENABLED><TEMPLATE><QUATTOR><![CDATA[1]]></QUATTOR><TOKEN_PASSWORD><![CDATA[4a782c2aec2b95bf97701d4a57f7cc9032d7331b]]></TOKEN_PASSWORD></TEMPLATE><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA><DEFAULT_USER_QUOTAS><DATASTORE_QUOTA></DATASTORE_QUOTA><NETWORK_QUOTA></NETWORK_QUOTA><VM_QUOTA></VM_QUOTA><IMAGE_QUOTA></IMAGE_QUOTA></DEFAULT_USER_QUOTAS></USER>
 EOF
 
 $cmds{rpc_list_user3}{params} = [0];

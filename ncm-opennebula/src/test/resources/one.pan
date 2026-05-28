@@ -273,6 +273,7 @@ prefix "/software/components/opennebula";
     ),
     "stdweird", dict(
         "password", "another_fancy_pass",
+        "driver", "public",
     ),
     "serveradmin", dict(
         "password", "yet_another_fancy_pass",

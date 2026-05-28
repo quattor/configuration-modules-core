@@ -99,6 +99,11 @@ type opennebula_vm_mad = {
     "xen" ? opennebula_vm_mad_xen
 } = dict();
 
+type opennebula_ipam_mad = {
+    "executable" : string = 'one_ipam'
+    "arguments" : string = '-t 1 -i dummy,aws,equinix,vultr'
+} = dict();
+
 type opennebula_tm_mad = {
     "executable" : string = 'one_tm'
     "arguments" : string = '-t 15 -d dummy,lvm,shared,fs_lvm,qcow2,ssh,ceph,dev,vcenter,iscsi_libvirt'
@@ -404,6 +409,9 @@ type opennebula_user = {
     in the admin and cloud views. It is also possible to include in the list
     sub-labels using a common slash: list("Name", "Name/SubName")}
     "labels" ? string[]
+    @{The driver that will be used to authenticate the user.
+    core is always used by default if you do not define any driver.}
+    "driver" ? choice('core', 'ssh', 'x509', 'server_cipher', 'server_x509', 'saml', 'public')
 } = dict();
 
 @documentation{
@@ -582,6 +590,7 @@ type opennebula_oned = {
             "threads", 8,
         ),
     )
+    "ipam_mad" : opennebula_ipam_mad
     "vm_mad" : opennebula_vm_mad
     "tm_mad" : opennebula_tm_mad
     "datastore_mad" : opennebula_datastore_mad
