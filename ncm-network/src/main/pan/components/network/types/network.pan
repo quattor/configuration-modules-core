@@ -53,8 +53,15 @@ type structure_network = {
     "gatewaydev" ? valid_interface
     @{Per interface network settings.
       These values are used to generate the /etc/sysconfig/network-scripts/ifcfg-<interface> files
-      when using ncm-network.}
-    "interfaces" : network_interface{}
+      when using ncm-network.
+      Interface names must be no more than 15 characters in and cannot contain whitespace, ".", "/" or ":".
+    }
+    "interfaces" : network_interface{} with {
+        foreach (i; _; SELF) {
+            match(i, '^[^\s\/:]{1,15}$') || error('Device name "%s" is invalid', i);
+        };
+        true;
+    }
     "nameserver" ? type_ip[]
     "nisdomain" ? string(1..64) with match(SELF, '^\S+$')
     @{Setting nozeroconf to true stops an interface from being assigned an automatic address in the 169.254.0.0 subnet.}
