@@ -68,8 +68,8 @@ sub is_valid_interface
             # Filename is either right at the beginning or following a slash
             (?: \A | / )
             # $1 will capture for example:
-            # eth0  bond1  eth0.101  bond0.102 vlan.456 or dummy_$key
-            ( \w+ \d+ (?: \. \d+ )? | \w+ \. \d+ | dummy_.* )
+            # eth0  bond1  eth0.101  bond0.102 vlan.456, dummy_$key or lo
+            ( \w+ \d+ (?: \. \d+ )? | \w+ \. \d+ | dummy_.* | lo )
             # Suffix (not captured)
             \. yml \z
         }x
