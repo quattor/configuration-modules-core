@@ -493,6 +493,7 @@ type postfix_main = {
     "smtpd_history_flush_threshold" ? long
     "smtpd_junk_command_limit" ? long
     "smtpd_milters" ? string
+    "smtpd_milter_maps" ? postfix_lookup
     "smtpd_noop_commands" ? string
     "smtpd_null_access_lookup_key" ? string
     "smtpd_peername_lookup" ? boolean
