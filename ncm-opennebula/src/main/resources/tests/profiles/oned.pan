@@ -25,5 +25,6 @@ prefix "/metaconfig/contents/oned";
     "system", "syslog",
     "debug_level", 3,
 );
+"quota_vm_attribute" = list("GPU_L40", "GPU_A20");
 "default_device_prefix" = "vd";
 "onegate_endpoint" = "http://hyp004.cubone.os:5030";

@@ -31,6 +31,8 @@ prefix "/software/components/opennebula/oned";
     "arguments", "follower ens1 10.0.0.2/24",
 );
 
+"quota_vm_attribute" = list("GPU_L40", "GPU_A20");
+
 "log" = dict(
     "system", "syslog",
     "debug_level", 3,

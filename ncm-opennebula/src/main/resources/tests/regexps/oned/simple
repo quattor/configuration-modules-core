@@ -97,6 +97,7 @@ multiline
 ^NETWORK_SIZE\s?=\s*\d+\s*$
 ^ONEGATE_ENDPOINT\s?=\s?".+"\s*$
 ^PORT\s?=\s*\d+\s*$
+^QUOTA_VM_ATTRIBUTE\s?=\s*".+"\s*$
 ^RAFT\s?=\s?\[$
 ^\s*broadcast_timeout_ms\s?=\s*\d+,\s*$
 ^\s*election_timeout_ms\s?=\s*\d+,\s*$

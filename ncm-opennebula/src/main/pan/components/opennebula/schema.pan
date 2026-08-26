@@ -994,6 +994,16 @@ type opennebula_oned = {
         "VCENTER_CCR_REF",
         "VCENTER_INSTANCE_ID",
     )
+    @{QUOTA_VM_ATTRIBUTE is an optional string list to define generic quotas like GPUs.
+     Each generic quota defined with the QUOTA_VM_ATTRIBUTE is automatically
+     included in the VM_RESTRICTED_ATTR set.
+     This inclusion prevents regular users from circumventing the quota system
+     by altering the attributes related to these generic quotas.
+
+     See:
+     https://docs.opennebula.io/7.2/product/cloud_system_administration/capacity_planning/quotas/
+     }
+    "quota_vm_attribute" ? string[]
 };
 
 
