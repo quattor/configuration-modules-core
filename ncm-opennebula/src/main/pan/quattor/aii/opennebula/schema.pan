@@ -1,6 +1,7 @@
 declaration template quattor/aii/opennebula/schema;
 
 include 'pan/types';
+include 'quattor/aii/opennebula/qemu-schema';
 
 final variable OPENNEBULA_AII_MODULE_NAME ?= 'NCM::Component::opennebula';
 
@@ -351,9 +352,15 @@ type opennebula_vmtemplate = {
     }
     "cpuratio" : double(0..1) = 1.0
     @{The CPU model exposed to the guest. host-passthrough is the same model as the host.
-    Available modes are stored in the host information and obtained through monitor (onehost show <id>).
+    Available models are stored in the host information and obtained through monitor (onehost show <id>).
+    More info: https://qemu-project.gitlab.io/qemu/system/qemu-cpu-models.html
     }
-    "cpu_model" : string = "host-passthrough"
+    "cpu_model" : qemu_cpu_model
+    @{The CPU features exposed to the guest (on top of those included in the cpu_model).
+    Available features are stored in the host information and obtained through monitor (onehost show <id>).
+    More info: https://qemu-project.gitlab.io/qemu/system/qemu-cpu-models.html
+    }
+    "cpu_features" ? qemu_cpu_feature[]
     @{Libvirt machine type.
     Check libvirt hyp capabilities for the list of available machine types (KVM_MACHINES list from "onehost show <id>").
     Required to use the new KVM machine types for RHEL>=9 (like q35 82Q35 chipset) with PCI passthrough:

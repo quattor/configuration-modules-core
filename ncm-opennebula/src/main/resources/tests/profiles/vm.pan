@@ -222,6 +222,7 @@ prefix "/system/opennebula";
 
 "cpuratio" = 1.0;
 "cpu_model" = "Broadwell-noTSX-IBRS";
+"cpu_features" = list("pcid");
 
 "topology" = dict(
     "pin_policy", "NONE",
