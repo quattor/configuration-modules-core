@@ -15,6 +15,24 @@ include 'components/network/config-nmstate';
 "/hardware/cards/nic/eth3/hwaddr" = "6e:a5:1b:55:77:0d";
 "/system/network/interfaces/eth3/master" = "bond0";
 
+# create SR-IOV virtual functions and use one as a bond slave
+"/hardware/cards/nic/eth6/hwaddr" = "6e:a5:1b:55:77:0f";
+prefix "/system/network/interfaces/eth6";
+"bootproto" = "none";
+"sriov/0" = dict(
+    "master", "bond2",
+    "mac", "6e:a5:1b:55:77:20",
+    "spoof_check", false,
+    "trust", true,
+    "min_tx_rate", 0,
+    "max_tx_rate", 1000,
+    "vlanid", 0,
+    "qos", 0,
+    "vlan_proto", "802.1ad",
+);
+"sriov/1" = dict();
+"/system/network/interfaces/bond2" = create("bondinterface");
+
 # routes and rules
 prefix "/system/network/routing_table";
 "outside" = 3;
