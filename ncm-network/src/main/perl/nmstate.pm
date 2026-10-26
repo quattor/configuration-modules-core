@@ -446,6 +446,9 @@ sub generate_nmstate_config
 
     $ifaceconfig->{mtu} = $iface->{mtu} if $iface->{mtu};
     $ifaceconfig->{'mac-address'} = $iface->{hwaddr} if $iface->{hwaddr};
+    if ($iface->{altnames}) {
+        $ifaceconfig->{'alt-names'} = [map { +{name => $_->{name}} } @{$iface->{altnames}}];
+    }
 
     # this will be empty if the interface isnt a bond interface.
     # we can use this to determine if this interface is bond interface.
