@@ -52,10 +52,10 @@ sub Configure
         $fh->remove_lines(q(^(?i)\s*nameserver\s+),
                           q(no good line));
         if ( $server_enabled && $named_config->{use_localhost} ) {
-            print $fh "nameserver 127.0.0.1\t\t# added by Quattor\n";
+            print $fh "nameserver 127.0.0.1\n";
         }
         for my $named_server (@{$named_config->{servers}}) {
-            print $fh "nameserver $named_server\t\t# added by Quattor\n";
+            print $fh "nameserver $named_server\n";
         }
 
         if ( $named_config->{search} ) {
