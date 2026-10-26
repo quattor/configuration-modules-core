@@ -57,7 +57,7 @@ type structure_network_route_backend_specific = {
 }
 type structure_nmstate_altname = {
     @{Alternative name value.}
-    "name" : string
+    "name" : string_trimmed(..127)
 };
 
 @documentation{
