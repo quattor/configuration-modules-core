@@ -61,14 +61,42 @@ type structure_nmstate_altname = {
 };
 
 @documentation{
+    SR-IOV virtual function configuration.
+    Virtual functions can currently be assigned only as bond slaves.
+}
+type sriov_interface = {
+    @{Bonding master.}
+    "master" ? string
+    @{VF MAC address.}
+    "mac" ? string
+    @{Whether spoof checking is enabled.}
+    "spoof_check" ? boolean
+    @{Whether the VF is trusted.}
+    "trust" ? boolean
+    @{Minimum transmit rate in Mbps.}
+    "min_tx_rate" ? long(0..)
+    @{Maximum transmit rate in Mbps.}
+    "max_tx_rate" ? long(0..)
+    @{VF VLAN identifier.}
+    "vlanid" ? long(0..4095)
+    @{VF VLAN quality of service value.}
+    "qos" ? long(0..)
+    @{VF VLAN protocol.}
+    "vlan_proto" ? choice('802.1q', '802.1ad')
+    "bootproto" ? choice('none')
+};
+
+@documentation{
     network interface settings specific to nmstate backend
 }
 type network_interface_backend_specific = {
     @{Alternative interface names.
         These values are used by the nmstate backend to generate interface alt-names entries.
         Virtual interfaces only supported since rhel 9.8 (and rhel 10.2).
-        }
+    }
     "altnames" ? structure_nmstate_altname[]
+    @{SR-IOV virtual functions to create for this physical interface.}
+    "sriov" ? sriov_interface[]
 };
 
 function network_valid_route = {

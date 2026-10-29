@@ -256,6 +256,17 @@ sub get_bonded_eth
         if ( $iface->{master} ){
             push @data, $name if $iface->{master} eq $bond_name;
         }
+        # nmstate resolves this reference to the kernel interface name assigned to the VF.
+        # SRIOV (virtual) interfaces can also be slaves of a bond so they also need to be checked if present
+        if (my $vfs = $iface->{sriov}) {
+            for my $i (0 .. $#$vfs) {
+                my $vf = $vfs->[$i];
+                # nmstate supports the format sriov:<physint>:<vfidx> for the slaves so that at the point of definition in nmstate
+                # the actual kernel interface name does not need to be known
+                push @data, "sriov:$name:$i"
+                    if $vf->{master} && $vf->{master} eq $bond_name;
+            }
+        }
     }
     return \@data;
 }
@@ -448,6 +459,26 @@ sub generate_nmstate_config
     $ifaceconfig->{'mac-address'} = $iface->{hwaddr} if $iface->{hwaddr};
     if ($iface->{altnames}) {
         $ifaceconfig->{'alt-names'} = [map { +{name => $_->{name}} } @{$iface->{altnames}}];
+    }
+    if (my $vfs = $iface->{sriov}) {
+        my $sriov = $ifaceconfig->{ethernet}->{'sr-iov'} = {};
+        $sriov->{'total-vfs'} = scalar @$vfs;
+        $sriov->{vfs} = [];
+        for my $id (0 .. $#$vfs) {
+            my $vf = $vfs->[$id];
+            my $vfdata = {id => $id};
+            $vfdata->{'mac-address'} = $vf->{mac} if exists $vf->{mac};
+            $vfdata->{'spoof-check'} = $vf->{spoof_check} ? $YTRUE : $YFALSE
+                if exists $vf->{spoof_check};
+            $vfdata->{trust} = $vf->{trust} ? $YTRUE : $YFALSE
+                if exists $vf->{trust};
+            $vfdata->{'min-tx-rate'} = int($vf->{min_tx_rate}) if exists $vf->{min_tx_rate};
+            $vfdata->{'max-tx-rate'} = int($vf->{max_tx_rate}) if exists $vf->{max_tx_rate};
+            $vfdata->{'vlan-id'} = int($vf->{vlanid}) if exists $vf->{vlanid};
+            $vfdata->{qos} = int($vf->{qos}) if exists $vf->{qos};
+            $vfdata->{'vlan-proto'} = $vf->{vlan_proto} if exists $vf->{vlan_proto};
+            push @{$sriov->{vfs}}, $vfdata;
+        }
     }
 
     # this will be empty if the interface isnt a bond interface.
