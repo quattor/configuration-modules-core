@@ -63,6 +63,14 @@ type structure_nmstate_altname = {
 @documentation{
     SR-IOV virtual function configuration.
     Virtual functions can currently be assigned only as bond slaves.
+
+    The VF index is the position of the entry in the sriov list (starting at 0).
+    It is used both as the nmstate VF id and in the sriov:<interface>:<index> bond slave reference,
+    and total-vfs is the length of the list.
+    Append new entries to the end of the list to keep existing VF indexes stable.
+    If not, the following VFs are renumbered, but this should not break anything:
+    the VF settings and the bond slave references are both generated from the same list,
+    so they stay consistent with each other.
 }
 type sriov_interface = {
     @{Bonding master.}
@@ -95,7 +103,10 @@ type network_interface_backend_specific = {
         Virtual interfaces only supported since rhel 9.8 (and rhel 10.2).
     }
     "altnames" ? structure_nmstate_altname[]
-    @{SR-IOV virtual functions to create for this physical interface.}
+    @{SR-IOV virtual functions to create for this physical interface.
+        The list order defines the VF index (starting at 0).
+        Appending keeps existing VF indexes stable; otherwise VFs are renumbered, which should not break anything.
+    }
     "sriov" ? sriov_interface[]
 };
 
