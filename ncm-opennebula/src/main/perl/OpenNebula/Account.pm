@@ -74,7 +74,8 @@ sub manage_consumers
                 $self->info("Creating new $type: ", $consumer);
                 if (exists $data->{$consumer}->{password}) {
                     # Create new user
-                    $one->$createmethod($consumer, $data->{$consumer}->{password}, $CORE_AUTH_DRIVER);
+                    my $driver = $data->{$consumer}->{driver} // $CORE_AUTH_DRIVER;
+                    $one->$createmethod($consumer, $data->{$consumer}->{password}, $driver);
                     $self->set_user_primary_group($one, $consumer, $data->{$consumer}->{group}) if (exists $data->{$consumer}->{group});
                 } else {
                     # Create new group/cluster
