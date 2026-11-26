@@ -28,7 +28,7 @@ type ${project.artifactId}_component = {
     @{Configure a NFS server. In particular relevant for missing exports attribute.
       If true, missing exports forces an empty exports file and a NFS service reload.
       If false, missing exports has no effect.}
-    'server' : boolean = true
+    'server' : boolean = false
     @{ Daemon to reload when changes are made }
     'daemon' : string_trimmed = 'nfs-server'
     @{This is a list of dicts with "path" giving the export path and
